@@ -1,6 +1,6 @@
 package main
 
-// $ "go get github.com/alexedwards/flow"
+// $ "go get github.com/alexedwards/flow@latest"
 
 import (
 	"fmt"
