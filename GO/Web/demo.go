@@ -1,5 +1,7 @@
 package main
 
+// $ "go get github.com/alexedwards/flow"
+
 import (
 	"fmt"
 	"github.com/alexedwards/flow"
