@@ -85,15 +85,6 @@ def train_model(model, train_data, train_labels, val_data, val_labels):
     )
 
 
-"""
-============================
-CIFAR100-ImageClassification
-============================
-The CIFAR100 Dataset is used to classify 32x32 images into 100 Classes. This is
-achived through the use of the a own implementation, a non pretrained model
-"""
-
-
 def main():
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     warnings.filterwarnings("ignore", module='tensorflow')
