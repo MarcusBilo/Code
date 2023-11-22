@@ -1,0 +1,1 @@
+# Basic ANN for MNIST
