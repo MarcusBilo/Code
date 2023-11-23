@@ -1,9 +1,6 @@
 import pandas as pd
 from datetime import datetime
 
-pd.set_option("display.width", 1000)
-pd.set_option("display.max_columns", 100)
-
 
 def parse_name(name):
     parts = name.split("_")
@@ -15,54 +12,43 @@ def parse_name(name):
     })
 
 
-data = pd.read_csv("metaData.csv")
-parsed_data = data["name"].apply(parse_name)
+def main():
+    pd.set_option("display.width", 1000)
+    pd.set_option("display.max_columns", 100)
 
-columns_to_drop = [
-    "name",
-    "startTime_iso",
-    "startTime_unix",
-    "endTime_iso",
-    "endTime_unix",
-    "busRoute"
-]
+    data = pd.read_csv("metaData.csv")
+    parsed_data = data["name"].apply(parse_name)
+    new_data = pd.concat([data, parsed_data], axis=1)
+    new_data["startDate"] = new_data["startTime"].dt.date
 
-new_data = pd.concat([data.drop(columns=columns_to_drop), parsed_data], axis=1)
-new_data["startDate"] = new_data["startTime"].dt.date
-new_data["endDate"] = new_data["endTime"].dt.date
+    grouped = new_data.groupby([
+        "busNumber",
+        "startDate"
+    ])
 
-grouped = new_data.groupby([
-    "busNumber",
-    "startDate"
-])
+    aggregation_rules = {
+        'drivenDistance': 'mean',
+        'energyConsumption': 'mean',
+        'itcs_numberOfPassengers_mean': 'mean',
+        'itcs_numberOfPassengers_min': 'min',
+        'itcs_numberOfPassengers_max': 'max',
+        'temperature_ambient_mean': 'mean',
+        'temperature_ambient_min': 'min',
+        'temperature_ambient_max': 'max',
+    }
 
-aggregation_rules = {
-    'startTime': 'min',
-    'endTime': 'max',
-    'drivenDistance': 'mean',
-    'energyConsumption': 'mean',
-    'itcs_numberOfPassengers_mean': 'mean',
-    'itcs_numberOfPassengers_min': 'min',
-    'itcs_numberOfPassengers_max': 'max',
-    'temperature_ambient_mean': 'mean',
-    'temperature_ambient_min': 'min',
-    'temperature_ambient_max': 'max',
-}
+    columns_to_rename = {
+        "startDate": "date",
+        "itcs_numberOfPassengers_mean": "numberOfPassengers_mean",
+        "itcs_numberOfPassengers_min": "numberOfPassengers_min",
+        "itcs_numberOfPassengers_max": "numberOfPassengers_max",
+    }
 
-columns_to_drop = [
-    "startTime",
-    "endTime",
-]
+    merged_data = grouped.agg(aggregation_rules).reset_index()
+    final_data = merged_data.rename(columns=columns_to_rename)
 
-columns_to_rename = {
-    "startDate": "date",
-    "itcs_numberOfPassengers_mean": "numberOfPassengers_mean",
-    "itcs_numberOfPassengers_min": "numberOfPassengers_min",
-    "itcs_numberOfPassengers_max": "numberOfPassengers_max",
-}
+    print(final_data)
 
-merged_data = grouped.agg(aggregation_rules).reset_index()
-merged_data = merged_data.drop(columns=columns_to_drop)
-merged_data = merged_data.rename(columns=columns_to_rename)
 
-print(merged_data)
+if __name__ == "__main__":
+    main()
