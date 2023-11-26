@@ -7,7 +7,7 @@ import (
 	"math/big"
 )
 
-func factorial(n int) *big.Int {
+func factorial(n uint) *big.Int {
 	if n == 0 || n == 1 {
 		return big.NewInt(1)
 	} else {
@@ -15,7 +15,7 @@ func factorial(n int) *big.Int {
 	}
 }
 
-func binomialCoefficient(n, k int) *big.Int {
+func binomialCoefficient(n uint, k uint) *big.Int {
 	if n == k {
 		return big.NewInt(1)
 	} else {
@@ -25,13 +25,14 @@ func binomialCoefficient(n, k int) *big.Int {
 	}
 }
 
-// Returns the sum of the probabilities of the binomial distribution from 1 to k (exclusive)
-func cumulativeBinomial(n int, k int, p float64) (*big.Float, error) {
-	if n < k || n < 1 || k < 1 || p < 0 || 1 < p {
+// Returns the sum of the probabilities of the binomial distribution from 1 to k (inclusive).
+func cumulativeBinomial(n uint, k uint, p float64) (*big.Float, error) {
+	if n < k || n == 0 || k == 0 || p < 0 || 1 < p {
 		return nil, errors.New("invalid input")
 	} else {
 		var result = big.NewFloat(0)
-		for i := 1; i < k; i++ {
+		var i uint
+		for i = 1; i <= k; i++ {
 			coefficient := new(big.Float).SetInt(binomialCoefficient(n, i))
 			success := new(big.Float).SetFloat64(math.Pow(p, float64(i)))
 			failure := new(big.Float).SetFloat64(math.Pow(1-p, float64(n-i)))
@@ -43,14 +44,30 @@ func cumulativeBinomial(n int, k int, p float64) (*big.Float, error) {
 	}
 }
 
-func main() {
-	result, err := cumulativeBinomial(60, 15, 0.2)
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
+// Returns the probability that a variable assumes a value less than or equal to k. A continuity
+// correction of +0.5 is applied. Phi calculation is interchangeable with a Z-Table lookup.
+func standardNormalDistribution(n uint, k uint, p float64) (float64, error) {
+	if n < k || n == 0 || p < 0 || 1 < p {
+		return 0, errors.New("invalid input")
 	} else {
-		result.SetPrec(15)
-		fmt.Println("\nP(X<15) =", result)
-		return
+		expectedValue := float64(n) * p
+		variance := float64(n) * p * (1 - p)
+		x := float64(k) + 0.5
+		z := (x - expectedValue) / math.Sqrt(variance)
+		phi := 0.5 * (1 + math.Erf(z/math.Sqrt2))
+		return phi, nil
+	}
+}
+
+func main() {
+	if resultBinomial, err := cumulativeBinomial(60, 14, 0.2); err != nil {
+		fmt.Println("Error:", err)
+	} else {
+		fmt.Println("\nBinomial distribution: P(X<=14) =", resultBinomial)
+	}
+	if resultNormal, err := standardNormalDistribution(60, 14, 0.2); err != nil {
+		fmt.Println("Error:", err)
+	} else {
+		fmt.Println("Normal Approximation:  P(X<=14) =", resultNormal)
 	}
 }
