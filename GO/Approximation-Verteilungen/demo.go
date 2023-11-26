@@ -25,14 +25,14 @@ func binomialCoefficient(n uint, k uint) *big.Int {
 	}
 }
 
-// Returns the sum of the probabilities of the binomial distribution from 1 to k (inclusive).
+// Returns the sum of the probabilities of the binomial distribution from 0 to k (inclusive).
 func cumulativeBinomial(n uint, k uint, p float64) (*big.Float, error) {
 	if n < k || n == 0 || k == 0 || p < 0 || 1 < p {
 		return nil, errors.New("invalid input")
 	} else {
-		var result = big.NewFloat(0)
+		var result = new(big.Float).SetPrec(64).SetFloat64(0)
 		var i uint
-		for i = 1; i <= k; i++ {
+		for i = 0; i <= k; i++ {
 			coefficient := new(big.Float).SetInt(binomialCoefficient(n, i))
 			success := new(big.Float).SetFloat64(math.Pow(p, float64(i)))
 			failure := new(big.Float).SetFloat64(math.Pow(1-p, float64(n-i)))
@@ -59,15 +59,21 @@ func standardNormalDistribution(n uint, k uint, p float64) (float64, error) {
 	}
 }
 
+func round(val float64, precision uint) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
+}
+
 func main() {
 	if resultBinomial, err := cumulativeBinomial(60, 14, 0.2); err != nil {
 		fmt.Println("Error:", err)
 	} else {
+		resultBinomial.SetPrec(15)
 		fmt.Println("\nBinomial distribution: P(X<=14) =", resultBinomial)
 	}
 	if resultNormal, err := standardNormalDistribution(60, 14, 0.2); err != nil {
 		fmt.Println("Error:", err)
 	} else {
-		fmt.Println("Normal Approximation:  P(X<=14) =", resultNormal)
+		fmt.Println("Normal Approximation:  P(X<=14) =", round(resultNormal, 5))
 	}
 }
