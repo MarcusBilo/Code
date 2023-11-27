@@ -74,6 +74,7 @@ func main() {
 	if resultNormal, err := standardNormalDistribution(60, 14, 0.2); err != nil {
 		fmt.Println("Error:", err)
 	} else {
-		fmt.Println("Normal Approximation:  P(X<=14) =", round(resultNormal, 5))
+		resultNormal = round(resultNormal, 5)
+		fmt.Println("Normal Approximation:  P(X<=14) =", resultNormal)
 	}
 }
