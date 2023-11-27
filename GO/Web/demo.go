@@ -15,6 +15,7 @@ func main() {
 		log.Fatal(err)
 	}
 }
+
 func renderHTML(w http.ResponseWriter, fileName string) {
 	tmpl, err := template.ParseFiles(fileName)
 	if err != nil {
