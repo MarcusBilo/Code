@@ -1,18 +1,70 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Go App with htmx and flow</title>
-    <!-- Include htmx library from CDN -->
     <script src="https://unpkg.com/htmx.org@1.9.8"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: none;
+            max-width: 300px;
+            overflow: hidden;
+            transition: max-height 0.5s ease, opacity 0.5s ease;
+        }
+        #result.active {
+            display: block;
+            max-height: 500px;
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
 <h1>Welcome to the Go App!</h1>
-<button hx-post="/clicked" hx-trigger="click" hx-target="#result" hx-swap="outerHTML">
-    Click Me!
+<button hx-post="/clicked" hx-trigger="click" hx-target="#result" hx-swap="outerHTML" onclick="toggleResult()">
+    Click Me! Switch
 </button>
-<div id="result"></div>
+<div id="result">
+    <p>This is the result content that appears after clicking the button!</p>
+</div>
+<script>
+    function toggleResult() {
+        const resultDiv = document.getElementById("result");
+        resultDiv.classList.toggle("active");
+    }
+</script>
 </body>
 </html>
