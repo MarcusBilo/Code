@@ -1,1 +1,1 @@
-# Basic Web with HTMX and Flow
+# Basic Web with Flow
