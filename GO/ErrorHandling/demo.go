@@ -27,17 +27,18 @@ func Log(err error) {
 }
 
 func main() {
+	var err error
 
-	_, err1 := divide(10, 0)
-	Log(err1)
+	_, err = divide(10, 0)
+	Log(err)
 
-	_, err2 := divide(10, 0)
-	if err2 != nil {
-		fmt.Println("Error:", err2)
+	_, err = divide(10, 0)
+	if err != nil {
+		fmt.Println("Error:", err)
 	}
 
-	if _, err3 := divide(10, 0); err3 != nil {
-		fmt.Println("Error:", err3)
+	if _, err = divide(10, 0); err != nil {
+		fmt.Println("Error:", err)
 	}
 
 	return
