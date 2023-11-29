@@ -1,1 +1,1 @@
-# Basic html serving
+# Serve HTMX and Tailwind page
