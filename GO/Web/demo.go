@@ -10,6 +10,7 @@ import (
 func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/data", data)
+	http.Handle("/styles.css", http.FileServer(http.Dir("./")))
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
