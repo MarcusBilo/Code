@@ -1,1 +1,1 @@
-# Serve HTMX and Tailwind page
+# Serve HTMX web page
