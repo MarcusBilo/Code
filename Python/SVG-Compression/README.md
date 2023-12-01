@@ -1,0 +1,1 @@
+# Compress SVG with scour
