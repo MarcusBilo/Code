@@ -55,7 +55,6 @@ def create_animal_window():
         entry_id.delete(0, 'end')
         entry_id.config(state='readonly')
         entry_genus.delete(0, 'end')
-        load_animals()
 
     def delete_animal():
         selected_animal = option_var.get()
@@ -143,7 +142,6 @@ def create_location_window():
         entry_lnr.config(state='readonly')
         entry_shorttitel.delete(0, 'end')
         entry_description.delete(0, 'end')
-        load_locations()
 
     def delete_location():
         selected_location = option_var.get()
