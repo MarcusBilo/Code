@@ -18,21 +18,12 @@ def execute_query(query, parameters=None):
     conn.close()
 
 
-def dump_data_to_file():
-    conn = connect_to_db()
-    with open("dump.sql", "w") as f:
-        for line in conn.iterdump():
-            f.write("%s\n" % line)
-    conn.close()
-
-
 def create_animal_window():
 
     def create_animal():
         genus_value = entry_genus.get()
         insert_query = "INSERT INTO Animal (Genus) VALUES (?)"
         execute_query(insert_query, (genus_value,))
-        dump_data_to_file()
         load_animals()
         entry_id.config(state='normal')
         entry_id.delete(0, 'end')
@@ -46,7 +37,6 @@ def create_animal_window():
             animal_id = int(selected_animal.split()[0])
             delete_query = "DELETE FROM Animal WHERE ID = ?"
             execute_query(delete_query, (animal_id,))
-            dump_data_to_file()
             load_animals()
             entry_id.config(state='normal')
             entry_id.delete(0, 'end')
