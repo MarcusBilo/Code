@@ -2,13 +2,8 @@ import tkinter as tk
 import sqlite3
 
 
-def connect_to_db():
-    conn = sqlite3.connect('my_database.db')
-    return conn
-
-
 def execute_query(query, parameters=None):
-    conn = connect_to_db()
+    conn = sqlite3.connect('my_database.db')
     cursor = conn.cursor()
     if parameters:
         cursor.execute(query, parameters)
@@ -75,27 +70,30 @@ def create_animal_window():
     new_window = tk.Toplevel(root)
     new_window.title("Create Animal")
 
-    tk.Label(new_window, text="ID").grid(row=0, column=0, pady=5, padx=5, sticky="e")
+    label_id = tk.Label(new_window, text="ID")
+    label_id.grid(row=0, column=0, pady=5, padx=5, sticky="e")
     entry_id = tk.Entry(new_window, state="readonly")
     entry_id.grid(row=0, column=1, pady=5, padx=5, sticky="w")
 
-    tk.Label(new_window, text="Genus").grid(row=0, column=2, pady=5, padx=5, sticky="e")
+    label_genus = tk.Label(new_window, text="Genus")
+    label_genus.grid(row=0, column=2, pady=5, padx=5, sticky="e")
     entry_genus = tk.Entry(new_window)
     entry_genus.grid(row=0, column=3, pady=5, padx=5, sticky="w")
 
-    tk.Label(new_window, text="Select Animal").grid(row=0, column=4, pady=5, padx=5, sticky="e")
+    label_select = tk.Label(new_window, text="Select Animal")
+    label_select.grid(row=0, column=4, pady=5, padx=5, sticky="e")
     option_var = tk.StringVar(new_window)
     option_menu = tk.OptionMenu(new_window, option_var, "")
     option_menu.grid(row=0, column=5, pady=5, padx=5, sticky="w")
 
-    create_animal_button = tk.Button(new_window, text="Create Animal", command=create_animal)
-    create_animal_button.grid(row=1, column=0, columnspan=2, pady=10, sticky="nsew")
+    btn_create_animal = tk.Button(new_window, text="Create Animal", command=create_animal)
+    btn_create_animal.grid(row=1, column=0, columnspan=2, pady=10, sticky="nsew")
 
-    select_animal_button = tk.Button(new_window, text="Load Animal", command=select_animal)
-    select_animal_button.grid(row=1, column=2, columnspan=2, pady=10, sticky="nsew")
+    btn_select_animal = tk.Button(new_window, text="Load Animal", command=select_animal)
+    btn_select_animal.grid(row=1, column=2, columnspan=2, pady=10, sticky="nsew")
 
-    delete_animal_button = tk.Button(new_window, text="Delete Animal", command=delete_animal)
-    delete_animal_button.grid(row=1, column=4, columnspan=2, pady=10, sticky="nsew")
+    btn_delete_animal = tk.Button(new_window, text="Delete Animal", command=delete_animal)
+    btn_delete_animal.grid(row=1, column=4, columnspan=2, pady=10, sticky="nsew")
 
     load_animals()
 
