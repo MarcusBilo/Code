@@ -12,9 +12,17 @@ tables <- dbListTables(con)
 tables <- tables[tables != "sqlite_sequence"]
 print(tables)
 
+cat("\n")
+
 # Query data from a specific table
-query_result <- dbGetQuery(con, "SELECT * FROM Animal")
-print(query_result)
+query_result1 <- dbGetQuery(con, "SELECT * FROM Animal")
+print(query_result1)
+
+cat("\n")
+
+# Query data from a specific table
+query_result2 <- dbGetQuery(con, "SELECT * FROM Location")
+print(query_result2)
 
 # Close the database connection when finished
 dbDisconnect(con)
