@@ -24,6 +24,12 @@ cat("\n")
 query_result2 <- dbGetQuery(con, "SELECT * FROM Location")
 print(query_result2)
 
+cat("\n")
+
+# Query data from a specific table
+query_result3 <- dbGetQuery(con, "SELECT * FROM Observation")
+print(query_result3)
+
 # Close the database connection when finished
 dbDisconnect(con)
 
