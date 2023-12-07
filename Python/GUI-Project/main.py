@@ -356,8 +356,8 @@ def enter_observation_window():
     entry_size = tk.Entry(new_window)
     entry_size.grid(row=1, column=7, pady=5, padx=5, sticky="w")
 
-    btn_save_observation = tk.Button(new_window, text="Reload", command=reload_values)
-    btn_save_observation.grid(row=2, column=0, columnspan=2, pady=10, padx=5, sticky="nsew")
+    btn_reload_observation = tk.Button(new_window, text="Reload", command=reload_values)
+    btn_reload_observation.grid(row=2, column=0, columnspan=2, pady=10, padx=5, sticky="nsew")
 
     btn_save_observation = tk.Button(new_window, text="Save Observation", command=save_observation)
     btn_save_observation.grid(row=2, column=2, columnspan=2, pady=10, padx=5, sticky="nsew")
