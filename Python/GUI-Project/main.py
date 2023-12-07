@@ -94,7 +94,7 @@ def create_animal_window():
         cursor = conn.cursor()
         cursor.execute("SELECT ID, Genus FROM Animal")
         animals = cursor.fetchall()
-        animal_options = [f"{animal[0]} - {animal[1]}" for animal in animals]
+        animal_options = [f"{animal[0]}" for animal in animals]
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in animal_options:
@@ -182,7 +182,7 @@ def create_location_window():
         cursor = conn.cursor()
         cursor.execute("SELECT ID, Shorttitle, Description FROM Location")
         locations = cursor.fetchall()
-        location_options = [f"{location[0]} - {location[1]} - {location[2]}" for location in locations]
+        location_options = [f"{location[0]}" for location in locations]
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in location_options:
@@ -297,6 +297,8 @@ def enter_observation_window():
             parameters = (animal_id, location_id, date, time, gender, age, weight, size)
             execute_query(query, parameters)
             clear_fields()
+            load_animals(option_var_animal, option_menu_animal)
+            load_locations(option_var_location, option_menu_location)
 
     def clear_fields():
         option_var_animal.set("")
@@ -307,6 +309,10 @@ def enter_observation_window():
         entry_age.delete(0, "end")
         entry_weight.delete(0, "end")
         entry_size.delete(0, "end")
+
+    def reload_values():
+        load_animals(option_var_animal, option_menu_animal)
+        load_locations(option_var_location, option_menu_location)
 
     def delete_observation():
         pass
@@ -356,14 +362,17 @@ def enter_observation_window():
     entry_size = tk.Entry(new_window)
     entry_size.grid(row=1, column=7, pady=5, padx=5, sticky="w")
 
+    btn_save_observation = tk.Button(new_window, text="Reload", command=reload_values)
+    btn_save_observation.grid(row=2, column=0, columnspan=2, pady=10, padx=5, sticky="nsew")
+
     btn_save_observation = tk.Button(new_window, text="Save Observation", command=save_observation)
-    btn_save_observation.grid(row=2, column=0, columnspan=3, pady=10, padx=5, sticky="nsew")
+    btn_save_observation.grid(row=2, column=2, columnspan=2, pady=10, padx=5, sticky="nsew")
 
     btn_clear_observation = tk.Button(new_window, text="Clear Input Fields", command=clear_fields)
-    btn_clear_observation.grid(row=2, column=3, columnspan=3, pady=10, padx=5, sticky="nsew")
+    btn_clear_observation.grid(row=2, column=4, columnspan=2, pady=10, padx=5, sticky="nsew")
 
     btn_delete_observation = tk.Button(new_window, text="Delete Observation", command=delete_observation)
-    btn_delete_observation.grid(row=2, column=6, columnspan=3, pady=10, padx=5, sticky="nsew")
+    btn_delete_observation.grid(row=2, column=6, columnspan=2, pady=10, padx=5, sticky="nsew")
 
     load_animals(option_var_animal, option_menu_animal)
     load_locations(option_var_location, option_menu_location)
