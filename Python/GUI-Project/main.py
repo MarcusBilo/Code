@@ -6,11 +6,20 @@ from tkcalendar import DateEntry
 
 
 def main():
-    create_animal_table = "CREATE TABLE IF NOT EXISTS Animal (ID INTEGER PRIMARY KEY AUTOINCREMENT, Genus TEXT)"
-    create_location_table = "CREATE TABLE IF NOT EXISTS Location (ID INTEGER PRIMARY KEY AUTOINCREMENT, Shorttitle TEXT, Description TEXT)"
+    create_animal_table = """
+        CREATE TABLE IF NOT EXISTS Animal
+        (ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Genus TEXT)
+    """
+    create_location_table = """
+        CREATE TABLE IF NOT EXISTS Location
+        (ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        Shorttitle TEXT,
+        Description TEXT)
+    """
     create_observation_table = """
-    CREATE TABLE IF NOT EXISTS Observation (
-        ID INTEGER PRIMARY KEY AUTOINCREMENT,
+        CREATE TABLE IF NOT EXISTS Observation
+        (ID INTEGER PRIMARY KEY AUTOINCREMENT,
         AnimalID INTEGER,
         LocationID INTEGER,
         Date DATE,
@@ -20,8 +29,7 @@ def main():
         Weight TEXT,
         Size TEXT,
         FOREIGN KEY (AnimalID) REFERENCES Animal(ID),
-        FOREIGN KEY (LocationID) REFERENCES Location(ID)
-    )
+        FOREIGN KEY (LocationID) REFERENCES Location(ID))
     """
 
     execute_query(create_animal_table)
@@ -127,6 +135,7 @@ def create_animal_window():
 
     new_window = tk.Toplevel(root)
     new_window.title("Create Animal")
+    new_window.resizable(False, False)
 
     label_select = tk.Label(new_window, text="Select Animal")
     label_select.grid(row=0, column=0, pady=5, padx=5, sticky="e")
@@ -211,6 +220,7 @@ def create_location_window():
 
     new_window = tk.Toplevel(root)
     new_window.title("Create Location")
+    new_window.resizable(False, False)
 
     label_select = tk.Label(new_window, text="Select Location")
     label_select.grid(row=0, column=0, pady=5, padx=5, sticky="e")
@@ -313,6 +323,7 @@ def enter_observation_window():
 
     new_window = tk.Toplevel(root)
     new_window.title("Enter Observation")
+    new_window.resizable(False, False)
 
     label_select_animal = tk.Label(new_window, text="Animal")
     label_select_animal.grid(row=0, column=0, pady=5, padx=5, sticky="e")
