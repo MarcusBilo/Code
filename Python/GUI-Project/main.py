@@ -61,6 +61,18 @@ def execute_query(query, parameters=None):
     conn.close()
 
 
+def execute_query_select(query, parameters=None):
+    conn = connect_to_db()
+    cursor = conn.cursor()
+    if parameters:
+        cursor.execute(query, parameters)
+    else:
+        cursor.execute(query)
+    data = cursor.fetchall()
+    conn.close()
+    return data
+
+
 def connect_to_db():
     return sqlite3.connect('my_database.db')
 
@@ -90,26 +102,21 @@ def create_animal_window():
             entry_genus.delete(0, 'end')
 
     def load_animals():
-        conn = connect_to_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT ID, Genus FROM Animal")
-        animals = cursor.fetchall()
+        query = "SELECT ID, Genus FROM Animal"
+        animals = execute_query_select(query)
         animal_options = [f"{animal[0]}" for animal in animals]
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in animal_options:
             command = lambda value=option: option_var.set(value)
             option_menu['menu'].add_command(label=option, command=command)
-        conn.close()
 
     def select_animal():
         selected_animal = option_var.get()
         if selected_animal:
             animal_id = int(selected_animal.split()[0])
-            conn = connect_to_db()
-            cursor = conn.cursor()
-            cursor.execute("SELECT Genus FROM Animal WHERE ID=?", (animal_id,))
-            selected_genus = cursor.fetchone()
+            query = "SELECT Genus FROM Animal WHERE ID=?"
+            selected_genus = execute_query_select(query, (animal_id,))
             if selected_genus:
                 entry_id.config(state='normal')
                 entry_id.delete(0, 'end')
@@ -117,7 +124,6 @@ def create_animal_window():
                 entry_id.config(state='readonly')
                 entry_genus.delete(0, 'end')
                 entry_genus.insert(0, selected_genus[0])
-            conn.close()
 
     new_window = tk.Toplevel(root)
     new_window.title("Create Animal")
@@ -178,36 +184,30 @@ def create_location_window():
             entry_description.delete(0, 'end')
 
     def load_locations():
-        conn = connect_to_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT ID, Shorttitle, Description FROM Location")
-        locations = cursor.fetchall()
+        query = "SELECT ID, Shorttitle, Description FROM Location"
+        locations = execute_query_select(query)
         location_options = [f"{location[0]}" for location in locations]
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in location_options:
             command = lambda value=option: option_var.set(value)
             option_menu['menu'].add_command(label=option, command=command)
-        conn.close()
 
     def select_location():
         selected_location = option_var.get()
         if selected_location:
             location_id = int(selected_location.split()[0])
-            conn = connect_to_db()
-            cursor = conn.cursor()
-            cursor.execute("SELECT ID, Shorttitle, Description FROM Location WHERE ID=?", (location_id,))
-            selected_location = cursor.fetchone()
+            query = "SELECT ID, Shorttitle, Description FROM Location WHERE ID=?"
+            selected_location = execute_query_select(query, (location_id,))
             if selected_location:
                 entry_id.config(state='normal')
                 entry_id.delete(0, 'end')
-                entry_id.insert(0, str(selected_location[0]))
+                entry_id.insert(0, str(selected_location[0][0]))
                 entry_id.config(state='readonly')
                 entry_shorttitel.delete(0, 'end')
-                entry_shorttitel.insert(0, selected_location[1])
+                entry_shorttitel.insert(0, selected_location[0][1])
                 entry_description.delete(0, 'end')
-                entry_description.insert(0, selected_location[2])
-            conn.close()
+                entry_description.insert(0, selected_location[0][2])
 
     new_window = tk.Toplevel(root)
     new_window.title("Create Location")
@@ -255,30 +255,24 @@ def enter_observation_window():
             messagebox.showerror("Error", "Please enter a valid time in HH:MM format")
 
     def load_locations(option_var, option_menu):
-        conn = connect_to_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT ID, Shorttitle FROM Location")
-        locations = cursor.fetchall()
+        query = "SELECT ID, Shorttitle FROM Location"
+        locations = execute_query_select(query)
         location_options = [f"{location[0]} - {location[1]}" for location in locations]
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in location_options:
             command = lambda value=option: option_var.set(value)
             option_menu['menu'].add_command(label=option, command=command)
-        conn.close()
 
     def load_animals(option_var, option_menu):
-        conn = connect_to_db()
-        cursor = conn.cursor()
-        cursor.execute("SELECT ID, Genus FROM Animal")
-        animals = cursor.fetchall()
+        query = "SELECT ID, Genus FROM Animal"
+        animals = execute_query_select(query)
         animal_options = [f"{animal[0]} - {animal[1]}" for animal in animals]
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in animal_options:
             command = lambda value=option: option_var.set(value)
             option_menu['menu'].add_command(label=option, command=command)
-        conn.close()
 
     def save_observation():
         time = entry_time.get()
