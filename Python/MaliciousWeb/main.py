@@ -42,14 +42,14 @@ if not exists('D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_W
     good_test_split = pd.read_csv("D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_test_data.csv")
     groups = good_test_split.groupby(np.arange(len(good_test_split.index)) // 22117)  # 353872 mod 16 = 0
     for (frameno, frame) in groups:
-        frame.to_csv(f"D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_test_data_split_%s.csv" % frameno)
+        frame.to_csv(f"D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_test_data_split_%s.csv" % frameno, index=False)
 
 if not exists('D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_train_data_split_0.csv'):
     good_train_split = pd.read_csv("D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_train_data.csv")
     good_train_split = good_train_split.iloc[:-11]  # Drop the last 11 rows
     groups = good_train_split.groupby(np.arange(len(good_train_split.index)) // 73296)  # 1172747-11 mod 16 = 0
     for (frameno, frame) in groups:
-        frame.to_csv(f"D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_train_data_split_%s.csv" % frameno)
+        frame.to_csv(f"D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_train_data_split_%s.csv" % frameno, index=False)
 
 edit_good_train = pd.read_csv("D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_train_data_split_0.csv")
 edit_good_test = pd.read_csv("D:\Ablage\Dataset of Malicious and Benign Webpages\Good_Compact_Webpages_Classification_test_data_split_0.csv")
