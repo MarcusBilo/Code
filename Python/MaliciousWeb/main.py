@@ -5,27 +5,20 @@ from os.path import exists
 path = "D:\Ablage\Dataset of Malicious and Benign Webpages"
 
 if not exists(path+"\Good_Compact_Webpages_Classification_test_data.csv"):
-
-    original_data_test = pd.read_csv(path+"\Webpages_Classification_test_data.csv")
-    original_data_train = pd.read_csv(path+"\Webpages_Classification_train_data.csv")
-
     columns_to_keep = ["url", "content", "label"]
-
+    original_data_test = pd.read_csv(path+"\Webpages_Classification_test_data.csv")
     selected_columns_test = original_data_test[columns_to_keep]
-    selected_columns_train = original_data_test[columns_to_keep]
-
-    good_data_test = selected_columns_test[selected_columns_test["label"] == "good"].copy()
-    bad_data_test = selected_columns_test[selected_columns_test["label"] == "bad"].copy()
-    good_data_train = selected_columns_train[selected_columns_train["label"] == "good"].copy()
-    bad_data_train = selected_columns_train[selected_columns_train["label"] == "bad"].copy()
-
-    good_data_test.drop(columns="label", inplace=True)
-    bad_data_test.drop(columns="label", inplace=True)
-    good_data_train.drop(columns="label", inplace=True)
-    bad_data_train.drop(columns="label", inplace=True)
-
+    good_data_test = selected_columns_test[selected_columns_test["label"] == "good"]
     good_data_test.to_csv(path+"\Good_Compact_Webpages_Classification_test_data.csv", index=False)
+    bad_data_test = selected_columns_test[selected_columns_test["label"] == "bad"]
     bad_data_test.to_csv(path+"\Bad_Compact_Webpages_Classification_test_data.csv", index=False)
+
+if not exists(path + "\Good_Compact_Webpages_Classification_train_data.csv"):
+    columns_to_keep = ["url", "content", "label"]
+    original_data_train = pd.read_csv(path+"\Webpages_Classification_train_data.csv")
+    selected_columns_train = original_data_train[columns_to_keep]
+    good_data_train = selected_columns_train[selected_columns_train["label"] == "good"]
+    bad_data_train = selected_columns_train[selected_columns_train["label"] == "bad"]
     good_data_train.to_csv(path+"\Good_Compact_Webpages_Classification_train_data.csv", index=False)
     bad_data_train.to_csv(path+"\Bad_Compact_Webpages_Classification_train_data.csv", index=False)
 
