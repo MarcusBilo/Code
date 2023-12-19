@@ -22,6 +22,7 @@ if not exists(path + "\Good_Compact_Webpages_Classification_train_data.csv"):
     good_data_train.to_csv(path+"\Good_Compact_Webpages_Classification_train_data.csv", index=False)
     bad_data_train.to_csv(path+"\Bad_Compact_Webpages_Classification_train_data.csv", index=False)
 
+"""
 og_good_train = pd.read_csv(path+"\Good_Compact_Webpages_Classification_train_data.csv")
 og_good_test = pd.read_csv(path+"\Good_Compact_Webpages_Classification_test_data.csv")
 bad_train = pd.read_csv(path+"\Bad_Compact_Webpages_Classification_train_data.csv")
@@ -31,6 +32,7 @@ print("OG Good train\n", og_good_train.shape)
 print("OG Good test\n", og_good_test.shape)
 print("Bad train\n", bad_train.shape)
 print("Bad test\n", bad_test.shape)
+"""
 
 if not exists(path+"\Good_Compact_Webpages_Classification_test_data_split_0.csv"):
     good_test_split = pd.read_csv(path+"\Good_Compact_Webpages_Classification_test_data.csv")
@@ -45,7 +47,28 @@ if not exists(path+"\Good_Compact_Webpages_Classification_train_data_split_0.csv
     for (frameno, frame) in groups:
         frame.to_csv(path+f"\Good_Compact_Webpages_Classification_train_data_split_%s.csv" % frameno, index=False)
 
+"""
 edit_good_train = pd.read_csv(path+"\Good_Compact_Webpages_Classification_train_data_split_0.csv")
 edit_good_test = pd.read_csv(path+"\Good_Compact_Webpages_Classification_test_data_split_0.csv")
 print("Edit Good train\n", edit_good_train.shape)
 print("Edit Good test\n", edit_good_test.shape)
+"""
+
+# ----------------------------------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------------------------- #
+# ----------------------------------------------------------------------------------------------- #
+
+train_data = pd.concat(map(pd.read_csv, [
+    path+"\Good_Compact_Webpages_Classification_train_data_split_0.csv",
+    path+"\Bad_Compact_Webpages_Classification_train_data.csv"
+    ]), ignore_index=True)
+
+test_data = pd.concat(map(pd.read_csv, [
+    path+"\Good_Compact_Webpages_Classification_test_data_split_0.csv",
+    path+"\Bad_Compact_Webpages_Classification_test_data.csv"
+    ]), ignore_index=True)
+
+print(train_data.head())
+print(train_data.shape)
+print(test_data.head())
+print(test_data.shape)
