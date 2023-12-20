@@ -24,10 +24,10 @@ def main():
         LocationID INTEGER,
         Date DATE,
         Time TIME,
-        Gender TEXT,
-        Age TEXT,
-        Weight TEXT,
-        Size TEXT,
+        Gender BOOLEAN,
+        Age INTEGER,
+        Weight INTEGER,
+        Size INTEGER,
         FOREIGN KEY (AnimalID) REFERENCES Animal(ID),
         FOREIGN KEY (LocationID) REFERENCES Location(ID))
     """
@@ -86,9 +86,11 @@ def connect_to_db():
 
 
 def create_animal_window():
-
     def create_animal():
         genus_value = entry_genus.get()
+        if genus_value == "":
+            messagebox.showerror("Error", "Please enter a Genus")
+            return
         insert_query = "INSERT INTO Animal (Genus) VALUES (?)"
         execute_query(insert_query, (genus_value,))
         load_animals()
@@ -99,15 +101,17 @@ def create_animal_window():
 
     def delete_animal():
         selected_animal = option_var.get()
-        if selected_animal:
-            animal_id = int(selected_animal.split()[0])
-            delete_query = "DELETE FROM Animal WHERE ID = ?"
-            execute_query(delete_query, (animal_id,))
-            load_animals()
-            entry_id.config(state='normal')
-            entry_id.delete(0, 'end')
-            entry_id.config(state='readonly')
-            entry_genus.delete(0, 'end')
+        if selected_animal == "":
+            messagebox.showerror("Error", "Please select a Animal")
+            return
+        animal_id = int(selected_animal.split()[0])
+        delete_query = "DELETE FROM Animal WHERE ID = ?"
+        execute_query(delete_query, (animal_id,))
+        load_animals()
+        entry_id.config(state='normal')
+        entry_id.delete(0, 'end')
+        entry_id.config(state='readonly')
+        entry_genus.delete(0, 'end')
 
     def load_animals():
         query = "SELECT ID, Genus FROM Animal"
@@ -121,17 +125,19 @@ def create_animal_window():
 
     def select_animal():
         selected_animal = option_var.get()
-        if selected_animal:
-            animal_id = int(selected_animal.split()[0])
-            query = "SELECT Genus FROM Animal WHERE ID=?"
-            selected_genus = execute_query_select(query, (animal_id,))
-            if selected_genus:
-                entry_id.config(state='normal')
-                entry_id.delete(0, 'end')
-                entry_id.insert(0, str(animal_id))
-                entry_id.config(state='readonly')
-                entry_genus.delete(0, 'end')
-                entry_genus.insert(0, selected_genus[0])
+        if selected_animal == "":
+            messagebox.showerror("Error", "Please select a Animal")
+            return
+        animal_id = int(selected_animal.split()[0])
+        query = "SELECT Genus FROM Animal WHERE ID=?"
+        selected_genus = execute_query_select(query, (animal_id,))
+        if selected_genus:
+            entry_id.config(state='normal')
+            entry_id.delete(0, 'end')
+            entry_id.insert(0, str(animal_id))
+            entry_id.config(state='readonly')
+            entry_genus.delete(0, 'end')
+            entry_genus.insert(0, selected_genus[0])
 
     new_window = tk.Toplevel(root)
     new_window.title("Create Animal")
@@ -166,10 +172,15 @@ def create_animal_window():
 
 
 def create_location_window():
-
     def create_location():
         short_title_value = entry_shorttitel.get()
+        if short_title_value == "":
+            messagebox.showerror("Error", "Please enter a shorttitle")
+            return
         description_value = entry_description.get()
+        if description_value == "":
+            messagebox.showerror("Error", "Please enter a description")
+            return
         insert_query = "INSERT INTO Location (Shorttitle, Description) VALUES (?, ?)"
         execute_query(insert_query, (short_title_value, description_value))
         load_locations()
@@ -181,16 +192,18 @@ def create_location_window():
 
     def delete_location():
         selected_location = option_var.get()
-        if selected_location:
-            location_id = int(selected_location.split()[0])
-            delete_query = "DELETE FROM Location WHERE ID = ?"
-            execute_query(delete_query, (location_id,))
-            load_locations()
-            entry_id.config(state='normal')
-            entry_id.delete(0, 'end')
-            entry_id.config(state='readonly')
-            entry_shorttitel.delete(0, 'end')
-            entry_description.delete(0, 'end')
+        if selected_location == "":
+            messagebox.showerror("Error", "Please select a Location")
+            return
+        location_id = int(selected_location.split()[0])
+        delete_query = "DELETE FROM Location WHERE ID = ?"
+        execute_query(delete_query, (location_id,))
+        load_locations()
+        entry_id.config(state='normal')
+        entry_id.delete(0, 'end')
+        entry_id.config(state='readonly')
+        entry_shorttitel.delete(0, 'end')
+        entry_description.delete(0, 'end')
 
     def load_locations():
         query = "SELECT ID, Shorttitle, Description FROM Location"
@@ -204,19 +217,21 @@ def create_location_window():
 
     def select_location():
         selected_location = option_var.get()
+        if selected_location == "":
+            messagebox.showerror("Error", "Please select a Location")
+            return
+        location_id = int(selected_location.split()[0])
+        query = "SELECT ID, Shorttitle, Description FROM Location WHERE ID=?"
+        selected_location = execute_query_select(query, (location_id,))
         if selected_location:
-            location_id = int(selected_location.split()[0])
-            query = "SELECT ID, Shorttitle, Description FROM Location WHERE ID=?"
-            selected_location = execute_query_select(query, (location_id,))
-            if selected_location:
-                entry_id.config(state='normal')
-                entry_id.delete(0, 'end')
-                entry_id.insert(0, str(selected_location[0][0]))
-                entry_id.config(state='readonly')
-                entry_shorttitel.delete(0, 'end')
-                entry_shorttitel.insert(0, selected_location[0][1])
-                entry_description.delete(0, 'end')
-                entry_description.insert(0, selected_location[0][2])
+            entry_id.config(state='normal')
+            entry_id.delete(0, 'end')
+            entry_id.insert(0, str(selected_location[0][0]))
+            entry_id.config(state='readonly')
+            entry_shorttitel.delete(0, 'end')
+            entry_shorttitel.insert(0, selected_location[0][1])
+            entry_description.delete(0, 'end')
+            entry_description.insert(0, selected_location[0][2])
 
     new_window = tk.Toplevel(root)
     new_window.title("Create Location")
@@ -256,13 +271,19 @@ def create_location_window():
 
 
 def enter_observation_window():
-
     def validate_time(time):
         try:
             formatted_time = datetime.strptime(time, "%H:%M").time()
             return formatted_time
         except ValueError:
             messagebox.showerror("Error", "Please enter a valid time in HH:MM format")
+
+    def validate_int(entry, var_to_check):
+        try:
+            legit_int = int(var_to_check)
+            return legit_int
+        except ValueError:
+            messagebox.showerror("Error", f"Please enter {entry} as a Integer")
 
     def load_locations(option_var, option_menu):
         query = "SELECT ID, Shorttitle FROM Location"
@@ -285,24 +306,47 @@ def enter_observation_window():
             option_menu['menu'].add_command(label=option, command=command)
 
     def save_observation():
+        animal_id = option_var_animal.get()
+        if animal_id == "":
+            messagebox.showerror("Error", "Please select a Animal")
+            return
+        animal_id = int(animal_id.split('-')[0])
+        location_id = option_var_location.get()
+        if location_id == "":
+            messagebox.showerror("Error", "Please select a Location")
+            return
+        location_id = int(location_id.split('-')[0])
+        date = cal.get_date()
         time = entry_time.get()
         valid_time = validate_time(time)
-        if valid_time:
-            animal_id = option_var_animal.get()
-            animal_id = int(animal_id.split('-')[0])
-            location_id = option_var_location.get()
-            location_id = int(location_id.split('-')[0])
-            date = cal.get_date()
-            gender = entry_gender.get()
-            age = entry_age.get()
-            weight = entry_weight.get()
-            size = entry_size.get()
-            query = "INSERT INTO Observation (AnimalID, LocationID, Date, Time, Gender, Age, Weight, Size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-            parameters = (animal_id, location_id, date, time, gender, age, weight, size)
-            execute_query(query, parameters)
-            clear_fields()
-            load_animals(option_var_animal, option_menu_animal)
-            load_locations(option_var_location, option_menu_location)
+        if not valid_time:
+            return
+        gender_entry = entry_gender.get()
+        if gender_entry.lower().startswith('m'):
+            gender = 0
+        elif gender_entry.lower().startswith('f'):
+            gender = 1
+        else:
+            messagebox.showerror("Error", "Please enter either Male or Female")
+            return
+        age = entry_age.get()
+        valid_age = validate_int("Age", age)
+        if not valid_age:
+            return
+        weight = entry_weight.get()
+        valid_weight = validate_int("Weight", weight)
+        if not valid_weight:
+            return
+        size = entry_size.get()
+        valid_size = validate_int("Size", size)
+        if not valid_size:
+            return
+        query = "INSERT INTO Observation (AnimalID, LocationID, Date, Time, Gender, Age, Weight, Size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        parameters = (animal_id, location_id, date, time, gender, age, weight, size)
+        execute_query(query, parameters)
+        clear_fields()
+        load_animals(option_var_animal, option_menu_animal)
+        load_locations(option_var_location, option_menu_location)
 
     def clear_fields():
         option_var_animal.set("")
@@ -376,7 +420,8 @@ def enter_observation_window():
     btn_clear_observation = tk.Button(new_window, text="Clear Input Fields", command=clear_fields)
     btn_clear_observation.grid(row=2, column=4, columnspan=2, pady=10, padx=5, sticky="nsew")
 
-    btn_delete_observation = tk.Button(new_window, text="Delete Observation", command=delete_observation)
+    btn_delete_observation = tk.Button(new_window, text="Delete Observation",
+                                       command=delete_observation)
     btn_delete_observation.grid(row=2, column=6, columnspan=2, pady=10, padx=5, sticky="nsew")
 
     load_animals(option_var_animal, option_menu_animal)
