@@ -36,6 +36,9 @@ def main():
 
     train_data = pd.concat([undersampled_good_train, bad_train])
     test_data = pd.concat([undersampled_good_test, bad_test])
+    
+    del bad_train
+    del bad_test
 
     print(train_data.head())
     print(train_data.tail())
