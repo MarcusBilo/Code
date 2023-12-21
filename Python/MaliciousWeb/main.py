@@ -29,8 +29,8 @@ def prepare_data(path):
     bad_train = pd.read_csv(path + "\Bad_Compact_Webpages_Classification_train_data.csv")
     bad_test = pd.read_csv(path + "\Bad_Compact_Webpages_Classification_test_data.csv")
 
-    undersampled_good_test = resample(good_test, replace=False, n_samples=len(bad_test))
     undersampled_good_train = resample(good_train, replace=False, n_samples=len(bad_train))
+    undersampled_good_test = resample(good_test, replace=False, n_samples=len(bad_test))
     del good_train, good_test
 
     train_data = pd.concat([undersampled_good_train, bad_train])
