@@ -363,7 +363,7 @@ def enter_observation_window():
         load_locations(option_var_location, option_menu_location)
 
     def delete_observation():
-        pass
+        messagebox.showinfo("Information", "Not yet implemented")
 
     new_window = tk.Toplevel(root)
     new_window.title("Enter Observation")
@@ -420,8 +420,7 @@ def enter_observation_window():
     btn_clear_observation = tk.Button(new_window, text="Clear Input Fields", command=clear_fields)
     btn_clear_observation.grid(row=2, column=4, columnspan=2, pady=10, padx=5, sticky="nsew")
 
-    btn_delete_observation = tk.Button(new_window, text="Delete Observation",
-                                       command=delete_observation)
+    btn_delete_observation = tk.Button(new_window, text="Delete Observation", command=delete_observation)
     btn_delete_observation.grid(row=2, column=6, columnspan=2, pady=10, padx=5, sticky="nsew")
 
     load_animals(option_var_animal, option_menu_animal)
