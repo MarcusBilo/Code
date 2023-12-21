@@ -31,6 +31,9 @@ def main():
     undersampled_good_test = resample(good_test, replace=False, n_samples=len(bad_test))
     undersampled_good_train = resample(good_train, replace=False, n_samples=len(bad_train))
 
+    del good_train
+    del good_test
+
     train_data = pd.concat([undersampled_good_train, bad_train])
     test_data = pd.concat([undersampled_good_test, bad_test])
 
