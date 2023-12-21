@@ -3,8 +3,7 @@ from sklearn.utils import resample
 from os.path import exists
 
 
-def prepare_data():
-    path = "D:\Ablage\Dataset of Malicious and Benign Webpages"
+def prepare_data(path):
     columns_to_keep = ["url", "content", "label"]
 
     if not exists(path + "\Good_Compact_Webpages_Classification_test_data.csv"):
@@ -42,7 +41,8 @@ def prepare_data():
 
 
 def main():
-    train_data, test_data = prepare_data()
+    path = "D:\Ablage\Dataset of Malicious and Benign Webpages"
+    train_data, test_data = prepare_data(path)
 
     print(train_data.head())
     print(train_data.tail())
