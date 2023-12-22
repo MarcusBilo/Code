@@ -80,7 +80,7 @@ def load_prepped_test_data(filename="prepped_test_data.joblib"):
 
 
 def load_data(data):
-    texts = data["content"].tolist()
+    texts = data["content"].tolist()  # or data["url"].tolist()
     labels = data["label"].tolist()
     return texts, labels
 
