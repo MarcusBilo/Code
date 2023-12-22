@@ -1,4 +1,3 @@
-# pip install spacy scikit-learn joblib
 # python -m spacy download en_core_web_md
 
 import spacy
@@ -45,12 +44,12 @@ def main():
     train_data = preprocess_text(train_data_normalized)
     test_data = preprocess_text(test_data_normalized)
 
-    clf = RandomForestClassifier(n_estimators=10)
+    clf = RandomForestClassifier()
     clf.fit(train_data, train_labels)
 
     predictions = clf.predict(test_data)
     accuracy = accuracy_score(test_labels, predictions)
-    print(f"Accuracy: {accuracy}")
+    print(f"Accuracy: {accuracy:.4f}")
 
 
 if __name__ == "__main__":
