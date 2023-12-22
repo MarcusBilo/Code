@@ -48,6 +48,7 @@ def prepare_data(path):
     test_data = pd.concat([undersampled_good_test, bad_test])
     del undersampled_good_train, undersampled_good_test, bad_train, bad_test
 
+    # to prevent the model from potentially learning order-specific patterns
     train_data_shuffled = train_data.sample(frac=1)
     test_data_shuffled = test_data.sample(frac=1)
     del train_data, test_data
