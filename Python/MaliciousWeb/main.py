@@ -1,6 +1,17 @@
+# pip install spacy scikit-learn joblib
+# python -m spacy download en_core_web_md
+
+import os
+import spacy
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+from tqdm import tqdm
+import joblib
 import pandas as pd
 from sklearn.utils import resample
 from os.path import exists
+
+nlp = spacy.load("en_core_web_md")
 
 
 def prepare_data(path):
@@ -37,18 +48,63 @@ def prepare_data(path):
     test_data = pd.concat([undersampled_good_test, bad_test])
     del undersampled_good_train, undersampled_good_test, bad_train, bad_test
 
-    return train_data, test_data
+    train_data_shuffled = train_data.sample(frac=1)
+    test_data_shuffled = test_data.sample(frac=1)
+    del train_data, test_data
+
+    return train_data_shuffled, test_data_shuffled
+
+
+def preprocess_text(data):
+    processed_data = []
+    for text in tqdm(data, desc="Preprocessing"):
+        doc = nlp(text)
+        doc_vector = doc.vector
+        processed_data.append(doc_vector)
+    return processed_data
+
+
+def load_prepped_train_data(filename="prepped_train_data.joblib"):
+    if os.path.exists(filename):
+        return joblib.load(filename)
+    else:
+        return None
+
+
+def load_prepped_test_data(filename="prepped_test_data.joblib"):
+    if os.path.exists(filename):
+        return joblib.load(filename)
+    else:
+        return None
+
+
+def load_data(data):
+    texts = data["content"].tolist()
+    labels = data["label"].tolist()
+    return texts, labels
 
 
 def main():
     path = "D:\Ablage\Dataset of Malicious and Benign Webpages"
     train_data, test_data = prepare_data(path)
 
-    print(train_data.head())
-    print(train_data.tail())
-    print("\n", "_" * 75, "\n")
-    print(test_data.head())
-    print(test_data.tail())
+    content_train, labels_train = load_data(train_data)
+    content_test, labels_test = load_data(test_data)
+
+    X_train = load_prepped_train_data()
+    if X_train is None:
+        X_train = preprocess_text(content_train)
+
+    X_test = load_prepped_test_data()
+    if X_test is None:
+        X_test = preprocess_text(content_test)
+
+    clf = RandomForestClassifier(n_estimators=10)
+    clf.fit(X_train, labels_train)
+
+    predictions = clf.predict(X_test)
+    accuracy = accuracy_score(labels_test, predictions)
+    print(f"Accuracy: {accuracy}")
 
 
 if __name__ == "__main__":
