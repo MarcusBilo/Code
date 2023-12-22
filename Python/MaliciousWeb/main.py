@@ -95,10 +95,12 @@ def main():
     X_train = load_prepped_train_data()
     if X_train is None:
         X_train = preprocess_text(content_train)
+        joblib.dump(X_train, "prepped_train_data.joblib")
 
     X_test = load_prepped_test_data()
     if X_test is None:
         X_test = preprocess_text(content_test)
+        joblib.dump(X_test, "prepped_test_data.joblib")
 
     clf = RandomForestClassifier(n_estimators=10)
     clf.fit(X_train, labels_train)
