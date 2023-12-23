@@ -41,15 +41,30 @@ def main():
     train_labels = [sentiment_map[p] for p in y_train]
     test_labels = [sentiment_map[p] for p in y_test]
 
+    """
+    from collections import Counter
+    
+    occurrences_of_sentiment_train = Counter(train_labels)
+    occurrences_of_sentiment_test = Counter(test_labels)
+    print("Training set class counts:", occurrences_of_sentiment_train)
+    print("Test set class counts:", occurrences_of_sentiment_test)
+    
+    # -> ggf undersampling und oversampling nutzen
+    """
+
     train_data = preprocess_text(train_data_normalized)
     test_data = preprocess_text(test_data_normalized)
 
-    clf = RandomForestClassifier()
+    clf = RandomForestClassifier(max_depth=5)
     clf.fit(train_data, train_labels)
 
-    predictions = clf.predict(test_data)
-    accuracy = accuracy_score(test_labels, predictions)
-    print(f"Accuracy: {accuracy:.4f}")
+    train_predictions = clf.predict(train_data)
+    train_accuracy = accuracy_score(train_labels, train_predictions)
+    print(f"Training Accuracy: {train_accuracy:.4f}")
+
+    test_predictions = clf.predict(test_data)
+    test_accuracy = accuracy_score(test_labels, test_predictions)
+    print(f"Test Accuracy: {test_accuracy:.4f}")
 
 
 if __name__ == "__main__":
