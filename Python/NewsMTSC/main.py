@@ -1,13 +1,23 @@
 # python -m spacy download en_core_web_md
 
-import spacy
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from tqdm import tqdm
 import json
-from sklearn.utils import resample
+import spacy
+import warnings
 import numpy as np
+from tabulate import tabulate
+from tqdm import tqdm
+from sklearn.exceptions import ConvergenceWarning
+from sklearn.metrics import accuracy_score
+from sklearn.utils import resample
+from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier, RandomForestClassifier
+from sklearn.linear_model import SGDClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 nlp = spacy.load("en_core_web_md")
 
 
@@ -67,32 +77,54 @@ def load_data(x):
 
 
 def main():
-    train_accuracies = []
-    test_accuracies = []
+    classifiers = [
+        RandomForestClassifier(),
+        SVC(),
+        SGDClassifier(),
+        KNeighborsClassifier(),
+        DecisionTreeClassifier(),
+        HistGradientBoostingClassifier(),
+        MLPClassifier(),
+        AdaBoostClassifier(),
+        GaussianNB()
+    ]
 
-    for _ in tqdm(range(10), desc="Processing", unit="iteration"):
-        train_data, test_data, train_labels, test_labels = load_data("undersampled")
+    results = []
 
-        train_data = preprocess_text(train_data)
-        test_data = preprocess_text(test_data)
+    for clf in classifiers:
+        train_accuracies = []
+        test_accuracies = []
 
-        clf = RandomForestClassifier(max_depth=5)
-        clf.fit(train_data, train_labels)
+        for _ in tqdm(range(3), desc=f"Processing {clf.__class__.__name__}", unit="iteration"):
+            train_data, test_data, train_labels, test_labels = load_data("undersampled")
 
-        train_predictions = clf.predict(train_data)
-        train_accuracy = accuracy_score(train_labels, train_predictions)
-        train_accuracies.append(train_accuracy)
+            train_data = preprocess_text(train_data)
+            test_data = preprocess_text(test_data)
 
-        test_predictions = clf.predict(test_data)
-        test_accuracy = accuracy_score(test_labels, test_predictions)
-        test_accuracies.append(test_accuracy)
+            clf.fit(train_data, train_labels)
 
-    train_min, train_max = np.min(train_accuracies), np.max(train_accuracies)
-    test_min, test_max = np.min(test_accuracies), np.max(test_accuracies)
-    train_range, test_range = (train_max - train_min) / 2, (test_max - test_min) / 2
+            train_predictions = clf.predict(train_data)
+            train_accuracy = accuracy_score(train_labels, train_predictions)
+            train_accuracies.append(train_accuracy)
 
-    print(f"\nAverage Training Accuracy: {np.mean(train_accuracies):.3f} ± {train_range:.3f}")
-    print(f"Average Test Accuracy: {np.mean(test_accuracies):.3f} ± {test_range:.3f}")
+            test_predictions = clf.predict(test_data)
+            test_accuracy = accuracy_score(test_labels, test_predictions)
+            test_accuracies.append(test_accuracy)
+
+        train_min, train_max = np.min(train_accuracies), np.max(train_accuracies)
+        test_min, test_max = np.min(test_accuracies), np.max(test_accuracies)
+        train_range, test_range = (train_max - train_min) / 2, (test_max - test_min) / 2
+
+        results.append([
+            clf.__class__.__name__,
+            np.mean(train_accuracies).round(4),
+            round(train_range, 4),
+            np.mean(test_accuracies).round(4),
+            round(test_range, 4)
+        ])
+
+    headers = ["Classifier", "Train Acc x̄", "Train Acc ±", "Test Acc x̄", "Test Acc ±"]
+    print("\n", tabulate(results, headers=headers, tablefmt="grid"))
 
 
 if __name__ == "__main__":
