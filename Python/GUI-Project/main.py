@@ -120,8 +120,7 @@ def create_animal_window():
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in animal_options:
-            command = lambda value=option: option_var.set(value)
-            option_menu['menu'].add_command(label=option, command=command)
+            option_menu['menu'].add_command(label=option, command=lambda value=option: option_var.set(value))
 
     def select_animal():
         selected_animal = option_var.get()
@@ -212,8 +211,7 @@ def create_location_window():
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in location_options:
-            command = lambda value=option: option_var.set(value)
-            option_menu['menu'].add_command(label=option, command=command)
+            option_menu['menu'].add_command(label=option, command=lambda value=option: option_var.set(value))
 
     def select_location():
         selected_location = option_var.get()
@@ -271,20 +269,6 @@ def create_location_window():
 
 
 def enter_observation_window():
-    def validate_time(time):
-        try:
-            formatted_time = datetime.strptime(time, "%H:%M").time()
-            return formatted_time
-        except ValueError:
-            messagebox.showerror("Error", "Please enter a valid time in HH:MM format")
-
-    def validate_int(entry, var_to_check):
-        try:
-            legit_int = int(var_to_check)
-            return legit_int
-        except ValueError:
-            messagebox.showerror("Error", f"Please enter {entry} as a Integer")
-
     def load_locations(option_var, option_menu):
         query = "SELECT ID, Shorttitle FROM Location"
         locations = execute_query_select(query)
@@ -292,8 +276,7 @@ def enter_observation_window():
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in location_options:
-            command = lambda value=option: option_var.set(value)
-            option_menu['menu'].add_command(label=option, command=command)
+            option_menu['menu'].add_command(label=option, command=lambda value=option: option_var.set(value))
 
     def load_animals(option_var, option_menu):
         query = "SELECT ID, Genus FROM Animal"
@@ -302,44 +285,62 @@ def enter_observation_window():
         option_var.set("")
         option_menu['menu'].delete(0, 'end')
         for option in animal_options:
-            command = lambda value=option: option_var.set(value)
-            option_menu['menu'].add_command(label=option, command=command)
+            option_menu['menu'].add_command(label=option, command=lambda value=option: option_var.set(value))
 
-    def save_observation():
-        animal_id = option_var_animal.get()
-        if animal_id == "":
-            messagebox.showerror("Error", "Please select a Animal")
+    def get_id(entry, var_to_check):
+        try:
+            legit_id = int(var_to_check.split('-')[0])
+            return legit_id
+        except ValueError:
+            messagebox.showerror("Error", f"Please select a {entry}")
             return
-        animal_id = int(animal_id.split('-')[0])
-        location_id = option_var_location.get()
-        if location_id == "":
-            messagebox.showerror("Error", "Please select a Location")
+
+    def valid_time(time):
+        try:
+            formatted_time = datetime.strptime(time, "%H:%M").time()
+            return formatted_time
+        except ValueError:
+            messagebox.showerror("Error", "Please enter a valid time in HH:MM format")
             return
-        location_id = int(location_id.split('-')[0])
-        date = cal.get_date()
-        time = entry_time.get()
-        valid_time = validate_time(time)
-        if not valid_time:
-            return
-        gender_entry = entry_gender.get()
-        if gender_entry.lower().startswith('m'):
-            gender = 0
-        elif gender_entry.lower().startswith('f'):
-            gender = 1
+
+    def get_gender(var_to_check):
+        if var_to_check.lower().startswith('m'):
+            return 0
+        elif var_to_check.lower().startswith('f'):
+            return 1
         else:
             messagebox.showerror("Error", "Please enter either Male or Female")
             return
+
+    def valid_int(entry, var_to_check):
+        try:
+            legit_int = int(var_to_check)
+            return legit_int
+        except ValueError:
+            messagebox.showerror("Error", f"Please enter {entry} as a Integer")
+
+    def save_observation():
+        animal_id = get_id("Animal", option_var_animal.get())
+        if not isinstance(animal_id, int):
+            return
+        location_id = get_id("Location", option_var_location.get())
+        if not isinstance(location_id, int):
+            return
+        date = cal.get_date()
+        time = entry_time.get()
+        if not valid_time(time):
+            return
+        gender = get_gender(entry_gender.get())
+        if gender not in (0, 1):
+            return
         age = entry_age.get()
-        valid_age = validate_int("Age", age)
-        if not valid_age:
+        if not valid_int("Age", age):
             return
         weight = entry_weight.get()
-        valid_weight = validate_int("Weight", weight)
-        if not valid_weight:
+        if not valid_int("Weight", weight):
             return
         size = entry_size.get()
-        valid_size = validate_int("Size", size)
-        if not valid_size:
+        if not valid_int("Size", size):
             return
         query = "INSERT INTO Observation (AnimalID, LocationID, Date, Time, Gender, Age, Weight, Size) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         parameters = (animal_id, location_id, date, time, gender, age, weight, size)
@@ -351,7 +352,6 @@ def enter_observation_window():
     def clear_fields():
         option_var_animal.set("")
         option_var_location.set("")
-        cal.delete(0, "end")
         entry_time.delete(0, "end")
         entry_gender.delete(0, "end")
         entry_age.delete(0, "end")
@@ -361,6 +361,7 @@ def enter_observation_window():
     def reload_values():
         load_animals(option_var_animal, option_menu_animal)
         load_locations(option_var_location, option_menu_location)
+        clear_fields()
 
     def delete_observation():
         messagebox.showinfo("Information", "Not yet implemented")
@@ -420,7 +421,8 @@ def enter_observation_window():
     btn_clear_observation = tk.Button(new_window, text="Clear Input Fields", command=clear_fields)
     btn_clear_observation.grid(row=2, column=4, columnspan=2, pady=10, padx=5, sticky="nsew")
 
-    btn_delete_observation = tk.Button(new_window, text="Delete Observation", command=delete_observation)
+    btn_delete_observation = tk.Button(new_window, text="Delete Observation",
+                                       command=delete_observation)
     btn_delete_observation.grid(row=2, column=6, columnspan=2, pady=10, padx=5, sticky="nsew")
 
     load_animals(option_var_animal, option_menu_animal)
