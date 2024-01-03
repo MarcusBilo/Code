@@ -48,7 +48,7 @@ get_count <- function(genus) {
 }
 
 
-get_count_all_animals <- function() {
+get_count_all_unique_animals <- function() {
   get_count <- function(genus) {
     query <- paste("SELECT Observation.ID
                     FROM Observation 
@@ -107,6 +107,20 @@ get_stdev <- function(genus, column) {
   return(paste("Stdev for", column, "of", genus, "is", stdev))
 }
 
+
+get_occurrences <- function(genus, column) {
+  query <- paste("SELECT Observation.", column, ", COUNT(*) as Occurrences
+                  FROM Observation 
+                  JOIN Animal ON Observation.AnimalID = Animal.ID 
+                  WHERE Animal.Genus = ", shQuote(genus),
+                 "GROUP BY Observation.", column, sep = " ")
+  
+  data <- dbGetQuery(con, query)
+  return(data)
+}
+
+
+
 specific_genus <- "deer"
 selected_column <- "Age"
 
@@ -128,22 +142,33 @@ cat("\n")
 
 
 
-# bar charts using ggplot for:
-# 1) Die jeweiligen Alter eines Genus darstellen -> function: get all ages of specific genus
+occ <- get_occurrences(specific_genus, selected_column)
+
+individual_entries <- lapply(1:nrow(occ), function(i) {
+  data.frame(Value = rep(occ[i, 1], occ[i, 2]))
+})
+
+individual_entries_df$Value <- factor(individual_entries_df$Value, levels = unique(individual_entries_df$Value))
+x_axis_label <- paste(specific_animal, selected_column, sep = " ")
+
+occ_plot <- ggplot(individual_entries_df, aes(x = Value)) +
+  geom_bar(stat = "count", fill = "skyblue") +
+  labs(title = NULL, x = x_axis_label, y = "Count")
+print(occ_plot)
 
 
 
-
-all_animal_counts <- get_count_all_animals()
-
+all_animal_counts <- get_count_all_unique_animals()
 animal_counts_df <- data.frame(Genus = names(all_animal_counts), Count = unlist(all_animal_counts))
-
-plot <- ggplot(animal_counts_df, aes(x = Genus, y = Count)) +
+animal_count_plot <- ggplot(animal_counts_df, aes(x = Genus, y = Count)) +
   geom_bar(stat = "identity", fill = "skyblue") +
   labs(title = NULL, x = "Genus", y = "Count") +
   theme(axis.text.x = element_text(vjust = 0.5, hjust=0.5))
+print(animal_count_plot)
 
-ggsave("animal_counts_plot.png", plot)
+
+
+
 
 
 
