@@ -143,17 +143,11 @@ cat("\n")
 
 
 occ <- get_occurrences(specific_genus, selected_column)
-
-individual_entries <- lapply(1:nrow(occ), function(i) {
-  data.frame(Value = rep(occ[i, 1], occ[i, 2]))
-})
-
-individual_entries_df$Value <- factor(individual_entries_df$Value, levels = unique(individual_entries_df$Value))
-x_axis_label <- paste(specific_animal, selected_column, sep = " ")
-
-occ_plot <- ggplot(individual_entries_df, aes(x = Value)) +
+occ[[selected_column]] <- factor(occ[[selected_column]])
+occ_plot <- ggplot(data = occ, aes(x = !!rlang::sym(selected_column))) +
   geom_bar(stat = "count", fill = "skyblue") +
-  labs(title = NULL, x = x_axis_label, y = "Count")
+  scale_x_discrete(drop = FALSE) +
+  labs(title = NULL, x = paste(specific_animal, selected_column, sep = " "), y = "Count")
 print(occ_plot)
 
 
