@@ -39,24 +39,54 @@ cat("\n")
 
 
 
-specific_animal <- "deer"
 
-query <- "SELECT COUNT(*) AS Number_of_Animals
-          FROM Observation 
-          JOIN Animal ON Observation.AnimalID = Animal.ID 
-          WHERE Animal.Genus = ?"
+get_count <- function(genus) {
+  query <- paste("SELECT COUNT(*) AS Number_of_", genus,"
+                  FROM Observation 
+                  JOIN Animal ON Observation.AnimalID = Animal.ID 
+                  WHERE Animal.Genus = ", shQuote(genus), sep = "")
+  
+  result <- dbGetQuery(con, query)
+  return(result)
+}
 
-result <- dbGetQuery(con, query, params = list(specific_animal))
-print(result)
+
+get_average <- function(genus, column) {
+
+  query <- paste("SELECT AVG(Observation.", column, ") AS Average_", genus, "_", column,"
+                  FROM Observation 
+                  JOIN Animal ON Observation.AnimalID = Animal.ID 
+                  WHERE Animal.Genus = ", shQuote(genus), sep = "")
+  
+  result <- dbGetQuery(con, query)
+  return(result)
+}
 
 
-query <- "SELECT AVG(Observation.Age) AS Average_Age
-          FROM Observation 
-          JOIN Animal ON Observation.AnimalID = Animal.ID 
-          WHERE Animal.Genus = ?"
+get_median <- function(genus, column) {
+  
+  query <- paste("SELECT MEDIAN(Observation.", column, ") AS Median_", genus, "_", column,"
+                  FROM Observation 
+                  JOIN Animal ON Observation.AnimalID = Animal.ID 
+                  WHERE Animal.Genus = ", shQuote(genus), sep = "")
+  
+  result <- dbGetQuery(con, query)
+  return(result)
+}
 
-result <- dbGetQuery(con, query, params = list(specific_animal))
-print(result)
+specific_genus <- "deer"
+selected_column <- "Age"
+
+count_value <- get_count(specific_genus)
+print(count_value)
+
+average_value <- get_average(specific_genus, selected_column)
+print(average_value)
+
+median_value <- get_median(specific_genus, selected_column)
+print(median_value)
+
+
 
 
 
