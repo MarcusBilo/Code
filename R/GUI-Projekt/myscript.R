@@ -142,12 +142,12 @@ cat("\n")
 
 
 
-occ <- get_occurrences(specific_genus, selected_column)
-occ[[selected_column]] <- factor(occ[[selected_column]])
-occ_plot <- ggplot(data = occ, aes(x = !!rlang::sym(selected_column))) +
-  geom_bar(stat = "count", fill = "skyblue") +
-  scale_x_discrete(drop = FALSE) +
-  labs(title = NULL, x = paste(specific_animal, selected_column, sep = " "), y = "Count")
+data <- get_occurrences(specific_genus, selected_column)
+occ_plot <- ggplot(data, aes(x = Age, y = Occurrences)) +
+  geom_bar(stat = "identity", fill = "skyblue") +
+  labs(title = NULL, x = paste(specific_animal, selected_column, sep = " "), y = "Count") +
+  scale_x_continuous(breaks = unique(data$Age)) +
+  theme(axis.text.x = element_text(vjust = 0.5, hjust = 0.5))
 print(occ_plot)
 
 
