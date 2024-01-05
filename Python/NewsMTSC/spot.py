@@ -80,54 +80,44 @@ def main():
 
     classifiers = [
         RandomForestClassifier(),
-        RandomForestClassifier(),
         SVC(),
         HistGradientBoostingClassifier(),
-        HistGradientBoostingClassifier(),
         MLPClassifier(),
-        AdaBoostClassifier(),
         AdaBoostClassifier(),
     ]
 
     param_grid = [
         # For RandomForestClassifier
         {
-            'n_estimators': [20, 40, 60, 80, 100],
-        },
-        # For RandomForestClassifier
-        {
-            'max_depth': [2, 4, 6, 8, 10],
+            'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         },
         # For SVC
         {
             'kernel': ["linear", "poly", "rbf", "sigmoid"],
+            'gamma': ["scale", "auto"]
         },
         # For HistGradientBoostingClassifier
         {
-            'max_iter': [20, 40, 60, 80, 100],
-        },
-        # For HistGradientBoostingClassifier
-        {
-            'max_depth': [2, 4, 6, 8, 10],
+            'max_iter': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         },
         # For MLPClassifier
         {
             'activation': ["identity", "logistic", "tanh", "relu"],
+            'solver': ["lbfgs", "sgd", "adam"]
         },
         # For AdaBoostClassifier
         {
-            'n_estimators': [10, 20, 30, 40, 50],
-        },
-        # For AdaBoostClassifier
-        {
-            'learning_rate': [0.5, 1.0, 1.5, 2.0, 2.5]
+            'n_estimators': [20, 30, 40, 50, 60],
+            'learning_rate': [0.8, 0.9, 1.0, 1.1, 1.2]
         },
     ]
 
     best_parameters = []
 
     for clf, param in tqdm(zip(classifiers, param_grid), total=len(classifiers), desc="Hyperparameter optimization"):
-        search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=5)
+        search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=4, n_jobs=4)
         search.fit(train_data, train_labels)
         best_params = search.best_params_
         best_parameters.append((type(clf).__name__, best_params))
