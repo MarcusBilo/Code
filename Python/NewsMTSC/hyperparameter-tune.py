@@ -6,15 +6,14 @@ import warnings
 import numpy as np
 from tabulate import tabulate
 from tqdm import tqdm
-from sklearn.exceptions import ConvergenceWarning
-from sklearn.metrics import accuracy_score
 from sklearn.utils import resample
 from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier, RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
+from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
 
-warnings.filterwarnings("ignore", category=ConvergenceWarning)
+warnings.filterwarnings("ignore")
 nlp = spacy.load("en_core_web_md")
 
 
@@ -81,6 +80,7 @@ def main():
     classifiers = [
         RandomForestClassifier(),
         SVC(),
+        SGDClassifier(),
         HistGradientBoostingClassifier(),
         MLPClassifier(),
         AdaBoostClassifier(),
@@ -89,18 +89,23 @@ def main():
     param_grid = [
         # For RandomForestClassifier
         {
-            'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80],
+            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8]
         },
         # For SVC
         {
             'kernel': ["linear", "poly", "rbf", "sigmoid"],
             'gamma': ["scale", "auto"]
         },
+        # For SGD
+        {
+            'loss': ["hinge", "log_loss", "modified_huber", "squared_hinge", "perceptron",
+                     "squared_error", "huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+        },
         # For HistGradientBoostingClassifier
         {
-            'max_iter': [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+            'max_iter': [10, 20, 30, 40, 50, 60, 70, 80],
+            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8]
         },
         # For MLPClassifier
         {
@@ -109,7 +114,7 @@ def main():
         },
         # For AdaBoostClassifier
         {
-            'n_estimators': [20, 30, 40, 50, 60],
+            'n_estimators': [10, 20, 30, 40, 50, 60],
             'learning_rate': [0.8, 0.9, 1.0, 1.1, 1.2]
         },
     ]
