@@ -4,6 +4,7 @@ import json
 import spacy
 import warnings
 import numpy as np
+from sklearn.exceptions import ConvergenceWarning
 from tabulate import tabulate
 from tqdm import tqdm
 from sklearn.utils import resample
@@ -13,7 +14,6 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 from sklearn.model_selection import GridSearchCV
 
-warnings.filterwarnings("ignore")
 nlp = spacy.load("en_core_web_md")
 
 
@@ -87,33 +87,27 @@ def main():
     ]
 
     param_grid = [
-        # For RandomForestClassifier
-        {
+        {   # For RandomForestClassifier
             'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80],
             'max_depth': [1, 2, 3, 4, 5, 6, 7, 8]
         },
-        # For SVC
-        {
+        {   # For SVC
             'kernel': ["linear", "poly", "rbf", "sigmoid"],
             'gamma': ["scale", "auto"]
         },
-        # For SGD
-        {
+        {   # For SGD
             'loss': ["hinge", "log_loss", "modified_huber", "squared_hinge", "perceptron",
                      "squared_error", "huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
         },
-        # For HistGradientBoostingClassifier
-        {
+        {   # For HistGradientBoostingClassifier
             'max_iter': [10, 20, 30, 40, 50, 60, 70, 80],
             'max_depth': [1, 2, 3, 4, 5, 6, 7, 8]
         },
-        # For MLPClassifier
-        {
+        {   # For MLPClassifier
             'activation': ["identity", "logistic", "tanh", "relu"],
             'solver': ["lbfgs", "sgd", "adam"]
         },
-        # For AdaBoostClassifier
-        {
+        {   # For AdaBoostClassifier
             'n_estimators': [10, 20, 30, 40, 50, 60],
             'learning_rate': [0.8, 0.9, 1.0, 1.1, 1.2]
         },
@@ -122,8 +116,10 @@ def main():
     best_parameters = []
 
     for clf, param in tqdm(zip(classifiers, param_grid), total=len(classifiers), desc="Hyperparameter optimization"):
-        search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=4, n_jobs=4)
-        search.fit(train_data, train_labels)
+        search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=4)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=ConvergenceWarning, module="sklearn.neural_network")
+            search.fit(train_data, train_labels)
         best_params = search.best_params_
         best_parameters.append((type(clf).__name__, best_params))
 
