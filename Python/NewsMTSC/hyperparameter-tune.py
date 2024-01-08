@@ -108,9 +108,9 @@ def main():
             'class_weight': ["balanced", None]
         },
         {   # For HistGradientBoostingClassifier
-            'max_iter': [70, 80, 90, 100],
-            'max_depth': [7, 8, 9, 10, None],
-            'min_samples_leaf': [5, 10, 15, 20],
+            'max_iter': [80, 90, 100],
+            'max_depth': [8, 9, 10, None],
+            'min_samples_leaf': [10, 15, 20],
             'class_weight': ["balanced", None]
         },
         {   # For MLPClassifier
