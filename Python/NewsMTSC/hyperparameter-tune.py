@@ -1,4 +1,4 @@
-# python -m spacy download en_core_web_md
+# !python -m spacy download en_core_web_md
 
 import json
 import spacy
@@ -88,28 +88,40 @@ def main():
 
     param_grid = [
         {   # For RandomForestClassifier
-            'n_estimators': [10, 20, 30, 40, 50, 60, 70, 80],
-            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8]
+            'n_estimators': [80, 90, 100],
+            'max_depth': [8, 9, 10, None],
+            'criterion': ["gini", "entropy", "log_loss"],
+            'class_weight': ["balanced", None]
         },
         {   # For SVC
-            'kernel': ["linear", "poly", "rbf", "sigmoid"],
-            'gamma': ["scale", "auto"]
+            'C': [0.85, 0.9, 0.95, 1.0, 1.05],
+            'degree': [2, 3, 4],
+            'coef0': [0.0, 0.05, 0.1],
+            'kernel': ["poly"],
+            'gamma': ["auto"],
+            'class_weight': ["balanced", None]
         },
         {   # For SGD
             'loss': ["hinge", "log_loss", "modified_huber", "squared_hinge", "perceptron",
                      "squared_error", "huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+            'penalty': ["l2", "l1", "elasticnet", None],
+            'class_weight': ["balanced", None]
         },
         {   # For HistGradientBoostingClassifier
-            'max_iter': [10, 20, 30, 40, 50, 60, 70, 80],
-            'max_depth': [1, 2, 3, 4, 5, 6, 7, 8]
+            'max_iter': [70, 80, 90, 100],
+            'max_depth': [7, 8, 9, 10, None],
+            'min_samples_leaf': [5, 10, 15, 20],
+            'class_weight': ["balanced", None]
         },
         {   # For MLPClassifier
-            'activation': ["identity", "logistic", "tanh", "relu"],
-            'solver': ["lbfgs", "sgd", "adam"]
+            'activation': ["logistic"],
+            'solver': ["adam"],
+            'hidden_layer_sizes': [(50,), (75,), (100,)],
+            'max_iter': [50, 100, 150, 200],
         },
         {   # For AdaBoostClassifier
-            'n_estimators': [10, 20, 30, 40, 50, 60],
-            'learning_rate': [0.8, 0.9, 1.0, 1.1, 1.2]
+            'n_estimators': [70, 80, 90, 100],
+            'learning_rate': [0.6, 0.7, 0.8, 0.9, 1.0]
         },
     ]
 
