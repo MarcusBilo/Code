@@ -6,7 +6,7 @@ import spacy
 import warnings
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import balanced_accuracy_score
 from tqdm import tqdm
 from sklearn.utils import resample
 from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier, RandomForestClassifier
@@ -144,7 +144,7 @@ def main():
             clf.set_params(**param_dict)
             clf.fit(train_data, train_labels)
             predicted_labels = clf.predict(test_data)
-            accuracy = accuracy_score(test_labels, predicted_labels)
+            accuracy = balanced_accuracy_score(test_labels, predicted_labels)
 
             if accuracy > best_accuracy:
                 best_accuracy = accuracy
