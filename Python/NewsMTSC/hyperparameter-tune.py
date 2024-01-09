@@ -1,6 +1,7 @@
 # !python -m spacy download en_core_web_md
 
 import json
+from itertools import product
 import spacy
 import warnings
 import numpy as np
@@ -11,8 +12,8 @@ from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier,
 from sklearn.neural_network import MLPClassifier
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV
 
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 nlp = spacy.load("en_core_web_md")
 
 
@@ -72,9 +73,9 @@ def load_data(x):
 
 
 def main():
-
     train_data, test_data, train_labels, test_labels = load_data("undersampled")
     train_data = preprocess_text(train_data)
+    test_data = preprocess_text(test_data)
 
     classifiers = [
         RandomForestClassifier(),
@@ -127,15 +128,23 @@ def main():
 
     best_parameters = []
 
-    for clf, param in tqdm(zip(classifiers, param_grid), total=len(classifiers), desc="Hyperparameter optimization"):
+    for clf, param in zip(classifiers, param_grid):
         clf_name = type(clf).__name__
-        if clf_name == "MLPClassifier":
-            search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=4, n_jobs=1)
-            warnings.simplefilter("ignore", category=ConvergenceWarning)
-        else:
-            search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=4, n_jobs=4)
-        search.fit(train_data, train_labels)
-        best_params = search.best_params_
+        param_combinations = product(*param.values())
+
+        best_score = float('-inf')
+        best_params = None
+
+        for params in tqdm(param_combinations, desc=f"{clf_name}"):
+            param_dict = dict(zip(param.keys(), params))
+            clf.set_params(**param_dict)
+            clf.fit(train_data, train_labels)
+            score = clf.score(test_data, test_labels)
+
+            if score > best_score:
+                best_score = score
+                best_params = param_dict.copy()
+
         best_parameters.append((clf_name, best_params))
 
     for clf_name, params in best_parameters:
