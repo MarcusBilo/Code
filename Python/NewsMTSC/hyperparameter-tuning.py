@@ -96,7 +96,7 @@ def main():
             'n_jobs': [4],
         },
         {   # For SVC
-            'C': [0.85, 0.9, 0.95, 1.0, 1.05],
+            'C': [0.8, 0.9, 1.0, 1.1],
             'degree': [2, 3, 4],
             'coef0': [0.0, 0.05, 0.1],
             'kernel': ["poly"],
@@ -136,7 +136,7 @@ def main():
         clf_name = type(clf).__name__
         param_combinations = product(*param.values())
 
-        best_accuracy = float('-inf')
+        best_accuracy = float("-inf")
         best_params = None
 
         for params in tqdm(param_combinations, desc=f"{clf_name}"):
