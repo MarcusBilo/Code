@@ -91,7 +91,8 @@ def main():
             'n_estimators': [80, 90, 100],
             'max_depth': [8, 9, 10, None],
             'criterion': ["gini", "entropy", "log_loss"],
-            'class_weight': ["balanced", None]
+            'class_weight': ["balanced", None],
+            'n_jobs': [4],
         },
         {   # For SVC
             'C': [0.85, 0.9, 0.95, 1.0, 1.05],
@@ -106,7 +107,8 @@ def main():
                      "perceptron", "squared_error", "huber", "epsilon_insensitive",
                      "squared_epsilon_insensitive"],
             'penalty': ["l2", "l1", "elasticnet", None],
-            'class_weight': ["balanced", None]
+            'class_weight': ["balanced", None],
+            'n_jobs': [4],
         },
         {   # For HistGradientBoostingClassifier
             'max_iter': [80, 90, 100],
@@ -118,7 +120,7 @@ def main():
             'activation': ["logistic"],
             'solver': ["adam"],
             'hidden_layer_sizes': [(50,), (75,), (100,)],
-            'max_iter': [50, 100, 150, 200],
+            'max_iter': [50, 100, 150, 200]
         },
         {   # For AdaBoostClassifier
             'n_estimators': [70, 80, 90, 100],
