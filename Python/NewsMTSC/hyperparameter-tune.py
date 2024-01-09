@@ -5,7 +5,6 @@ import spacy
 import warnings
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
-from tabulate import tabulate
 from tqdm import tqdm
 from sklearn.utils import resample
 from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier, RandomForestClassifier
@@ -102,8 +101,9 @@ def main():
             'class_weight': ["balanced", None]
         },
         {   # For SGD
-            'loss': ["hinge", "log_loss", "modified_huber", "squared_hinge", "perceptron",
-                     "squared_error", "huber", "epsilon_insensitive", "squared_epsilon_insensitive"],
+            'loss': ["hinge", "log_loss", "modified_huber", "squared_hinge",
+                     "perceptron", "squared_error", "huber", "epsilon_insensitive",
+                     "squared_epsilon_insensitive"],
             'penalty': ["l2", "l1", "elasticnet", None],
             'class_weight': ["balanced", None]
         },
@@ -128,12 +128,15 @@ def main():
     best_parameters = []
 
     for clf, param in tqdm(zip(classifiers, param_grid), total=len(classifiers), desc="Hyperparameter optimization"):
-        search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=4)
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=ConvergenceWarning, module="sklearn.neural_network")
-            search.fit(train_data, train_labels)
+        clf_name = type(clf).__name__
+        if clf_name == "MLPClassifier":
+            search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=4, n_jobs=1)
+            warnings.simplefilter("ignore", category=ConvergenceWarning)
+        else:
+            search = GridSearchCV(clf, param, scoring="balanced_accuracy", cv=4, n_jobs=4)
+        search.fit(train_data, train_labels)
         best_params = search.best_params_
-        best_parameters.append((type(clf).__name__, best_params))
+        best_parameters.append((clf_name, best_params))
 
     for clf_name, params in best_parameters:
         print(f"Best parameters for {clf_name}: {params}")
