@@ -6,6 +6,7 @@ import spacy
 import warnings
 import numpy as np
 from sklearn.exceptions import ConvergenceWarning
+from sklearn.metrics import accuracy_score
 from tqdm import tqdm
 from sklearn.utils import resample
 from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier, RandomForestClassifier
@@ -120,7 +121,8 @@ def main():
             'activation': ["logistic"],
             'solver': ["adam"],
             'hidden_layer_sizes': [(50,), (75,), (100,)],
-            'max_iter': [50, 100, 150, 200]
+            'max_iter': [50, 100, 150, 200],
+            'learning_rate_init': [0.001, 0.01]
         },
         {   # For AdaBoostClassifier
             'n_estimators': [70, 80, 90, 100],
@@ -134,17 +136,18 @@ def main():
         clf_name = type(clf).__name__
         param_combinations = product(*param.values())
 
-        best_score = float('-inf')
+        best_accuracy = float('-inf')
         best_params = None
 
         for params in tqdm(param_combinations, desc=f"{clf_name}"):
             param_dict = dict(zip(param.keys(), params))
             clf.set_params(**param_dict)
             clf.fit(train_data, train_labels)
-            score = clf.score(test_data, test_labels)
+            predicted_labels = clf.predict(test_data)
+            accuracy = accuracy_score(test_labels, predicted_labels)
 
-            if score > best_score:
-                best_score = score
+            if accuracy > best_accuracy:
+                best_accuracy = accuracy
                 best_params = param_dict.copy()
 
         best_parameters.append((clf_name, best_params))
