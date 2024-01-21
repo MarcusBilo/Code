@@ -105,6 +105,15 @@ def create_animal_window():
             messagebox.showerror("Error", "Please select a Animal")
             return
         animal_id = int(selected_animal.split()[0])
+
+        check_query = "SELECT COUNT(*) FROM Observation WHERE AnimalID = ?"
+        data = execute_query_select(check_query, (animal_id,))
+
+        for row in data:
+            if row != (0,):
+                messagebox.showerror("Error", "Animal is used in the observation table")
+                return
+
         delete_query = "DELETE FROM Animal WHERE ID = ?"
         execute_query(delete_query, (animal_id,))
         load_animals()
@@ -195,6 +204,15 @@ def create_location_window():
             messagebox.showerror("Error", "Please select a Location")
             return
         location_id = int(selected_location.split()[0])
+
+        check_query = "SELECT COUNT(*) FROM Observation WHERE LocationID = ?"
+        data = execute_query_select(check_query, (location_id,))
+
+        for row in data:
+            if row != (0,):
+                messagebox.showerror("Error", "Location is used in the observation table")
+                return
+
         delete_query = "DELETE FROM Location WHERE ID = ?"
         execute_query(delete_query, (location_id,))
         load_locations()
