@@ -15,17 +15,14 @@ con <- dbConnect(SQLite(), dbname = "C:/Users/Marcus/PycharmProjects/pythonProje
 
 query_result <- dbGetQuery(con, "SELECT * FROM Animal")
 print(query_result)
-
 cat("\n")
 
 query_result <- dbGetQuery(con, "SELECT * FROM Location")
 print(query_result)
-
 cat("\n")
 
 query_result <- dbGetQuery(con, "SELECT * FROM Observation")
 print(query_result)
-
 cat("\n")
 
 
@@ -145,7 +142,7 @@ cat("\n")
 data <- get_occurrences(specific_genus, selected_column)
 occ_plot <- ggplot(data, aes(x = Age, y = Occurrences)) +
   geom_bar(stat = "identity", fill = "skyblue") +
-  labs(title = NULL, x = paste(specific_animal, selected_column, sep = " "), y = "Count") +
+  labs(title = NULL, x = paste(specific_genus, selected_column, sep = " "), y = "Count") +
   scale_x_continuous(breaks = unique(data$Age)) +
   theme(axis.text.x = element_text(vjust = 0.5, hjust = 0.5))
 print(occ_plot)
