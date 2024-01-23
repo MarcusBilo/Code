@@ -2,7 +2,6 @@
 
 import json
 import os
-
 import spacy
 import warnings
 import numpy as np
@@ -11,18 +10,12 @@ from tqdm import tqdm
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import accuracy_score
 from sklearn.utils import resample
-from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier, RandomForestClassifier
-from sklearn.linear_model import SGDClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
-from sklearn.tree import DecisionTreeClassifier
-from collections import Counter
 from keras.models import Sequential
 from keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense, LeakyReLU, Flatten, Masking
 from keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
+from keras.preprocessing.sequence import pad_sequences
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -31,27 +24,35 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 nlp = spacy.load("en_core_web_md")
 
 
-def preprocess_text_tensorflow(data, max_length=300):
-    processed_data = []
-    for text in data:
-        doc = nlp(text)
-        doc_vector = [word.vector for word in doc]
-        if len(doc_vector) > max_length:
-            doc_vector = doc_vector[:max_length]
-        else:
-            padding_size = max_length - len(doc_vector)
-            doc_vector += [np.zeros_like(doc_vector[0])] * padding_size
-        processed_data.append(doc_vector)
-    return np.array(processed_data)
-
-
-def preprocess_text_sklearn(data):
+def preprocess_text_sklearn(data, max_length=300):
     processed_data = []
     for text in data:
         doc = nlp(text)
         doc_vector = doc.vector
+        if len(doc_vector) > max_length:
+            doc_vector = doc_vector[:max_length]
+        else:
+            padding_size = max_length - len(doc_vector)
+            doc_vector = np.concatenate([doc_vector, np.zeros((padding_size,))])
         processed_data.append(doc_vector)
-    return processed_data
+    return np.array(processed_data)
+
+
+def preprocess_text_tensorflow(data, max_length=175):
+    processed_data = []
+    for text in data:
+        doc = nlp(text)
+        doc_vector = doc.vector
+        if len(doc_vector) > max_length:
+            doc_vector = doc_vector[:max_length]
+        else:
+            padding_size = max_length - len(doc_vector)
+            doc_vector = np.concatenate([doc_vector, np.zeros((padding_size,))])
+        processed_data.append(doc_vector)
+    processed_data = pad_sequences(processed_data, maxlen=max_length, padding='post', truncating='post')
+    processed_data = processed_data.reshape(processed_data.shape[0], processed_data.shape[1], 1)
+    processed_data = processed_data.astype('float32')
+    return np.array(processed_data)
 
 
 def undersample_classes(data, labels):
@@ -102,7 +103,7 @@ def load_data(x):
 
 def cnn_model():
     model = Sequential()
-    model.add(Conv1D(128, 5, activation="relu", input_shape=(300, 300)))
+    model.add(Conv1D(128, 5, activation="relu"))
     model.add(Flatten())
     model.add(Dense(64, activation="relu"))
     model.add(Dense(3, activation="softmax"))
@@ -126,7 +127,7 @@ def main():
         test_accuracies = []
 
         for _ in tqdm(range(2), desc=f"Processing {getattr(clf, 'name', clf.__class__.__name__)}", unit="iteration"):
-            train_data, test_data, train_labels, test_labels = load_data("undersampled")
+            train_data, test_data, train_labels, test_labels = load_data("undersampled2")
 
             if isinstance(clf, Sequential):
                 train_data = preprocess_text_tensorflow(train_data)
