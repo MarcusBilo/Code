@@ -26,18 +26,18 @@ warnings.filterwarnings("ignore", category=ConvergenceWarning)
 nlp = spacy.load("en_core_web_md")
 
 
-def print_10_longest_sentences(data, labels):
+def print_12_longest_sentences(data, labels):
     def count_words(sentence):
         return len(sentence.split())
 
-    print(f"\n10 Longest Sentences:")
+    print(f"\n12 Longest Sentences:")
     sorted_indices = sorted(range(len(data)), key=lambda i: count_words(data[i]), reverse=True)
-    for i in range(min(10, len(data))):
+    for i in range(min(12, len(data))):
         index = sorted_indices[i]
         print(f"(Word Count: {count_words(data[index])}, Label: {labels[index]})")
 
 
-def preprocess_text_sklearn(data, max_length=120):
+def preprocess_text_sklearn(data, max_length=100):
     processed_data = []
     for text in data:
         doc = nlp(text)
@@ -51,7 +51,7 @@ def preprocess_text_sklearn(data, max_length=120):
     return np.array(processed_data)
 
 
-def preprocess_text_tensorflow(data, max_length=120):
+def preprocess_text_tensorflow(data, max_length=100):
     processed_data = []
     for text in data:
         doc = nlp(text)
@@ -68,7 +68,7 @@ def preprocess_text_tensorflow(data, max_length=120):
     return np.array(processed_data)
 
 
-def preprocess_text_bert(data, max_length=60):
+def preprocess_text_bert(data, max_length=50):
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     input_ids = []
     attention_masks = []
@@ -178,8 +178,8 @@ def bert_model():
     bert_model = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
     for layer in bert_model.layers:
         layer.trainable = False
-    input_ids = Input(shape=(60,), dtype="int32", name="input_ids")
-    attention_mask = Input(shape=(60,), dtype="int32", name="attention_mask")
+    input_ids = Input(shape=(50,), dtype="int32", name="input_ids")
+    attention_mask = Input(shape=(50,), dtype="int32", name="attention_mask")
     outputs = bert_model(input_ids, attention_mask=attention_mask)[0]
     outputs = Dense(10, activation='relu')(outputs)
     outputs = Dense(3, activation='softmax')(outputs)
