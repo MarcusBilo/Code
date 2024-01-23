@@ -11,11 +11,13 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.metrics import accuracy_score
 from sklearn.utils import resample
 from sklearn.svm import SVC
-from keras.models import Sequential
-from keras.layers import Conv1D, Dense, LeakyReLU, Flatten, SimpleRNN
+from keras.models import Sequential, Model
+from keras.layers import Conv1D, Dense, LeakyReLU, Flatten, SimpleRNN, LSTM, Bidirectional, Input
 from keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 from keras.preprocessing.sequence import pad_sequences
+from keras.losses import categorical_crossentropy
+from transformers import BertTokenizer, TFBertForSequenceClassification
 
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -53,6 +55,25 @@ def preprocess_text_tensorflow(data, max_length=175):
     processed_data = processed_data.reshape(processed_data.shape[0], processed_data.shape[1], 1)
     processed_data = processed_data.astype('float32')
     return np.array(processed_data)
+
+
+def preprocess_text_bert(data, max_length=50):
+    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    input_ids = []
+    attention_masks = []
+    for text in data:
+        tokens = tokenizer.encode_plus(
+            text,
+            add_special_tokens=True,
+            max_length=max_length,
+            truncation=True,
+            padding='max_length',
+            return_attention_mask=True,
+            return_tensors='np'
+        )
+        input_ids.append(tokens['input_ids'])
+        attention_masks.append(tokens['attention_mask'])
+    return np.array(input_ids), np.array(attention_masks)
 
 
 def undersample_classes(data, labels):
@@ -122,12 +143,50 @@ def rnn_model():
     return model
 
 
+def lstm_model():
+    model = Sequential()
+    model.add(LSTM(128, activation="relu"))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(3, activation="softmax"))
+    model.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
+    model._name = "LSTM"
+    return model
+
+
+def bi_lstm_model():
+    model = Sequential()
+    model.add(Bidirectional(LSTM(128, activation="relu")))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(3, activation="softmax"))
+    model.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
+    model._name = "Bi-LSTM"
+    return model
+
+
+def bert_model():
+    bert_model = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
+    for layer in bert_model.layers:
+        layer.trainable = False
+    input_ids = Input(shape=(50,), dtype="int32", name="input_ids")
+    attention_mask = Input(shape=(50,), dtype="int32", name="attention_mask")
+    outputs = bert_model(input_ids, attention_mask=attention_mask)[0]
+    outputs = Dense(10, activation='relu')(outputs)
+    outputs = Dense(3, activation='softmax')(outputs)
+    model = Model(inputs=[input_ids, attention_mask], outputs=outputs)
+    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+    model._name = 'BERT_Model'
+    return model
+
+
 def main():
 
     classifiers = [
         SVC(),
         cnn_model(),
         rnn_model(),
+        lstm_model(),
+        bi_lstm_model(),
+        bert_model(),
     ]
 
     results = []
@@ -152,6 +211,24 @@ def main():
                 train_accuracy = accuracy_score(train_labels.argmax(axis=1), np.argmax(train_predictions, axis=1))
                 train_accuracies.append(train_accuracy)
                 test_predictions = clf.predict(test_data, verbose=0)
+                test_accuracy = accuracy_score(test_labels.argmax(axis=1), np.argmax(test_predictions, axis=1))
+                test_accuracies.append(test_accuracy)
+            elif isinstance(clf, Model):
+                train_input_ids, train_attention_mask = preprocess_text_bert(train_data)
+                test_input_ids, test_attention_mask = preprocess_text_bert(test_data)
+                train_labels = label_encoder.fit_transform(train_labels)
+                train_labels = to_categorical(y=train_labels, num_classes=3)
+                test_labels = label_encoder.fit_transform(test_labels)
+                test_labels = to_categorical(y=test_labels, num_classes=3)
+                train_input_ids = np.squeeze(train_input_ids, axis=1)
+                train_attention_mask = np.squeeze(train_attention_mask, axis=1)
+                test_input_ids = np.squeeze(test_input_ids, axis=1)
+                test_attention_mask = np.squeeze(test_attention_mask, axis=1)
+                clf.fit([train_input_ids, train_attention_mask], train_labels, verbose=0)
+                train_predictions = clf.predict([train_input_ids, train_attention_mask], verbose=0)
+                train_accuracy = accuracy_score(train_labels.argmax(axis=1), np.argmax(train_predictions, axis=1))
+                train_accuracies.append(train_accuracy)
+                test_predictions = clf.predict([test_input_ids, test_attention_mask], verbose=0)
                 test_accuracy = accuracy_score(test_labels.argmax(axis=1), np.argmax(test_predictions, axis=1))
                 test_accuracies.append(test_accuracy)
             else:
