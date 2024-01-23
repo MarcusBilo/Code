@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.utils import resample
 from sklearn.svm import SVC
 from keras.models import Sequential
-from keras.layers import Embedding, Conv1D, GlobalMaxPooling1D, Dense, LeakyReLU, Flatten, Masking
+from keras.layers import Conv1D, Dense, LeakyReLU, Flatten, SimpleRNN
 from keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 from keras.preprocessing.sequence import pad_sequences
@@ -112,11 +112,22 @@ def cnn_model():
     return model
 
 
+def rnn_model():
+    model = Sequential()
+    model.add(SimpleRNN(128, activation="relu"))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(3, activation="softmax"))
+    model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
+    model._name = "RNN"
+    return model
+
+
 def main():
 
     classifiers = [
         SVC(),
         cnn_model(),
+        rnn_model(),
     ]
 
     results = []
@@ -127,7 +138,7 @@ def main():
         test_accuracies = []
 
         for _ in tqdm(range(2), desc=f"Processing {getattr(clf, 'name', clf.__class__.__name__)}", unit="iteration"):
-            train_data, test_data, train_labels, test_labels = load_data("undersampled2")
+            train_data, test_data, train_labels, test_labels = load_data("undersampled")
 
             if isinstance(clf, Sequential):
                 train_data = preprocess_text_tensorflow(train_data)
