@@ -136,10 +136,9 @@ def load_data(x):
 def cnn_model():
     model = Sequential()
     model.add(Conv1D(128, 5, activation="relu"))
-    model.add(Conv1D(96, 5, activation="relu"))
+    model.add(Conv1D(128, 5, activation="relu"))
     model.add(Flatten())
     model.add(Dense(64, activation="relu"))
-    model.add(Dense(32, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     model._name = "CNN"
@@ -149,9 +148,8 @@ def cnn_model():
 def rnn_model():
     model = Sequential()
     model.add(SimpleRNN(128, activation="relu", return_sequences=True))
-    model.add(SimpleRNN(96, activation="relu"))
+    model.add(SimpleRNN(128, activation="relu"))
     model.add(Dense(64, activation="relu"))
-    model.add(Dense(32, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     model._name = "RNN"
@@ -161,9 +159,8 @@ def rnn_model():
 def lstm_model():
     model = Sequential()
     model.add(LSTM(128, activation="relu", return_sequences=True))
-    model.add(LSTM(96, activation="relu"))
+    model.add(LSTM(128, activation="relu"))
     model.add(Dense(64, activation="relu"))
-    model.add(Dense(32, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
     model._name = "LSTM"
@@ -173,9 +170,8 @@ def lstm_model():
 def bi_lstm_model():
     model = Sequential()
     model.add(Bidirectional(LSTM(128, activation="relu", return_sequences=True)))
-    model.add(Bidirectional(LSTM(96, activation="relu")))
+    model.add(Bidirectional(LSTM(128, activation="relu")))
     model.add(Dense(64, activation="relu"))
-    model.add(Dense(32, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
     model._name = "Bi-LSTM"
@@ -207,7 +203,7 @@ def main():
         rnn_model(),
         lstm_model(),
         bi_lstm_model(),
-        # bert_model(),
+        bert_model(),
     ]
 
     results = []
