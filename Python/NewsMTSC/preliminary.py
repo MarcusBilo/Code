@@ -68,7 +68,7 @@ def preprocess_text_tensorflow(data, max_length=100):
     return np.array(processed_data)
 
 
-def preprocess_text_bert(data, max_length=50):
+def preprocess_text_bert(data, max_length=100):
     tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
     input_ids = []
     attention_masks = []
@@ -137,7 +137,7 @@ def cnn_model():
     model = Sequential()
     model.add(Conv1D(128, 5, activation="relu"))
     model.add(Flatten())
-    model.add(Dense(64, activation="relu"))
+    model.add(Dense(96, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     model._name = "CNN"
@@ -147,7 +147,7 @@ def cnn_model():
 def rnn_model():
     model = Sequential()
     model.add(SimpleRNN(128, activation="relu"))
-    model.add(Dense(64, activation="relu"))
+    model.add(Dense(96, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     model._name = "RNN"
@@ -157,7 +157,7 @@ def rnn_model():
 def lstm_model():
     model = Sequential()
     model.add(LSTM(128, activation="relu"))
-    model.add(Dense(64, activation="relu"))
+    model.add(Dense(96, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
     model._name = "LSTM"
@@ -167,7 +167,7 @@ def lstm_model():
 def bi_lstm_model():
     model = Sequential()
     model.add(Bidirectional(LSTM(128, activation="relu")))
-    model.add(Dense(64, activation="relu"))
+    model.add(Dense(96, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
     model._name = "Bi-LSTM"
@@ -178,8 +178,8 @@ def bert_model():
     bert_model = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
     for layer in bert_model.layers:
         layer.trainable = False
-    input_ids = Input(shape=(50,), dtype="int32", name="input_ids")
-    attention_mask = Input(shape=(50,), dtype="int32", name="attention_mask")
+    input_ids = Input(shape=(100,), dtype="int32", name="input_ids")
+    attention_mask = Input(shape=(100,), dtype="int32", name="attention_mask")
     outputs = bert_model(input_ids, attention_mask=attention_mask)[0]
     outputs = Dense(10, activation='relu')(outputs)
     outputs = Dense(3, activation='softmax')(outputs)
