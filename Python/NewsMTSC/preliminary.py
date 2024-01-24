@@ -136,8 +136,10 @@ def load_data(x):
 def cnn_model():
     model = Sequential()
     model.add(Conv1D(128, 5, activation="relu"))
+    model.add(Conv1D(96, 5, activation="relu"))
     model.add(Flatten())
-    model.add(Dense(96, activation="relu"))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(32, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     model._name = "CNN"
@@ -146,8 +148,10 @@ def cnn_model():
 
 def rnn_model():
     model = Sequential()
-    model.add(SimpleRNN(128, activation="relu"))
-    model.add(Dense(96, activation="relu"))
+    model.add(SimpleRNN(128, activation="relu", return_sequences=True))
+    model.add(SimpleRNN(96, activation="relu"))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(32, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
     model._name = "RNN"
@@ -156,8 +160,10 @@ def rnn_model():
 
 def lstm_model():
     model = Sequential()
-    model.add(LSTM(128, activation="relu"))
-    model.add(Dense(96, activation="relu"))
+    model.add(LSTM(128, activation="relu", return_sequences=True))
+    model.add(LSTM(96, activation="relu"))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(32, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
     model._name = "LSTM"
@@ -166,8 +172,10 @@ def lstm_model():
 
 def bi_lstm_model():
     model = Sequential()
-    model.add(Bidirectional(LSTM(128, activation="relu")))
-    model.add(Dense(96, activation="relu"))
+    model.add(Bidirectional(LSTM(128, activation="relu", return_sequences=True)))
+    model.add(Bidirectional(LSTM(96, activation="relu")))
+    model.add(Dense(64, activation="relu"))
+    model.add(Dense(32, activation="relu"))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer="adam", loss=categorical_crossentropy, metrics=["accuracy"])
     model._name = "Bi-LSTM"
@@ -176,12 +184,14 @@ def bi_lstm_model():
 
 def bert_model():
     bert_model = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
+    # BERT base has 12 layers - only the last 2 layers are trainable
     for layer in bert_model.layers:
         layer.trainable = False
+    for layer in bert_model.layers[-2:]:
+        layer.trainable = True
     input_ids = Input(shape=(100,), dtype="int32", name="input_ids")
     attention_mask = Input(shape=(100,), dtype="int32", name="attention_mask")
     outputs = bert_model(input_ids, attention_mask=attention_mask)[0]
-    outputs = Dense(10, activation='relu')(outputs)
     outputs = Dense(3, activation='softmax')(outputs)
     model = Model(inputs=[input_ids, attention_mask], outputs=outputs)
     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -197,7 +207,7 @@ def main():
         rnn_model(),
         lstm_model(),
         bi_lstm_model(),
-        bert_model(),
+        # bert_model(),
     ]
 
     results = []
