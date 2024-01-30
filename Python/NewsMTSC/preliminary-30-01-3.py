@@ -16,13 +16,10 @@ from keras.losses import categorical_crossentropy
 from transformers import BertTokenizer, TFBertForSequenceClassification
 from keras.metrics import CategoricalAccuracy
 from keras.callbacks import EarlyStopping
-from keras.optimizers import Adam
-from keras.optimizers.legacy import Adam as legacyAdam
+from keras.optimizers.legacy import Adam
 import psutil
 
-
 adam = Adam(clipvalue=1.0)
-legacy_adam = legacyAdam(clipvalue=1.0)
 spacy.cli.download("en_core_web_lg")
 nlp = spacy.load("en_core_web_lg")
 # p = psutil.Process(os.getpid())
@@ -146,7 +143,7 @@ def rnn_model():
     model.add(Dense(512, activation=LeakyReLU()))
     # model.add(Dropout(0.5))
     model.add(Dense(3, activation="softmax"))
-    model.compile(optimizer=legacy_adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
+    model.compile(optimizer=adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
     model._name = "RNN"
     return model
 
@@ -160,7 +157,7 @@ def lstm_model():
     model.add(Dense(256, activation=LeakyReLU()))
     # model.add(Dropout(0.5))
     model.add(Dense(3, activation="softmax"))
-    model.compile(optimizer=legacy_adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
+    model.compile(optimizer=adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
     model._name = "LSTM"
     return model
 
@@ -174,7 +171,7 @@ def bi_lstm_model():
     model.add(Dense(128, activation=LeakyReLU()))
     # model.add(Dropout(0.5))
     model.add(Dense(3, activation="softmax"))
-    model.compile(optimizer=legacy_adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
+    model.compile(optimizer=adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
     model._name = "Bi-LSTM"
     return model
 
