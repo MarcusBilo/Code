@@ -15,13 +15,14 @@ from sklearn.preprocessing import LabelEncoder
 from keras.losses import categorical_crossentropy
 from transformers import BertTokenizer, TFBertForSequenceClassification
 from keras.metrics import CategoricalAccuracy
+from keras.callbacks import EarlyStopping
 import psutil
 
 
-# spacy.cli.download("en_core_web_lg")
+spacy.cli.download("en_core_web_lg")
 nlp = spacy.load("en_core_web_lg")
-p = psutil.Process(os.getpid())
-p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+# p = psutil.Process(os.getpid())
+# p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 
 def preprocess_sklearn(data):
@@ -82,7 +83,7 @@ def undersample_classes(data, labels):
 
 def load_data(x):
     train_data = []
-    with open("train.jsonl", "r", encoding="utf-8") as train_file:
+    with open("/content/drive/MyDrive/train.jsonl", "r", encoding="utf-8") as train_file:
         for line in train_file:
             train_data.append(json.loads(line))
 
@@ -90,7 +91,7 @@ def load_data(x):
     y_train = [item["targets"][0]["polarity"] for item in train_data]
 
     test_data = []
-    with open("test.jsonl", "r", encoding="utf-8") as test_file:
+    with open("/content/drive/MyDrive/test.jsonl", "r", encoding="utf-8") as test_file:
         for line in test_file:
             test_data.append(json.loads(line))
 
@@ -122,9 +123,9 @@ def cnn_model():
     model.add(Masking(mask_value=0))
     model.add(Conv1D(512, 5, activation=LeakyReLU()))
     model.add(Conv1D(512, 5, activation=LeakyReLU()))
-    model.add(Dropout(0.25))
+    # model.add(Dropout(0.5))
     model.add(Dense(512, activation=LeakyReLU()))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.5))
     model.add(Flatten())
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer='adam', loss=categorical_crossentropy, metrics=CategoricalAccuracy())
@@ -135,11 +136,11 @@ def cnn_model():
 def rnn_model():
     model = Sequential()
     model.add(Masking(mask_value=0))
-    model.add(SimpleRNN(128, activation=LeakyReLU(), return_sequences=True))
-    model.add(SimpleRNN(128, activation=LeakyReLU()))
-    model.add(Dropout(0.25))
-    model.add(Dense(128, activation=LeakyReLU()))
-    model.add(Dropout(0.25))
+    model.add(SimpleRNN(512, activation=LeakyReLU(), return_sequences=True))
+    model.add(SimpleRNN(512, activation=LeakyReLU()))
+    # model.add(Dropout(0.5))
+    model.add(Dense(512, activation=LeakyReLU()))
+    model.add(Dropout(0.5))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer='adam', loss=categorical_crossentropy, metrics=CategoricalAccuracy())
     model._name = "RNN"
@@ -151,9 +152,9 @@ def lstm_model():
     model.add(Masking(mask_value=0))
     model.add(LSTM(256, activation=LeakyReLU(), return_sequences=True))
     model.add(LSTM(256, activation=LeakyReLU()))
-    model.add(Dropout(0.25))
+    # model.add(Dropout(0.5))
     model.add(Dense(256, activation=LeakyReLU()))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.5))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer='adam', loss=categorical_crossentropy, metrics=CategoricalAccuracy())
     model._name = "LSTM"
@@ -165,16 +166,36 @@ def bi_lstm_model():
     model.add(Masking(mask_value=0))
     model.add(Bidirectional(LSTM(128, activation=LeakyReLU(), return_sequences=True)))
     model.add(Bidirectional(LSTM(128, activation=LeakyReLU())))
-    model.add(Dropout(0.25))
+    # model.add(Dropout(0.5))
     model.add(Dense(128, activation=LeakyReLU()))
-    model.add(Dropout(0.25))
+    model.add(Dropout(0.5))
     model.add(Dense(3, activation="softmax"))
     model.compile(optimizer='adam', loss=categorical_crossentropy, metrics=CategoricalAccuracy())
     model._name = "Bi-LSTM"
     return model
 
 
-def bert_model():
+def bert_model_2_128():
+    bert = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
+    # only the last 2 layers are trainable
+    for layer in bert.layers:
+        layer.trainable = False
+    for layer in bert.layers[-2:]:
+        layer.trainable = True
+    input_ids = Input(shape=(100,), dtype="int32", name="input_ids")
+    attention_mask = Input(shape=(100,), dtype="int32", name="attention_mask")
+    masked_input = Masking(mask_value=0)(input_ids)
+    outputs = bert(masked_input, attention_mask=attention_mask)[0]
+    outputs = Dense(128, activation=LeakyReLU())(outputs)
+    outputs = Dropout(0.5)(outputs)
+    outputs = Dense(3, activation='softmax')(outputs)
+    model = Model(inputs=[input_ids, attention_mask], outputs=outputs)
+    model.compile(optimizer='adam', loss=categorical_crossentropy, metrics=CategoricalAccuracy())
+    model._name = 'BERT_2_128'
+    return model
+
+
+def bert_model_2_0():
     bert = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
     # only the last 2 layers are trainable
     for layer in bert.layers:
@@ -188,7 +209,7 @@ def bert_model():
     outputs = Dense(3, activation='softmax')(outputs)
     model = Model(inputs=[input_ids, attention_mask], outputs=outputs)
     model.compile(optimizer='adam', loss=categorical_crossentropy, metrics=CategoricalAccuracy())
-    model._name = 'BERT_Model'
+    model._name = 'BERT_2_0'
     return model
 
 
@@ -200,52 +221,58 @@ def main():
         rnn_model(),
         lstm_model(),
         bi_lstm_model(),
-        bert_model(),
+        bert_model_2_128(),
+        bert_model_2_0()
     ]
 
     results = []
     label_encoder = LabelEncoder()
+    callback = EarlyStopping(monitor='val_loss', patience=3, verbose=0, restore_best_weights=True)
 
     for clf in classifiers:
-        train_accuracy, test_accuracy = 0.0, 0.0
-
-        for _ in tqdm(range(1), desc=f"Processing {getattr(clf, 'name', clf.__class__.__name__)}"):
-            train_data, test_data, train_labels, test_labels = load_data("undersampled")
-            if isinstance(clf, Sequential):
-                train_data, test_data = preprocess_tensorflow(train_data), preprocess_tensorflow(test_data)
-                train_labels, test_labels = preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3)
-                clf.fit(train_data, train_labels, verbose=1, epochs=3, batch_size=10)
-                train_predictions = clf.predict(train_data, verbose=0)
-                train_accuracy = accuracy_score(train_labels.argmax(axis=1), np.argmax(train_predictions, axis=1))
-                test_predictions = clf.predict(test_data, verbose=0)
-                test_accuracy = accuracy_score(test_labels.argmax(axis=1), np.argmax(test_predictions, axis=1))
-            elif isinstance(clf, Model):
-                train_input_ids, train_attention_mask = preprocess_bert(train_data)
-                test_input_ids, test_attention_mask = preprocess_bert(test_data)
-                train_labels, test_labels = preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3)
-                train_input_ids, train_attention_mask = np.squeeze(train_input_ids, axis=1), np.squeeze(train_attention_mask, axis=1)
-                test_input_ids, test_attention_mask = np.squeeze(test_input_ids, axis=1), np.squeeze(test_attention_mask, axis=1)
-                clf.fit([train_input_ids, train_attention_mask], train_labels, verbose=1, epochs=3, batch_size=10)
-                train_predictions = clf.predict([train_input_ids, train_attention_mask], verbose=0)
-                train_accuracy = accuracy_score(train_labels.argmax(axis=1), np.argmax(train_predictions, axis=1))
-                test_predictions = clf.predict([test_input_ids, test_attention_mask], verbose=0)
-                test_accuracy = accuracy_score(test_labels.argmax(axis=1), np.argmax(test_predictions, axis=1))
-            else:
-                train_data, test_data = preprocess_sklearn(train_data), preprocess_sklearn(test_data)
+        iteration_losses = []
+        train_data, test_data, train_labels, test_labels = load_data("undersampled")
+        if isinstance(clf, Sequential):
+            train_data, test_data = preprocess_tensorflow(train_data), preprocess_tensorflow(test_data)
+            train_labels, test_labels = preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3)
+            for _ in tqdm(range(5), desc=f"Fitting {getattr(clf, 'name', clf.__class__.__name__)}", unit="Epoch"):
+                loss = clf.fit(train_data, train_labels, verbose=0, batch_size=71, callbacks=[callback]).history['loss'][0]
+                iteration_losses.append(round(loss, 4))
+            train_predictions = clf.predict(train_data, verbose=0)
+            train_accuracy = accuracy_score(train_labels.argmax(axis=1), np.argmax(train_predictions, axis=1))
+            test_predictions = clf.predict(test_data, verbose=0)
+            test_accuracy = accuracy_score(test_labels.argmax(axis=1), np.argmax(test_predictions, axis=1))
+        elif isinstance(clf, Model):
+            train_input_ids, train_attention_mask = preprocess_bert(train_data)
+            test_input_ids, test_attention_mask = preprocess_bert(test_data)
+            train_labels, test_labels = preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3)
+            train_input_ids, train_attention_mask = np.squeeze(train_input_ids, axis=1), np.squeeze(train_attention_mask, axis=1)
+            test_input_ids, test_attention_mask = np.squeeze(test_input_ids, axis=1), np.squeeze(test_attention_mask, axis=1)
+            for _ in tqdm(range(5), desc=f"Fitting {getattr(clf, 'name', clf.__class__.__name__)}", unit="Epoch"):
+                loss = clf.fit([train_input_ids, train_attention_mask], train_labels, verbose=0, batch_size=10, callbacks=[callback]).history['loss'][0]
+                iteration_losses.append(round(loss, 4))
+            train_predictions = clf.predict([train_input_ids, train_attention_mask], verbose=0)
+            train_accuracy = accuracy_score(train_labels.argmax(axis=1), np.argmax(train_predictions, axis=1))
+            test_predictions = clf.predict([test_input_ids, test_attention_mask], verbose=0)
+            test_accuracy = accuracy_score(test_labels.argmax(axis=1), np.argmax(test_predictions, axis=1))
+        else:
+            train_data, test_data = preprocess_sklearn(train_data), preprocess_sklearn(test_data)
+            for _ in tqdm(range(1), desc=f"Fitting {getattr(clf, 'name', clf.__class__.__name__)}", unit="Epoch"):
                 clf.fit(train_data, train_labels)
-                train_predictions = clf.predict(train_data)
-                train_accuracy = accuracy_score(train_labels, train_predictions)
-                test_predictions = clf.predict(test_data)
-                test_accuracy = accuracy_score(test_labels, test_predictions)
+            iteration_losses.append("---")
+            train_predictions = clf.predict(train_data)
+            train_accuracy = accuracy_score(train_labels, train_predictions)
+            test_predictions = clf.predict(test_data)
+            test_accuracy = accuracy_score(test_labels, test_predictions)
 
         results.append([
             getattr(clf, 'name', clf.__class__.__name__),
             round(train_accuracy, 4),
             round(test_accuracy, 4),
+            iteration_losses
         ])
 
-    headers = ["Classifier", "Train Acc", "Test Acc"]
-    print("\n", "epochs=3, batch_size=10")
+    headers = ["Classifier", "Train Acc", "Test Acc", "Loss"]
     print("\n", tabulate(results, headers=headers, tablefmt="grid"))
 
 
