@@ -84,7 +84,7 @@ def undersample_classes(data, labels):
 
 def load_data(x):
     train_data = []
-    with open("/content/drive/MyDrive/train.jsonl", "r", encoding="utf-8") as train_file:
+    with open("train.jsonl", "r", encoding="utf-8") as train_file:
         for line in train_file:
             train_data.append(json.loads(line))
 
@@ -92,7 +92,7 @@ def load_data(x):
     y_train = [item["targets"][0]["polarity"] for item in train_data]
 
     test_data = []
-    with open("/content/drive/MyDrive/test.jsonl", "r", encoding="utf-8") as test_file:
+    with open("test.jsonl", "r", encoding="utf-8") as test_file:
         for line in test_file:
             test_data.append(json.loads(line))
 
