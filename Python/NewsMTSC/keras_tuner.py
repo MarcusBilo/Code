@@ -1,40 +1,29 @@
 import json
 import os
+
+import keras_tuner
 import silence_tensorflow.auto  # pip install silence-tensorflow
 import spacy
 import numpy as np
 from sklearn.utils import resample
 from keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
-from transformers import BertTokenizer, TFBertForSequenceClassification
 import tensorflow as tf
 import psutil
 from keras_tuner.tuners import RandomSearch  # pip install keras-tuner
 from keras.models import Sequential
-from keras.layers import Conv1D, Dense, Dropout, Flatten, Masking, GRU
+from keras.layers import Conv1D, Dense, Dropout, Flatten, Masking
 from keras.losses import CategoricalCrossentropy
-from keras.optimizers import Adam
 from keras.metrics import CategoricalAccuracy
+from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 
 
 tf.random.set_seed(2024)
-adam = tf.keras.optimizers.legacy.Adam(clipvalue=1.0)
 # spacy.cli.download("en_core_web_lg")
 nlp = spacy.load("en_core_web_lg")
 p = psutil.Process(os.getpid())
 p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
-
-
-def preprocess_sklearn(data):
-    processed_data = []
-    for text in data:
-        lemmatized_text = ' '.join([token.lemma_ for token in nlp(text) if not token.is_stop])
-        doc_lemmatized = nlp(lemmatized_text)
-        doc_vector = doc_lemmatized.vector
-        processed_data.append(doc_vector)
-    processed_data = np.array(processed_data)
-    return processed_data
 
 
 def preprocess_tensorflow(data):
@@ -47,25 +36,6 @@ def preprocess_tensorflow(data):
     processed_data = np.array(processed_data)
     processed_data = processed_data.reshape((processed_data.shape[0], processed_data.shape[1], 1))
     return processed_data
-
-
-def preprocess_bert(data):
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    input_ids, attention_masks = [], []
-    for text in data:
-        lemmatized_text = ' '.join([token.lemma_ for token in nlp(text) if not token.is_stop])
-        tokens = tokenizer.encode_plus(
-            lemmatized_text,
-            add_special_tokens=True,
-            truncation=True,
-            padding='max_length',
-            max_length=100,
-            return_attention_mask=True,
-            return_tensors='tf'
-        )
-        input_ids.append(tokens['input_ids'])
-        attention_masks.append(tokens['attention_mask'])
-    return np.array(input_ids), np.array(attention_masks)
 
 
 def undersample_classes(data, labels):
@@ -123,43 +93,33 @@ def preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3):
     return train_labels_categorical, test_labels_categorical
 
 
-def build_cnn_model(hp):
-    model = Sequential()
-    model.add(Masking(mask_value=0))
-    model.add(Conv1D(filters=hp.Int('conv1_filters', min_value=32, max_value=1024, step=32),
-                     kernel_size=hp.Int('conv1_kernel_size', min_value=2, max_value=20, step=2),
-                     strides=hp.Int('conv1_strides', min_value=2, max_value=10, step=1)))
-    model.add(Conv1D(filters=hp.Int('conv2_filters', min_value=32, max_value=1024, step=32),
-                     kernel_size=hp.Int('conv2_kernel_size', min_value=2, max_value=20, step=2),
-                     strides=hp.Int('conv2_strides', min_value=2, max_value=10, step=1)))
-    model.add(Dropout(rate=hp.Float('dropout', min_value=0.0, max_value=0.5, step=0.1)))
-    model.add(Dense(units=hp.Int('dense_units', min_value=32, max_value=1024, step=32), activation='linear'))
-    model.add(Flatten())
-    optimizer = Adam(
-        learning_rate=hp.Float('learning_rate', min_value=1e-4, max_value=1e-2, step=1e-4),
-        clipvalue=hp.Float('clipvalue', min_value=0.0, max_value=1.0, step=0.2)
-    )
-    model.add(Dense(3, activation='softmax'))
-    model.compile(optimizer=optimizer, loss=CategoricalCrossentropy(), metrics=[CategoricalAccuracy()])
-    model._name = "CNN"
-    return model
+class HyperModel(keras_tuner.HyperModel):
 
+    def build(self, hp):
+        model = Sequential()
+        model.add(Masking(mask_value=0))
+        model.add(Conv1D(filters=hp.Int('conv1_filters', min_value=32, max_value=1024, step=32),
+                         kernel_size=hp.Int('conv1_kernel_size', min_value=2, max_value=20, step=2),
+                         strides=hp.Int('conv1_strides', min_value=2, max_value=10, step=1)))
+        model.add(Conv1D(filters=hp.Int('conv2_filters', min_value=32, max_value=1024, step=32),
+                         kernel_size=hp.Int('conv2_kernel_size', min_value=2, max_value=20, step=2),
+                         strides=hp.Int('conv2_strides', min_value=2, max_value=10, step=1)))
+        model.add(Dropout(rate=hp.Float('dropout', min_value=0.0, max_value=0.5, step=0.1)))
+        dense_activation = hp.Choice('dense_activation', values=['linear', 'relu', 'hard_sigmoid'])
+        model.add(Dense(units=hp.Int('dense_units', min_value=32, max_value=1024, step=32), activation=dense_activation))
+        model.add(Flatten())
+        model.add(Dense(3, activation='softmax'))
+        optimizer = Adam(learning_rate=hp.Float('learning_rate', min_value=1e-4, max_value=1e-2, step=1e-4))
+        model.compile(optimizer=optimizer, loss=CategoricalCrossentropy(), metrics=[CategoricalAccuracy()])
+        model._name = "CNN"
+        return model
 
-def build_gru_model(hp):
-    model = Sequential()
-    model.add(Masking(mask_value=0))
-    model.add(GRU(units=hp.Int('gru_units_1', min_value=32, max_value=512, step=32), return_sequences=True))
-    model.add(GRU(units=hp.Int('gru_units_2', min_value=32, max_value=512, step=32)))
-    model.add(Dropout(rate=hp.Float('dropout', min_value=0.0, max_value=0.5, step=0.1)))
-    model.add(Dense(units=hp.Int('dense_units', min_value=32, max_value=512, step=32), activation='linear'))
-    model.add(Dense(3, activation='softmax'))
-    optimizer = Adam(
-        learning_rate=hp.Float('learning_rate', min_value=1e-4, max_value=1e-2, step=1e-4),
-        clipvalue=hp.Float('clipvalue', min_value=0.0, max_value=1.0, step=0.2)
-    )
-    model.compile(optimizer=optimizer, loss=CategoricalCrossentropy(), metrics=[CategoricalAccuracy()])
-    model._name = "GRU"
-    return model
+    def fit(self, hp, model, *args, **kwargs):
+        return model.fit(
+            *args,
+            batch_size=hp.Choice("batch_size", [6, 10, 15, 30, 71, 142]),
+            **kwargs,
+        )
 
 
 def main():
@@ -169,11 +129,12 @@ def main():
     train_data_tf, val_data_tf = preprocess_tensorflow(train_data), preprocess_tensorflow(val_data)
     train_labels_one_hot, val_labels_one_hot = preprocess_labels(label_encoder, train_labels, val_labels, num_classes=3)
     tuner = RandomSearch(
-        build_gru_model,
+        HyperModel(),
         objective='val_categorical_accuracy',
         max_trials=100,
-        directory='gru_tuning_dir',
-        project_name='gru_tuning'
+        overwrite=True,
+        directory='cnn_tuning_dir',
+        project_name='cnn_tuning'
     )
     tuner.search(train_data_tf, train_labels_one_hot, epochs=10, validation_data=(val_data_tf, val_labels_one_hot), verbose=1)
     best_hyperparameters = tuner.oracle.get_best_trials(num_trials=1)[0].hyperparameters.values
