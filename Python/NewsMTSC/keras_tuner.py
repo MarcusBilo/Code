@@ -16,6 +16,7 @@ from keras.losses import CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
+from tabulate import tabulate
 
 
 tf.random.set_seed(2024)
@@ -135,11 +136,19 @@ def main():
         project_name='cnn_tuning'
     )
     tuner.search(train_data_tf, train_labels_one_hot, epochs=10, validation_data=(val_data_tf, val_labels_one_hot), verbose=1)
-    best_hyperparameters = tuner.oracle.get_best_trials(num_trials=1)[0].hyperparameters.values
-    hyperparameters_dict = dict(best_hyperparameters)
-    print("\nBest Hyperparameters for 10 Epochs:")
-    for key, value in hyperparameters_dict.items():
-        print(f"{key}: {value}")
+    best_trials = tuner.oracle.get_best_trials(num_trials=2)
+    combined_results = {'Training Accuracy': [], 'Validation Accuracy': []}
+    for trial in best_trials:
+        hyperparameters_dict = {key: round(value, 5) if key == 'learning_rate' else value for key, value in trial.hyperparameters.values.items()}
+        training_accuracy = round(trial.metrics.get_last_value('categorical_accuracy'), 5)
+        validation_accuracy = round(trial.metrics.get_last_value('val_categorical_accuracy'), 5)
+        for key, value in hyperparameters_dict.items():
+            combined_results.setdefault(key, []).append(value)
+        combined_results['Training Accuracy'].append(training_accuracy)
+        combined_results['Validation Accuracy'].append(validation_accuracy)
+    table_data = [[key, values[0], values[1]] for key, values in combined_results.items()]
+    headers = ["Parameters", "Best", "2nd-Best"]
+    print("\n", tabulate(table_data, headers=headers, tablefmt="grid"))
 
 
 if __name__ == "__main__":
