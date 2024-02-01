@@ -124,7 +124,7 @@ class HyperModel(keras_tuner.HyperModel):
 def main():
     label_encoder = LabelEncoder()
     train_data, _, train_labels, _ = load_data("undersampled")
-    train_data, val_data, train_labels, val_labels = train_test_split(train_data, train_labels, test_size=0.3, random_state=2024)
+    train_data, val_data, train_labels, val_labels = train_test_split(train_data, train_labels, test_size=2130, random_state=2024, stratify=train_labels)
     train_data_tf, val_data_tf = preprocess_tensorflow(train_data), preprocess_tensorflow(val_data)
     train_labels_one_hot, val_labels_one_hot = preprocess_labels(label_encoder, train_labels, val_labels, num_classes=3)
     tuner = RandomSearch(
