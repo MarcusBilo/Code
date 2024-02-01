@@ -1,6 +1,5 @@
 import json
 import os
-
 import keras_tuner
 import silence_tensorflow.auto  # pip install silence-tensorflow
 import spacy
@@ -117,7 +116,7 @@ class HyperModel(keras_tuner.HyperModel):
     def fit(self, hp, model, *args, **kwargs):
         return model.fit(
             *args,
-            batch_size=hp.Choice("batch_size", [6, 10, 15, 30, 71, 142]),
+            batch_size=hp.Choice("batch_size", [15, 30, 71, 142]),
             **kwargs,
         )
 
@@ -132,13 +131,15 @@ def main():
         HyperModel(),
         objective='val_categorical_accuracy',
         max_trials=100,
-        overwrite=True,
         directory='cnn_tuning_dir',
         project_name='cnn_tuning'
     )
     tuner.search(train_data_tf, train_labels_one_hot, epochs=10, validation_data=(val_data_tf, val_labels_one_hot), verbose=1)
     best_hyperparameters = tuner.oracle.get_best_trials(num_trials=1)[0].hyperparameters.values
-    print("\n", best_hyperparameters)
+    hyperparameters_dict = dict(best_hyperparameters)
+    print("\nBest Hyperparameters for 10 Epochs:")
+    for key, value in hyperparameters_dict.items():
+        print(f"{key}: {value}")
 
 
 if __name__ == "__main__":
