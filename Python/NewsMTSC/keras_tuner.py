@@ -11,7 +11,7 @@ import tensorflow as tf
 import psutil
 from keras_tuner.tuners import RandomSearch  # pip install keras-tuner
 from keras.models import Sequential
-from keras.layers import Conv1D, Dense, Dropout, Flatten, Masking
+from keras.layers import Conv1D, Dense, Dropout, Flatten, Masking, GRU
 from keras.losses import CategoricalCrossentropy
 from keras.optimizers import Adam
 from keras.metrics import CategoricalAccuracy
@@ -145,20 +145,35 @@ def build_cnn_model(hp):
     return model
 
 
+def build_gru_model(hp):
+    model = Sequential()
+    model.add(Masking(mask_value=0))
+    model.add(GRU(units=hp.Int('gru_units_1', min_value=32, max_value=512, step=32), return_sequences=True))
+    model.add(GRU(units=hp.Int('gru_units_2', min_value=32, max_value=512, step=32)))
+    model.add(Dropout(rate=hp.Float('dropout', min_value=0.0, max_value=0.5, step=0.1)))
+    model.add(Dense(units=hp.Int('dense_units', min_value=32, max_value=512, step=32), activation='linear'))
+    model.add(Dense(3, activation='softmax'))
+    optimizer = Adam(
+        learning_rate=hp.Float('learning_rate', min_value=1e-4, max_value=1e-2, step=1e-4),
+        clipvalue=hp.Float('clipvalue', min_value=0.0, max_value=1.0, step=0.2)
+    )
+    model.compile(optimizer=optimizer, loss=CategoricalCrossentropy(), metrics=[CategoricalAccuracy()])
+    model._name = "GRU"
+    return model
+
+
 def main():
     label_encoder = LabelEncoder()
     train_data, _, train_labels, _ = load_data("undersampled")
-
     train_data, val_data, train_labels, val_labels = train_test_split(train_data, train_labels, test_size=0.3, random_state=2024)
-
     train_data_tf, val_data_tf = preprocess_tensorflow(train_data), preprocess_tensorflow(val_data)
     train_labels_one_hot, val_labels_one_hot = preprocess_labels(label_encoder, train_labels, val_labels, num_classes=3)
     tuner = RandomSearch(
-        build_cnn_model,
+        build_gru_model,
         objective='val_categorical_accuracy',
         max_trials=100,
-        directory='cnn_tuning_dir',
-        project_name='cnn_tuning'
+        directory='gru_tuning_dir',
+        project_name='gru_tuning'
     )
     tuner.search(train_data_tf, train_labels_one_hot, epochs=10, validation_data=(val_data_tf, val_labels_one_hot), verbose=1)
     best_hyperparameters = tuner.oracle.get_best_trials(num_trials=1)[0].hyperparameters.values
