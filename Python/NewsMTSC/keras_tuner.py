@@ -4,6 +4,7 @@ import keras_tuner
 import silence_tensorflow.auto  # pip install silence-tensorflow
 import spacy
 import numpy as np
+from keras.callbacks import EarlyStopping
 from sklearn.utils import resample
 from keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
@@ -98,15 +99,19 @@ class HyperModel(keras_tuner.HyperModel):
     def build(self, hp):
         model = Sequential()
         model.add(Masking(mask_value=0))
-        model.add(Conv1D(filters=hp.Int('conv1_filters', min_value=32, max_value=1024, step=32),
+        model.add(Conv1D(filters=hp.Int('conv1_filters', min_value=32, max_value=1536, step=32),
                          kernel_size=hp.Int('conv1_kernel_size', min_value=2, max_value=20, step=2),
                          strides=hp.Int('conv1_strides', min_value=2, max_value=10, step=1)))
-        model.add(Conv1D(filters=hp.Int('conv2_filters', min_value=32, max_value=1024, step=32),
+        model.add(Dropout(rate=hp.Float('dropout_1', min_value=0.1, max_value=0.5, step=0.1)))
+        model.add(Conv1D(filters=hp.Int('conv2_filters', min_value=32, max_value=1536, step=32),
                          kernel_size=hp.Int('conv2_kernel_size', min_value=2, max_value=20, step=2),
                          strides=hp.Int('conv2_strides', min_value=2, max_value=10, step=1)))
-        model.add(Dropout(rate=hp.Float('dropout', min_value=0.0, max_value=0.5, step=0.1)))
+        model.add(Dropout(rate=hp.Float('dropout_2', min_value=0.1, max_value=0.5, step=0.1)))
         dense_activation = hp.Choice('dense_activation', values=['linear', 'relu', 'hard_sigmoid'])
-        model.add(Dense(units=hp.Int('dense_units', min_value=32, max_value=1024, step=32), activation=dense_activation))
+        model.add(Dense(units=hp.Int('dense_units_1', min_value=32, max_value=1536, step=32), activation=dense_activation))
+        model.add(Dropout(rate=hp.Float('dropout_3', min_value=0.1, max_value=0.5, step=0.1)))
+        model.add(Dense(units=hp.Int('dense_units_2', min_value=32, max_value=1536, step=32), activation=dense_activation))
+        model.add(Dropout(rate=hp.Float('dropout_4', min_value=0.1, max_value=0.5, step=0.1)))
         model.add(Flatten())
         model.add(Dense(3, activation='softmax'))
         optimizer = Adam(learning_rate=hp.Float('learning_rate', min_value=1e-4, max_value=1e-2, step=1e-4))
@@ -117,7 +122,7 @@ class HyperModel(keras_tuner.HyperModel):
     def fit(self, hp, model, *args, **kwargs):
         return model.fit(
             *args,
-            batch_size=hp.Choice("batch_size", [15, 30, 71, 142]),
+            batch_size=hp.Choice("batch_size", [30, 71, 142]),
             **kwargs,
         )
 
@@ -125,22 +130,29 @@ class HyperModel(keras_tuner.HyperModel):
 def main():
     label_encoder = LabelEncoder()
     train_data, _, train_labels, _ = load_data("undersampled")
-    train_data, val_data, train_labels, val_labels = train_test_split(train_data, train_labels, test_size=2130, random_state=2024, stratify=train_labels)
+    train_data, val_data, train_labels, val_labels = train_test_split(
+        train_data, train_labels, test_size=2130, random_state=2024, stratify=train_labels
+    )
     train_data_tf, val_data_tf = preprocess_tensorflow(train_data), preprocess_tensorflow(val_data)
     train_labels_one_hot, val_labels_one_hot = preprocess_labels(label_encoder, train_labels, val_labels, num_classes=3)
     tuner = RandomSearch(
         HyperModel(),
         objective='val_categorical_accuracy',
         max_trials=100,
-        directory='cnn_tuning_dir',
+        directory='D:\Ablage\PycharmProjects\cnn_tuning_dir',
         project_name='cnn_tuning'
     )
-    epochs = 10
-    tuner.search(train_data_tf, train_labels_one_hot, epochs=epochs, validation_data=(val_data_tf, val_labels_one_hot), verbose=1)
+    epochs = 25
+    early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+    tuner.search(
+        train_data_tf, train_labels_one_hot, epochs=epochs, validation_data=(val_data_tf, val_labels_one_hot), verbose=1, callbacks=[early_stopping]
+    )
     best_trials = tuner.oracle.get_best_trials(num_trials=2)
     combined_results = {'Training Accuracy': [], 'Validation Accuracy': []}
     for trial in best_trials:
-        hyperparameters_dict = {key: round(value, 5) if key == 'learning_rate' else value for key, value in trial.hyperparameters.values.items()}
+        hyperparameters_dict = {
+            key: round(value, 5) if isinstance(value, (int, float)) else value for key, value in trial.hyperparameters.values.items()
+        }
         training_accuracy = round(trial.metrics.get_last_value('categorical_accuracy'), 5)
         validation_accuracy = round(trial.metrics.get_last_value('val_categorical_accuracy'), 5)
         for key, value in hyperparameters_dict.items():
