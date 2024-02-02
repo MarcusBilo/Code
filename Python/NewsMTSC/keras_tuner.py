@@ -143,7 +143,7 @@ def main():
         project_name='cnn_tuning'
     )
     epochs = 25
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5)
+    early_stopping = EarlyStopping(monitor='val_categorical_accuracy', patience=5)
     tuner.search(
         train_data_tf, train_labels_one_hot, epochs=epochs, validation_data=(val_data_tf, val_labels_one_hot), verbose=1, callbacks=[early_stopping]
     )
