@@ -52,12 +52,11 @@ def preprocess_tensorflow(data):
 
 
 def preprocess_bert(data):
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+    tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     input_ids, attention_masks = [], []
     for text in data:
-        lemmatized_text = ' '.join([token.lemma_ for token in nlp(text) if not token.is_stop])
         tokens = tokenizer.encode_plus(
-            lemmatized_text,
+            text,
             add_special_tokens=True,
             truncation=True,
             padding='max_length',
@@ -257,13 +256,13 @@ def bert_model_2_256():
 def main():
 
     classifiers = [
-        VADER(),
-        SVC(C=0.96),
-        cnn_model(),
-        gru_model(),
-        bi_gru_model(),
-        lstm_model(),
-        bi_lstm_model(),
+        # VADER(),
+        # SVC(C=0.96),
+        # cnn_model(),
+        # gru_model(),
+        # bi_gru_model(),
+        # lstm_model(),
+        # bi_lstm_model(),
         bert_model_1_128(),
         bert_model_2_256(),
     ]
@@ -310,8 +309,8 @@ def main():
                 test_predictions = clf.predict(test_data_tf, verbose=0)
                 test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
         elif isinstance(clf, Model):
-            for _ in tqdm(range(10), desc=f"Processing {getattr(clf, 'name', clf.__class__.__name__)}", unit="Epoch"):
-                loss = clf.fit([train_data_bert, train_attention_mask], train_labels_one_hot, verbose=0, batch_size=10).history['loss'][0]
+            for _ in tqdm(range(5), desc=f"Processing {getattr(clf, 'name', clf.__class__.__name__)}", unit="Epoch"):
+                loss = clf.fit([train_data_bert, train_attention_mask], train_labels_one_hot, verbose=0, batch_size=71).history['loss'][0]
                 iteration_losses.append(round(loss, 4))
                 train_predictions = clf.predict([train_data_bert, train_attention_mask], verbose=0)
                 train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
