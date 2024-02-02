@@ -110,7 +110,7 @@ class HyperModel(keras_tuner.HyperModel):
         # Freeze all layers except the last one
         for layer in bert.layers:
             layer.trainable = False
-        for layer in bert.layers[-1:]:
+        for layer in bert.layers[-2:]:
             layer.trainable = True
         input_ids = Input(shape=(100,), dtype="int32", name="input_ids")
         attention_mask = Input(shape=(100,), dtype="int32", name="attention_mask")
@@ -120,6 +120,8 @@ class HyperModel(keras_tuner.HyperModel):
         dense_activation = hp.Choice('dense_activation', values=['linear', 'relu', 'hard_sigmoid'])
         outputs = Dense(hp.Int('dense_units_1', min_value=32, max_value=1024, step=32), activation=dense_activation)(outputs)
         outputs = Dropout(rate=hp.Float('dropout_1', min_value=0.1, max_value=0.5, step=0.1))(outputs)
+        outputs = Dense(hp.Int('dense_units_2', min_value=32, max_value=1024, step=32), activation=dense_activation)(outputs)
+        outputs = Dropout(rate=hp.Float('dropout_2', min_value=0.1, max_value=0.5, step=0.1))(outputs)
 
         outputs = Dense(3, activation='softmax')(outputs)
         model = Model(inputs=[input_ids, attention_mask], outputs=outputs)
@@ -154,7 +156,7 @@ def main():
         directory=r'D:\Ablage\PycharmProjects\bert_tuning_dir',
         project_name='bert_tuning'
     )
-    epochs = 5
+    epochs = 25
     early_stopping = EarlyStopping(monitor='val_categorical_accuracy', patience=5)
     tuner.search(
         [train_data_bert, train_attention_mask], train_labels_one_hot, epochs=epochs,
