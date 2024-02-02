@@ -107,11 +107,12 @@ class HyperModel(keras_tuner.HyperModel):
 
     def build(self, hp):
         bert = TFBertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=3)
-        # Freeze all layers except the last one
+        
         for layer in bert.layers:
             layer.trainable = False
         for layer in bert.layers[-2:]:
             layer.trainable = True
+            
         input_ids = Input(shape=(100,), dtype="int32", name="input_ids")
         attention_mask = Input(shape=(100,), dtype="int32", name="attention_mask")
         masked_input = Masking(mask_value=0)(input_ids)
