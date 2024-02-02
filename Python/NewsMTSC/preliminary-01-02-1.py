@@ -18,8 +18,10 @@ from keras.metrics import CategoricalAccuracy
 import tensorflow as tf
 import psutil
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # pip install vaderSentiment
+from transformers import logging
 
 
+logging.set_verbosity_error()
 tf.random.set_seed(2024)
 adam = tf.keras.optimizers.legacy.Adam(clipvalue=1.0)
 spacy.cli.download("en_core_web_lg")
