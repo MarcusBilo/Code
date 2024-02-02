@@ -214,7 +214,7 @@ def bi_lstm_model():
 
 
 def bert_model_1_128():
-    bert = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
+    bert = TFBertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=3)
     # only the last 1 layers are trainable
     for layer in bert.layers:
         layer.trainable = False
@@ -234,7 +234,7 @@ def bert_model_1_128():
 
 
 def bert_model_2_256():
-    bert = TFBertForSequenceClassification.from_pretrained('bert-base-uncased', num_labels=3)
+    bert = TFBertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=3)
     # only the last 2 layers are trainable
     for layer in bert.layers:
         layer.trainable = False
