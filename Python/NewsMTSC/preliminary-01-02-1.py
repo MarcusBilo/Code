@@ -24,10 +24,10 @@ from transformers import logging
 logging.set_verbosity_error()
 tf.random.set_seed(2024)
 adam = tf.keras.optimizers.legacy.Adam(clipvalue=1.0)
-spacy.cli.download("en_core_web_lg")
+# spacy.cli.download("en_core_web_lg")
 nlp = spacy.load("en_core_web_lg")
-# p = psutil.Process(os.getpid())
-# p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+p = psutil.Process(os.getpid())
+p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 
 def preprocess_sklearn(data):
