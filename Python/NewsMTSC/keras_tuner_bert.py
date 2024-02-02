@@ -15,11 +15,11 @@ from keras.models import Model
 from keras.layers import Dense, Dropout, Flatten, Masking, Input
 from keras.losses import CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
-from keras.optimizers import Adam
 from sklearn.model_selection import train_test_split
 from tabulate import tabulate
 from transformers import BertTokenizer, TFBertForSequenceClassification
 from transformers import logging
+from tensorflow_addons.optimizers import AdamW  # pip install tensorflow-addons==0.18.0
 
 
 logging.set_verbosity_error()
@@ -107,26 +107,31 @@ class HyperModel(keras_tuner.HyperModel):
 
     def build(self, hp):
         bert = TFBertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=3)
-        
+
+        n_layers = (hp.Int('trainable_layers', min_value=1, max_value=4, step=1))
         for layer in bert.layers:
             layer.trainable = False
-        for layer in bert.layers[-2:]:
+        for layer in bert.layers[-n_layers:]:
             layer.trainable = True
-            
+
         input_ids = Input(shape=(100,), dtype="int32", name="input_ids")
         attention_mask = Input(shape=(100,), dtype="int32", name="attention_mask")
         masked_input = Masking(mask_value=0)(input_ids)
         outputs = bert(masked_input, attention_mask=attention_mask)[0]
+        outputs = Dropout(rate=hp.Float('dropout_0', min_value=0.0, max_value=0.5, step=0.05))(outputs)
 
-        dense_activation = hp.Choice('dense_activation', values=['linear', 'relu', 'hard_sigmoid'])
-        outputs = Dense(hp.Int('dense_units_1', min_value=32, max_value=1024, step=32), activation=dense_activation)(outputs)
-        outputs = Dropout(rate=hp.Float('dropout_1', min_value=0.1, max_value=0.5, step=0.1))(outputs)
-        outputs = Dense(hp.Int('dense_units_2', min_value=32, max_value=1024, step=32), activation=dense_activation)(outputs)
-        outputs = Dropout(rate=hp.Float('dropout_2', min_value=0.1, max_value=0.5, step=0.1))(outputs)
+        # dense_activation = hp.Choice('dense_activation', values=['linear', 'relu', 'hard_sigmoid'])
+        # outputs = Dense(hp.Int('dense_units_1', min_value=32, max_value=1024, step=32), activation=dense_activation)(outputs)
+        # outputs = Dropout(rate=hp.Float('dropout_1', min_value=0.1, max_value=0.5, step=0.1))(outputs)
+        # outputs = Dense(hp.Int('dense_units_2', min_value=32, max_value=1024, step=32), activation=dense_activation)(outputs)
+        # outputs = Dropout(rate=hp.Float('dropout_2', min_value=0.1, max_value=0.5, step=0.1))(outputs)
 
         outputs = Dense(3, activation='softmax')(outputs)
         model = Model(inputs=[input_ids, attention_mask], outputs=outputs)
-        optimizer = Adam(learning_rate=hp.Float('learning_rate', min_value=1e-4, max_value=1e-2, step=1e-4))
+        optimizer = AdamW(
+            learning_rate=hp.Float('learning_rate', min_value=1e-5, max_value=1e-3, step=1e-5),
+            weight_decay=hp.Float('weight_decay ', min_value=1e-5, max_value=1e-3, step=1e-5)
+        )
         model.compile(optimizer=optimizer, loss=CategoricalCrossentropy(), metrics=[CategoricalAccuracy()])
         model._name = 'BERT'
         return model
@@ -153,7 +158,7 @@ def main():
     tuner = RandomSearch(
         HyperModel(),
         objective='val_categorical_accuracy',
-        max_trials=5,
+        max_trials=10,
         directory=r'D:\Ablage\PycharmProjects\bert_tuning_dir',
         project_name='bert_tuning'
     )
@@ -167,7 +172,7 @@ def main():
     combined_results = {'Training Accuracy': [], 'Validation Accuracy': []}
     for trial in best_trials:
         hyperparameters_dict = {
-            key: round(value, 5) if isinstance(value, (int, float)) else value for key, value in trial.hyperparameters.values.items()
+            key: round(value, 7) if isinstance(value, (int, float)) else value for key, value in trial.hyperparameters.values.items()
         }
         training_accuracy = round(trial.metrics.get_last_value('categorical_accuracy'), 5)
         validation_accuracy = round(trial.metrics.get_last_value('val_categorical_accuracy'), 5)
