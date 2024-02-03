@@ -108,10 +108,9 @@ class HyperModel(keras_tuner.HyperModel):
     def build(self, hp):
         bert = TFBertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=3)
 
-        n_layers = (hp.Int('trainable_layers', min_value=1, max_value=4, step=1))
         for layer in bert.layers:
             layer.trainable = False
-        for layer in bert.layers[-n_layers:]:
+        for layer in bert.layers[-1:]:
             layer.trainable = True
 
         input_ids = Input(shape=(100,), dtype="int32", name="input_ids")
@@ -139,7 +138,7 @@ class HyperModel(keras_tuner.HyperModel):
     def fit(self, hp, model, *args, **kwargs):
         return model.fit(
             *args,
-            batch_size=hp.Choice("batch_size", [30, 71, 142]),
+            batch_size=hp.Choice("batch_size", [15, 30, 71, 142]),
             **kwargs,
         )
 
@@ -158,11 +157,11 @@ def main():
     tuner = RandomSearch(
         HyperModel(),
         objective='val_categorical_accuracy',
-        max_trials=10,
+        max_trials=50,
         directory=r'D:\Ablage\PycharmProjects\bert_tuning_dir',
         project_name='bert_tuning'
     )
-    epochs = 25
+    epochs = 5
     early_stopping = EarlyStopping(monitor='val_categorical_accuracy', patience=5)
     tuner.search(
         [train_data_bert, train_attention_mask], train_labels_one_hot, epochs=epochs,
