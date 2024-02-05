@@ -19,6 +19,7 @@ from sklearn.model_selection import train_test_split
 from tabulate import tabulate
 from transformers import BertTokenizer, TFBertForSequenceClassification
 from transformers import logging
+from keras.optimizers import Adam
 from tensorflow_addons.optimizers import AdamW  # pip install tensorflow-addons==0.18.0
 
 
@@ -39,7 +40,7 @@ def preprocess_bert(data):
             add_special_tokens=True,
             truncation=True,
             padding='max_length',
-            max_length=100,
+            max_length=180,
             return_attention_mask=True,
             return_tensors='tf'
         )
@@ -107,29 +108,22 @@ class HyperModel(keras_tuner.HyperModel):
 
     def build(self, hp):
         bert = TFBertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=3)
-
         for layer in bert.layers:
             layer.trainable = False
-        for layer in bert.layers[-1:]:
+        for layer in bert.layers[-2:]:
             layer.trainable = True
-
-        input_ids = Input(shape=(100,), dtype="int32", name="input_ids")
-        attention_mask = Input(shape=(100,), dtype="int32", name="attention_mask")
-        masked_input = Masking(mask_value=0)(input_ids)
-        outputs = bert(masked_input, attention_mask=attention_mask)[0]
-        outputs = Dropout(rate=hp.Float('dropout_0', min_value=0.0, max_value=0.5, step=0.05))(outputs)
-
-        # dense_activation = hp.Choice('dense_activation', values=['linear', 'relu', 'hard_sigmoid'])
-        # outputs = Dense(hp.Int('dense_units_1', min_value=32, max_value=1024, step=32), activation=dense_activation)(outputs)
-        # outputs = Dropout(rate=hp.Float('dropout_1', min_value=0.1, max_value=0.5, step=0.1))(outputs)
-        # outputs = Dense(hp.Int('dense_units_2', min_value=32, max_value=1024, step=32), activation=dense_activation)(outputs)
-        # outputs = Dropout(rate=hp.Float('dropout_2', min_value=0.1, max_value=0.5, step=0.1))(outputs)
-
+        input_ids = Input(shape=(180,), dtype="int32", name="input_ids")
+        attention_mask = Input(shape=(180,), dtype="int32", name="attention_mask")
+        masked_input_ids = Masking(mask_value=0)(input_ids)
+        outputs = bert(masked_input_ids, attention_mask=attention_mask)[0]
         outputs = Dense(3, activation='softmax')(outputs)
         model = Model(inputs=[input_ids, attention_mask], outputs=outputs)
-        optimizer = AdamW(
-            learning_rate=hp.Float('learning_rate', min_value=1e-5, max_value=1e-3, step=1e-5),
-            weight_decay=hp.Float('weight_decay ', min_value=1e-5, max_value=1e-3, step=1e-5)
+        optimizer = Adam(
+            learning_rate=hp.Float('learning_rate', min_value=1e-6, max_value=1e-2, step=1e-6),
+            beta_1=hp.Float('beta_1', min_value=0.8, max_value=0.999, step=0.001),
+            beta_2=hp.Float('beta_2', min_value=0.99, max_value=0.9999, step=0.0001),
+            epsilon=hp.Float('epsilon', min_value=1e-8, max_value=1e-6, step=1e-8),
+            clipnorm=hp.Float('clipnorm', min_value=0.0, max_value=2.0, step=0.1),
         )
         model.compile(optimizer=optimizer, loss=CategoricalCrossentropy(), metrics=[CategoricalAccuracy()])
         model._name = 'BERT'
@@ -138,7 +132,7 @@ class HyperModel(keras_tuner.HyperModel):
     def fit(self, hp, model, *args, **kwargs):
         return model.fit(
             *args,
-            batch_size=hp.Choice("batch_size", [15, 30, 71, 142]),
+            batch_size=hp.Choice("batch_size", [15, 30, 71]),
             **kwargs,
         )
 
@@ -154,15 +148,16 @@ def main():
     train_data_bert, train_attention_mask = np.squeeze(train_data_bert, axis=1), np.squeeze(train_attention_mask, axis=1)
     val_data_bert, val_attention_mask = np.squeeze(val_data_bert, axis=1), np.squeeze(val_attention_mask, axis=1)
     train_labels_one_hot, val_labels_one_hot = preprocess_labels(label_encoder, train_labels, val_labels, num_classes=3)
+
     tuner = RandomSearch(
         HyperModel(),
         objective='val_categorical_accuracy',
-        max_trials=50,
+        max_trials=10,
         directory=r'D:\Ablage\PycharmProjects\bert_tuning_dir',
         project_name='bert_tuning'
     )
-    epochs = 5
-    early_stopping = EarlyStopping(monitor='val_categorical_accuracy', patience=5)
+    epochs = 25
+    early_stopping = EarlyStopping(monitor='val_categorical_accuracy', patience=5, min_delta=0.001)
     tuner.search(
         [train_data_bert, train_attention_mask], train_labels_one_hot, epochs=epochs,
         validation_data=([val_data_bert, val_attention_mask], val_labels_one_hot), verbose=1, callbacks=[early_stopping]
@@ -171,7 +166,7 @@ def main():
     combined_results = {'Training Accuracy': [], 'Validation Accuracy': []}
     for trial in best_trials:
         hyperparameters_dict = {
-            key: round(value, 7) if isinstance(value, (int, float)) else value for key, value in trial.hyperparameters.values.items()
+            key: round(value, 8) if isinstance(value, (int, float)) else value for key, value in trial.hyperparameters.values.items()
         }
         training_accuracy = round(trial.metrics.get_last_value('categorical_accuracy'), 5)
         validation_accuracy = round(trial.metrics.get_last_value('val_categorical_accuracy'), 5)
