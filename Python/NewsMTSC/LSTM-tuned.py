@@ -230,43 +230,6 @@ def lstm_22_sec_best():
 
 def main():
 
-    """
-    def save_model_architecture(model, filename):
-        model_json = model.to_json()
-        with open(filename, 'w') as json_file:
-            json_file.write(model_json)
-
-    model = cnn_21_best()
-    save_model_architecture(model, 'cnn_21_best_architecture.json')
-    """
-
-    """
-    label_encoder = LabelEncoder()
-
-    train_data, test_data, train_labels, test_labels = load_data("undersampled")
-    train_data_tf, test_data_tf = preprocess_tensorflow(train_data), preprocess_tensorflow(test_data)
-    train_labels_one_hot, test_labels_one_hot = preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3)
-
-    def load_model_architecture(filename):
-        with open(filename, 'r') as json_file:
-            model_json = json_file.read()
-        return model_from_json(model_json)
-
-    loaded_model = load_model_architecture('cnn_12_sec_best_architecture.json')
-    loaded_model.build((None, 300, 1))
-    adam = tf.keras.optimizers.legacy.Adam(learning_rate=0.0006)
-    loaded_model.load_weights('10_epochs_CNN_0.6136_weights.h5')
-    loaded_model.compile(optimizer=adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
-
-    train_predictions = loaded_model.predict(train_data_tf, verbose=0)
-    train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
-    test_predictions = loaded_model.predict(test_data_tf, verbose=0)
-    test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
-
-    print(train_accuracy)
-    print(test_accuracy)
-    """
-
     classifiers = [
         lstm_11_best(),
         lstm_11_sec_best(),
