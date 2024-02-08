@@ -16,6 +16,7 @@ from keras.metrics import CategoricalAccuracy
 import tensorflow as tf
 import psutil
 from keras.models import model_from_json
+from sklearn.metrics import confusion_matrix
 
 
 tf.random.set_seed(2024)
@@ -211,6 +212,20 @@ def main():
             model_json = json_file.read()
         return model_from_json(model_json)
 
+    """
+    .--------------------.----------.----------.---------.----------.
+    |              	     |               Actual / True Values       |
+    :--------------------+----------+----------+---------+----------:
+    |                    |          | Negative | Neutral | Positive |
+    :                    +----------+----------+---------+----------:
+    |    		         | Negative |          |         |          |
+    :  Predicted Values  +----------+----------+---------+----------:
+    |                    | Neutral  |          |         |          |
+    :                    +----------+----------+---------+----------:
+    |                    | Positive |          |         |          |
+    '--------------------'----------'----------+---------+----------'
+    """
+
     loaded_model = load_model_architecture('cnn_22_sec_best_architecture.json')
     loaded_model.build((None, 300, 1))
     adam = tf.keras.optimizers.legacy.Adam(learning_rate=0.0016)
@@ -220,8 +235,10 @@ def main():
     train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
     test_predictions = loaded_model.predict(test_data_tf, verbose=0)
     test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
-    print("cnn", round(train_accuracy, 4))
-    print("cnn", round(test_accuracy, 4), "\n")
+    train_conf_matrix = confusion_matrix(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
+    test_conf_matrix = confusion_matrix(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
+    print("cnn", round(train_accuracy, 4), "\n", train_conf_matrix)
+    print("cnn", round(test_accuracy, 4), "\n", test_conf_matrix, "\n")
 
     loaded_model = load_model_architecture('gru_12_sec_best_architecture.json')
     loaded_model.build((None, 300, 1))
@@ -232,8 +249,10 @@ def main():
     train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
     test_predictions = loaded_model.predict(test_data_tf, verbose=0)
     test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
-    print("gru", round(train_accuracy, 4))
-    print("gru", round(test_accuracy, 4), "\n")
+    train_conf_matrix = confusion_matrix(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
+    test_conf_matrix = confusion_matrix(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
+    print("gru", round(train_accuracy, 4), "\n", train_conf_matrix)
+    print("gru", round(test_accuracy, 4), "\n", test_conf_matrix, "\n")
 
     loaded_model = load_model_architecture('bigru_22_sec_best_architecture.json')
     loaded_model.build((None, 300, 1))
@@ -244,8 +263,10 @@ def main():
     train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
     test_predictions = loaded_model.predict(test_data_tf, verbose=0)
     test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
-    print("bigru", round(train_accuracy, 4))
-    print("bigru", round(test_accuracy, 4), "\n")
+    train_conf_matrix = confusion_matrix(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
+    test_conf_matrix = confusion_matrix(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
+    print("bigru", round(train_accuracy, 4), "\n", train_conf_matrix)
+    print("bigru", round(test_accuracy, 4), "\n", test_conf_matrix, "\n")
 
     loaded_model = load_model_architecture('lstm_21_sec_best_architecture.json')
     loaded_model.build((None, 300, 1))
@@ -256,8 +277,10 @@ def main():
     train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
     test_predictions = loaded_model.predict(test_data_tf, verbose=0)
     test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
-    print("lstm", round(train_accuracy, 4))
-    print("lstm", round(test_accuracy, 4), "\n")
+    train_conf_matrix = confusion_matrix(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
+    test_conf_matrix = confusion_matrix(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
+    print("lstm", round(train_accuracy, 4), "\n", train_conf_matrix)
+    print("lstm", round(test_accuracy, 4), "\n", test_conf_matrix, "\n")
 
     loaded_model = load_model_architecture('bilstm_22_sec_best_architecture.json')
     loaded_model.build((None, 300, 1))
@@ -268,8 +291,10 @@ def main():
     train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
     test_predictions = loaded_model.predict(test_data_tf, verbose=0)
     test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
-    print("bilstm", round(train_accuracy, 4))
-    print("bilstm", round(test_accuracy, 4))
+    train_conf_matrix = confusion_matrix(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
+    test_conf_matrix = confusion_matrix(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
+    print("bilstm", round(train_accuracy, 4), "\n", train_conf_matrix)
+    print("bilstm", round(test_accuracy, 4), "\n", test_conf_matrix, "\n")
 
 
 if __name__ == "__main__":
