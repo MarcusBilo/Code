@@ -8,7 +8,7 @@ from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.utils import resample
 from keras.models import Sequential
-from keras.layers import Dense, Flatten, Masking, Dropout, LSTM, Bidirectional, Conv1D
+from keras.layers import Dense, Flatten, Masking, Dropout, LSTM, Bidirectional, Conv1D, GRU
 from keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 from keras.losses import categorical_crossentropy
@@ -111,6 +111,42 @@ def cnn_22_sec_best():
     return model
 
 
+def gru_12_sec_best():
+    model = Sequential()
+    model.add(Masking(mask_value=0))
+    model.add(GRU(units=512))
+    model.add(Dropout(0.1))
+    model.add(Dense(units=960, activation="relu"))
+    model.add(Dropout(0.4))
+    model.add(Dense(units=224, activation="relu"))
+    model.add(Dropout(0.4))
+    model.add(Flatten())
+    model.add(Dense(3, activation="softmax"))
+    adam = tf.keras.optimizers.legacy.Adam(learning_rate=0.001)
+    model.compile(optimizer=adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
+    model._name = "GRU_12_sec_best"
+    return model
+
+
+def bigru_22_sec_best():
+    model = Sequential()
+    model.add(Masking(mask_value=0))
+    model.add(Bidirectional(GRU(units=256, return_sequences=True)))
+    model.add(Dropout(0.2))
+    model.add(Bidirectional(GRU(units=416)))
+    model.add(Dropout(0.1))
+    model.add(Dense(units=864, activation="hard_sigmoid"))
+    model.add(Dropout(0.4))
+    model.add(Dense(units=960, activation="hard_sigmoid"))
+    model.add(Dropout(0.4))
+    model.add(Flatten())
+    model.add(Dense(3, activation="softmax"))
+    adam = tf.keras.optimizers.legacy.Adam(learning_rate=0.0003)
+    model.compile(optimizer=adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
+    model._name = "BiGRU_22_sec_best"
+    return model
+
+
 def lstm_21_sec_best():
     model = Sequential()
     model.add(Masking(mask_value=0))
@@ -156,6 +192,10 @@ def main():
 
     model = cnn_22_sec_best()
     save_model_architecture(model, 'cnn_22_sec_best_architecture.json')
+    model = gru_12_sec_best()
+    save_model_architecture(model, 'gru_12_sec_best_architecture.json')
+    model = bigru_22_sec_best()
+    save_model_architecture(model, 'bigru_22_sec_best_architecture.json')
     model = lstm_21_sec_best()
     save_model_architecture(model, 'lstm_21_sec_best_architecture.json')
     model = bilstm_22_sec_best()
@@ -182,6 +222,30 @@ def main():
     test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
     print("cnn", round(train_accuracy, 4))
     print("cnn", round(test_accuracy, 4), "\n")
+
+    loaded_model = load_model_architecture('gru_12_sec_best_architecture.json')
+    loaded_model.build((None, 300, 1))
+    adam = tf.keras.optimizers.legacy.Adam(learning_rate=0.001)
+    loaded_model.load_weights('GRU_12_sec_best_0.5238_e22_weights.h5')
+    loaded_model.compile(optimizer=adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
+    train_predictions = loaded_model.predict(train_data_tf, verbose=0)
+    train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
+    test_predictions = loaded_model.predict(test_data_tf, verbose=0)
+    test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
+    print("gru", round(train_accuracy, 4))
+    print("gru", round(test_accuracy, 4), "\n")
+
+    loaded_model = load_model_architecture('bigru_22_sec_best_architecture.json')
+    loaded_model.build((None, 300, 1))
+    adam = tf.keras.optimizers.legacy.Adam(learning_rate=0.0003)
+    loaded_model.load_weights('BiGRU_22_sec_best_0.5469_e15_weights.h5')
+    loaded_model.compile(optimizer=adam, loss=categorical_crossentropy, metrics=CategoricalAccuracy())
+    train_predictions = loaded_model.predict(train_data_tf, verbose=0)
+    train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
+    test_predictions = loaded_model.predict(test_data_tf, verbose=0)
+    test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
+    print("bigru", round(train_accuracy, 4))
+    print("bigru", round(test_accuracy, 4), "\n")
 
     loaded_model = load_model_architecture('lstm_21_sec_best_architecture.json')
     loaded_model.build((None, 300, 1))
