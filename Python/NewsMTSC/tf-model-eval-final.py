@@ -212,20 +212,6 @@ def main():
             model_json = json_file.read()
         return model_from_json(model_json)
 
-    """
-    .--------------------.----------.----------.---------.----------.
-    |              	     |               Actual / True Values       |
-    :--------------------+----------+----------+---------+----------:
-    |                    |          | Negative | Neutral | Positive |
-    :                    +----------+----------+---------+----------:
-    |    		         | Negative |          |         |          |
-    :  Predicted Values  +----------+----------+---------+----------:
-    |                    | Neutral  |          |         |          |
-    :                    +----------+----------+---------+----------:
-    |                    | Positive |          |         |          |
-    '--------------------'----------'----------+---------+----------'
-    """
-
     loaded_model = load_model_architecture('cnn_22_sec_best_architecture.json')
     loaded_model.build((None, 300, 1))
     adam = tf.keras.optimizers.legacy.Adam(learning_rate=0.0016)
