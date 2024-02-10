@@ -162,20 +162,6 @@ def main():
         bert_2()
     ]
 
-    """
-    .--------------------.----------.----------.---------.----------.
-    |              	     |               Actual / True Values       |
-    :--------------------+----------+----------+---------+----------:
-    |                    |          | Negative | Neutral | Positive |
-    :                    +----------+----------+---------+----------:
-    |    		         | Negative |          |         |          |
-    :  Predicted Values  +----------+----------+---------+----------:
-    |                    | Neutral  |          |         |          |
-    :                    +----------+----------+---------+----------:
-    |                    | Positive |          |         |          |
-    '--------------------'----------'----------+---------+----------'
-    """
-
     label_encoder = LabelEncoder()
     train_data, test_data, train_labels, test_labels = load_data("undersampled")
     train_data_sklearn, test_data_sklearn = preprocess_sklearn(train_data), preprocess_sklearn(test_data)
