@@ -10,7 +10,7 @@ import (
 func main() {
 	http.HandleFunc("/", index)
 	http.HandleFunc("/data", data)
-	http.HandleFunc("/favicon.ico", noFavicon)
+	http.HandleFunc("/favicon.ico", favicon)
 	http.HandleFunc("/htmx_v1.9.10.min.js", htmxHandler)
 	http.HandleFunc("/3834171_80219.avif", imageHandler)
 	http.Handle("/styles.css", http.FileServer(http.Dir("./")))
@@ -33,8 +33,9 @@ func data(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func noFavicon(w http.ResponseWriter, r *http.Request) {
-	// This handler does nothing, effectively returning no favicon
+func favicon(w http.ResponseWriter, r *http.Request) {
+	// https://www.flaticon.com/free-icon/quality_6294076
+	http.ServeFile(w, r, "quality.png")
 }
 
 func htmxHandler(w http.ResponseWriter, r *http.Request) {
