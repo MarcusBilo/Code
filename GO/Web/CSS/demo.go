@@ -12,6 +12,7 @@ func main() {
 	http.HandleFunc("/data", data)
 	http.HandleFunc("/favicon.ico", noFavicon)
 	http.HandleFunc("/htmx_v1.9.10.min.js", htmxHandler)
+	http.HandleFunc("/3834171_80219.avif", imageHandler)
 	http.Handle("/styles.css", http.FileServer(http.Dir("./")))
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
@@ -38,7 +39,12 @@ func noFavicon(w http.ResponseWriter, r *http.Request) {
 
 func htmxHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/javascript")
-	http.ServeFile(w, r, "htmx_v1.9.10.min.js") // Replace with the actual path
+	http.ServeFile(w, r, "htmx_v1.9.10.min.js")
+}
+
+func imageHandler(w http.ResponseWriter, r *http.Request) {
+	// https://www.freepik.com/free-vector/geometric-triangle-pattern-illustration_3834171.htm
+	http.ServeFile(w, r, "3834171_80219.avif")
 }
 
 func renderHTML(w http.ResponseWriter, fileName string) {
