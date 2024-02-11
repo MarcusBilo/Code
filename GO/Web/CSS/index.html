@@ -7,6 +7,7 @@
     <title>HTMX & Basic CSS Example</title>
     <script src="htmx_v1.9.10.min.js"></script>
     <link rel="stylesheet" href="styles.css">
+    <link resource="">
     <script>
         function toggleVisibility() {
             const result = document.getElementById('result');
@@ -20,7 +21,7 @@
 </head>
 
 <body class="custom-body">
-<div class="custom-div1">
+<div class="custom-div1" style="background-image: url('/3834171_80219.avif'); background-color: #fff;">
     <h1 class="custom-h1">HTMX & Basic CSS Example</h1>
     <p class="custom-p">Click the button below to toggle the visibility of the text:</p>
     <button hx-get="/data"
