@@ -44,6 +44,8 @@ func htmxHandler(w http.ResponseWriter, r *http.Request) {
 
 func imageHandler(w http.ResponseWriter, r *http.Request) {
 	// https://www.freepik.com/free-vector/geometric-triangle-pattern-illustration_3834171.htm
+	// https://convertio.co/de/jpg-avif/
+	// https://www.youcompress.com/avif/
 	http.ServeFile(w, r, "3834171_80219.avif")
 }
 
