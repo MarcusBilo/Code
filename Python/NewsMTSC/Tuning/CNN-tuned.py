@@ -3,7 +3,6 @@ import os
 import silence_tensorflow.auto  # pip install silence-tensorflow
 import spacy
 import numpy as np
-from tabulate import tabulate
 from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.utils import resample
@@ -15,7 +14,6 @@ from keras.losses import categorical_crossentropy
 from keras.metrics import CategoricalAccuracy
 import tensorflow as tf
 import psutil
-from keras.models import model_from_json
 
 
 tf.random.set_seed(2024)
@@ -241,8 +239,6 @@ def main():
         cnn_22_sec_best()
     ]
 
-    results = []
-    train_accuracy, test_accuracy = 0.0, 0.0
     label_encoder = LabelEncoder()
 
     for _ in tqdm(range(1), desc=f"Preprocessing Data"):
@@ -259,8 +255,6 @@ def main():
                 epoch += 1
                 loss = clf.fit(train_data_tf, train_labels_one_hot, verbose=0, epochs=1, batch_size=71).history['loss'][0]
                 iteration_losses.append(round(loss, 4))
-                train_predictions = clf.predict(train_data_tf, verbose=0)
-                train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
                 test_predictions = clf.predict(test_data_tf, verbose=0)
                 test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
                 if test_accuracy > highest_test_accuracy and test_accuracy > 0.6:
@@ -274,8 +268,6 @@ def main():
                 epoch += 1
                 loss = clf.fit(train_data_tf, train_labels_one_hot, verbose=0, epochs=1, batch_size=142).history['loss'][0]
                 iteration_losses.append(round(loss, 4))
-                train_predictions = clf.predict(train_data_tf, verbose=0)
-                train_accuracy = accuracy_score(train_labels_one_hot.argmax(axis=1), np.argmax(train_predictions, axis=1))
                 test_predictions = clf.predict(test_data_tf, verbose=0)
                 test_accuracy = accuracy_score(test_labels_one_hot.argmax(axis=1), np.argmax(test_predictions, axis=1))
                 if test_accuracy > highest_test_accuracy and test_accuracy > 0.6:
@@ -285,16 +277,6 @@ def main():
                     clf.save_weights(filename)
         else:
             raise Exception("no defined training for ", getattr(clf, 'name', clf.__class__.__name__))
-
-        results.append([
-            getattr(clf, 'name', clf.__class__.__name__),
-            round(train_accuracy, 4),
-            round(test_accuracy, 4),
-            iteration_losses
-        ])
-
-    headers = ["Classifier", "Train Acc", "Test Acc", "Loss"]
-    print("\n", tabulate(results, headers=headers, tablefmt="grid"))
 
 
 if __name__ == "__main__":
