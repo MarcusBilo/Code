@@ -9,10 +9,9 @@ from sklearn.utils import resample
 from keras.utils import to_categorical
 from sklearn.preprocessing import LabelEncoder
 import tensorflow as tf
-import psutil
 from keras_tuner.tuners import RandomSearch  # pip install keras-tuner
 from keras.models import Model
-from keras.layers import Dense, Dropout, Flatten, Masking, Input
+from keras.layers import Dense, Masking, Input
 from keras.losses import CategoricalCrossentropy
 from keras.metrics import CategoricalAccuracy
 from sklearn.model_selection import train_test_split
@@ -20,18 +19,26 @@ from tabulate import tabulate
 from transformers import BertTokenizer, TFBertForSequenceClassification
 from transformers import logging
 from keras.optimizers import Adam
-from tensorflow_addons.optimizers import AdamW  # pip install tensorflow-addons==0.18.0
 
 
 logging.set_verbosity_error()
 tf.random.set_seed(2024)
 # spacy.cli.download("en_core_web_lg")
 nlp = spacy.load("en_core_web_lg")
-p = psutil.Process(os.getpid())
-p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 
 def preprocess_bert(data):
+    """
+    This function utilizes the BERT (Bidirectional Encoder Representations from Transformers) tokenizer to
+    preprocess a list of textual data by converting it into input IDs and attention masks suitable for BERT-based models.
+
+    Parameters:
+    - data (list): A list containing textual data to be preprocessed.
+
+    Returns:
+    - input_ids (numpy.ndarray): An array of input IDs representing the preprocessed textual data.
+    - attention_masks (numpy.ndarray): An array of attention masks corresponding to the input IDs.
+    """
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     input_ids, attention_masks = [], []
     for text in data:
@@ -50,6 +57,18 @@ def preprocess_bert(data):
 
 
 def undersample_classes(data, labels):
+    """
+    This function performs undersampling of the majority classes ('negative' and 'neutral') to balance the dataset.
+    It resamples the 'negative' and 'neutral' classes to match the number of instances in the 'positive' class.
+
+    Parameters:
+    - data (list): A list containing the input data.
+    - labels (list): A list containing class labels corresponding to the input data.
+
+    Returns:
+    - balanced_data (list): A list of input data after undersampling.
+    - balanced_labels (list): A list of corresponding class labels after undersampling.
+    """
     positive_indices = [i for i, label in enumerate(labels) if label == "positive"]
     negative_indices = [i for i, label in enumerate(labels) if label == "negative"]
     neutral_indices = [i for i, label in enumerate(labels) if label == "neutral"]
@@ -68,6 +87,19 @@ def undersample_classes(data, labels):
 
 
 def load_data(x):
+    """
+    This function loads and preprocesses sentiment analysis data from JSONL files ('train.jsonl' and 'test.jsonl').
+    It extracts normalized sentences and corresponding sentiment labels for training and testing sets.
+
+    Parameters:
+    - x (str): A string indicating whether to return the original or undersampled data.
+
+    Returns:
+    - train_data (list): A list of normalized sentences from the training set.
+    - test_data (list): A list of normalized sentences from the testing set.
+    - train_labels (list): A list of sentiment labels corresponding to the training set.
+    - test_labels (list): A list of sentiment labels corresponding to the testing set.
+    """
     train_data = []
     with open("train.jsonl", "r", encoding="utf-8") as train_file:
         for line in train_file:
@@ -97,6 +129,20 @@ def load_data(x):
 
 
 def preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3):
+    """
+    This function preprocesses the categorical labels by encoding them using a provided label encoder
+    and converting them into one-hot encoded categorical format.
+
+    Parameters:
+    - label_encoder (LabelEncoder): A scikit-learn LabelEncoder instance for encoding labels.
+    - train_labels (list): A list of training set labels (original categorical labels).
+    - test_labels (list): A list of testing set labels (original categorical labels).
+    - num_classes (int): The total number of classes. Default is 3.
+
+    Returns:
+    - train_labels_categorical (numpy.ndarray): One-hot encoded labels for the training set.
+    - test_labels_categorical (numpy.ndarray): One-hot encoded labels for the testing set.
+    """
     train_labels_encoded = label_encoder.fit_transform(train_labels)
     train_labels_categorical = to_categorical(y=train_labels_encoded, num_classes=num_classes)
     test_labels_encoded = label_encoder.fit_transform(test_labels)
@@ -105,7 +151,9 @@ def preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3):
 
 
 class HyperModel(keras_tuner.HyperModel):
-
+    """
+    This class provides a wrapper for handling the hyperparameter tuning of the BERT models
+    """
     def build(self, hp):
         bert = TFBertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=3)
         for layer in bert.layers:
@@ -138,6 +186,10 @@ class HyperModel(keras_tuner.HyperModel):
 
 
 def main():
+    """
+    This is the main function that tunes the hyperparameters of the BERT model with the
+    given parameters for epochs, max trials etc
+    """
     label_encoder = LabelEncoder()
     train_data, _, train_labels, _ = load_data("undersampled")
     train_data, val_data, train_labels, val_labels = train_test_split(
@@ -152,8 +204,8 @@ def main():
     tuner = RandomSearch(
         HyperModel(),
         objective='val_categorical_accuracy',
-        max_trials=10,
-        directory=r'D:\Ablage\PycharmProjects\bert_tuning_dir',
+        max_trials=20,
+        directory=r'D:\Ablage\PycharmProjects\tuning_dir',
         project_name='bert_tuning'
     )
     epochs = 25
