@@ -111,7 +111,6 @@ def load_data(x):
 
     Parameters:
     - x (str): A string indicating whether to return the original or undersampled data.
-              Options: "original" (default) or "undersampled".
 
     Returns:
     - train_data (list): A list of normalized sentences from the training set.
