@@ -25,6 +25,16 @@ nlp = spacy.load("en_core_web_lg")
 
 
 def preprocess_sklearn(data):
+    """
+    This function takes a list of text data and performs preprocessing using spaCy for lemmatization and
+    stop-word removal. It then converts the processed text into numerical vectors using spaCy's word vectors.
+
+    Parameters:
+    - data (list): A list containing textual data to be preprocessed.
+
+    Returns:
+    - processed_data (numpy.ndarray): An array of numerical vectors representing the preprocessed text data.
+    """
     processed_data = []
     for text in data:
         lemmatized_text = ' '.join([token.lemma_ for token in nlp(text) if not token.is_stop])
@@ -36,6 +46,17 @@ def preprocess_sklearn(data):
 
 
 def preprocess_bert(data):
+    """
+    This function utilizes the BERT (Bidirectional Encoder Representations from Transformers) tokenizer to
+    preprocess a list of textual data by converting it into input IDs and attention masks suitable for BERT-based models.
+
+    Parameters:
+    - data (list): A list containing textual data to be preprocessed.
+
+    Returns:
+    - input_ids (numpy.ndarray): An array of input IDs representing the preprocessed textual data.
+    - attention_masks (numpy.ndarray): An array of attention masks corresponding to the input IDs.
+    """
     tokenizer = BertTokenizer.from_pretrained('bert-base-cased')
     input_ids, attention_masks = [], []
     for text in data:
@@ -54,6 +75,18 @@ def preprocess_bert(data):
 
 
 def undersample_classes(data, labels):
+    """
+    This function performs undersampling of the majority classes ('negative' and 'neutral') to balance the dataset.
+    It resamples the 'negative' and 'neutral' classes to match the number of instances in the 'positive' class.
+
+    Parameters:
+    - data (list): A list containing the input data.
+    - labels (list): A list containing class labels corresponding to the input data.
+
+    Returns:
+    - balanced_data (list): A list of input data after undersampling.
+    - balanced_labels (list): A list of corresponding class labels after undersampling.
+    """
     positive_indices = [i for i, label in enumerate(labels) if label == "positive"]
     negative_indices = [i for i, label in enumerate(labels) if label == "negative"]
     neutral_indices = [i for i, label in enumerate(labels) if label == "neutral"]
@@ -72,6 +105,20 @@ def undersample_classes(data, labels):
 
 
 def load_data(x):
+    """
+    This function loads and preprocesses sentiment analysis data from JSONL files ('train.jsonl' and 'test.jsonl').
+    It extracts normalized sentences and corresponding sentiment labels for training and testing sets.
+
+    Parameters:
+    - x (str): A string indicating whether to return the original or undersampled data.
+              Options: "original" (default) or "undersampled".
+
+    Returns:
+    - train_data (list): A list of normalized sentences from the training set.
+    - test_data (list): A list of normalized sentences from the testing set.
+    - train_labels (list): A list of sentiment labels corresponding to the training set.
+    - test_labels (list): A list of sentiment labels corresponding to the testing set.
+    """
     train_data = []
     with open("train.jsonl", "r", encoding="utf-8") as train_file:
         for line in train_file:
@@ -101,6 +148,20 @@ def load_data(x):
 
 
 def preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3):
+    """
+    This function preprocesses the categorical labels by encoding them using a provided label encoder
+    and converting them into one-hot encoded categorical format.
+
+    Parameters:
+    - label_encoder (LabelEncoder): A scikit-learn LabelEncoder instance for encoding labels.
+    - train_labels (list): A list of training set labels (original categorical labels).
+    - test_labels (list): A list of testing set labels (original categorical labels).
+    - num_classes (int): The total number of classes. Default is 3.
+
+    Returns:
+    - train_labels_categorical (numpy.ndarray): One-hot encoded labels for the training set.
+    - test_labels_categorical (numpy.ndarray): One-hot encoded labels for the testing set.
+    """
     train_labels_encoded = label_encoder.fit_transform(train_labels)
     train_labels_categorical = to_categorical(y=train_labels_encoded, num_classes=num_classes)
     test_labels_encoded = label_encoder.fit_transform(test_labels)
@@ -109,7 +170,21 @@ def preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3):
 
 
 class VADER:
+    """
+    This class provides a wrapper for sentiment analysis using the VADER (Valence Aware Dictionary and sEntiment Reasoner)
+    sentiment analysis tool.
 
+    Attributes:
+    - None
+
+    Methods:
+    - predict(x): Predicts sentiment labels for a list of sentences using VADER.
+    - analyze_sentiment(sentence): Analyzes the sentiment of a single sentence using VADER.
+    - classify_sentiment(compound_score): Classifies sentiment based on the compound score.
+
+    Reference:
+    - VADER Sentiment Analysis: https://github.com/cjhutto/vaderSentiment
+    """
     def predict(self, x):
         predictions = [self.analyze_sentiment(sentence) for sentence in x]
         return predictions
@@ -132,8 +207,14 @@ class VADER:
 
 
 def bert_2():
+    """
+    This function defines a BERT-based sequence classification model with specific configurations.
+    The model is setup for a sentiment analysis task with three output classes ('positive', 'neutral', 'negative').
+
+    Returns:
+    - model (tf.keras.Model): A BERT-based sentiment analysis model with trainable last two layers.
+    """
     bert = TFBertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=3)
-    # only the last 2 layers are trainable
     for layer in bert.layers:
         layer.trainable = False
     for layer in bert.layers[-2:]:
@@ -151,7 +232,11 @@ def bert_2():
 
 
 def main():
-
+    """
+    This is the main function that demonstrates the usage of different classifiers (VADER, SVC, BERT)
+    on a sentiment analysis task. It loads and preprocesses data, applies various classifiers,
+    and prints confusion matrices for each classifier on both the training and testing sets.
+    """
     classifiers = [
         VADER(),
         SVC(C=0.96),
