@@ -12,7 +12,6 @@ from sklearn.preprocessing import LabelEncoder
 from keras.losses import categorical_crossentropy
 from keras.metrics import CategoricalAccuracy
 import tensorflow as tf
-import psutil
 from keras.models import model_from_json
 from sklearn.metrics import confusion_matrix
 
