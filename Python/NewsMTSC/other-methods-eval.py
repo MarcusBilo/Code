@@ -17,7 +17,6 @@ import tensorflow as tf
 import psutil
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # pip install vaderSentiment
 from transformers import logging
-from keras.models import model_from_json
 
 
 logging.set_verbosity_error()
