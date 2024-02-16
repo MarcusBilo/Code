@@ -22,6 +22,17 @@ nlp = spacy.load("en_core_web_lg")
 
 
 def preprocess_tensorflow(data):
+    """
+    This function takes a list of text data and performs preprocessing using spaCy for lemmatization and
+    stop-word removal. It then converts the processed text into numerical vectors using spaCy's word vectors.
+    After that it converts it into a TensorFlow-compatible format.
+
+    Parameters:
+    - data (list): List of strings representing the input text data.
+
+    Returns:
+    - processed_data (numpy.ndarray): Processed data in TensorFlow-compatible format.
+    """
     processed_data = []
     for text in data:
         lemmatized_text = ' '.join([token.lemma_ for token in nlp(text) if not token.is_stop])
@@ -34,6 +45,18 @@ def preprocess_tensorflow(data):
 
 
 def undersample_classes(data, labels):
+    """
+    This function performs undersampling of the majority classes ('negative' and 'neutral') to balance the dataset.
+    It resamples the 'negative' and 'neutral' classes to match the number of instances in the 'positive' class.
+
+    Parameters:
+    - data (list): A list containing the input data.
+    - labels (list): A list containing class labels corresponding to the input data.
+
+    Returns:
+    - balanced_data (list): A list of input data after undersampling.
+    - balanced_labels (list): A list of corresponding class labels after undersampling.
+    """
     positive_indices = [i for i, label in enumerate(labels) if label == "positive"]
     negative_indices = [i for i, label in enumerate(labels) if label == "negative"]
     neutral_indices = [i for i, label in enumerate(labels) if label == "neutral"]
@@ -52,6 +75,19 @@ def undersample_classes(data, labels):
 
 
 def load_data(x):
+    """
+    This function loads and preprocesses sentiment analysis data from JSONL files ('train.jsonl' and 'test.jsonl').
+    It extracts normalized sentences and corresponding sentiment labels for training and testing sets.
+
+    Parameters:
+    - x (str): A string indicating whether to return the original or undersampled data.
+
+    Returns:
+    - train_data (list): A list of normalized sentences from the training set.
+    - test_data (list): A list of normalized sentences from the testing set.
+    - train_labels (list): A list of sentiment labels corresponding to the training set.
+    - test_labels (list): A list of sentiment labels corresponding to the testing set.
+    """
     train_data = []
     with open("train.jsonl", "r", encoding="utf-8") as train_file:
         for line in train_file:
@@ -81,6 +117,20 @@ def load_data(x):
 
 
 def preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3):
+    """
+    This function preprocesses the categorical labels by encoding them using a provided label encoder
+    and converting them into one-hot encoded categorical format.
+
+    Parameters:
+    - label_encoder (LabelEncoder): A scikit-learn LabelEncoder instance for encoding labels.
+    - train_labels (list): A list of training set labels (original categorical labels).
+    - test_labels (list): A list of testing set labels (original categorical labels).
+    - num_classes (int): The total number of classes. Default is 3.
+
+    Returns:
+    - train_labels_categorical (numpy.ndarray): One-hot encoded labels for the training set.
+    - test_labels_categorical (numpy.ndarray): One-hot encoded labels for the testing set.
+    """
     train_labels_encoded = label_encoder.fit_transform(train_labels)
     train_labels_categorical = to_categorical(y=train_labels_encoded, num_classes=num_classes)
     test_labels_encoded = label_encoder.fit_transform(test_labels)
@@ -89,6 +139,13 @@ def preprocess_labels(label_encoder, train_labels, test_labels, num_classes=3):
 
 
 def cnn_22_sec_best():
+    """
+    This function defines a CNN classification model with specific configurations.
+    The model is setup for a sentiment analysis task with three output classes ('positive', 'neutral', 'negative').
+
+    Returns:
+    - sequential (tf.keras.Sequential): A CNN-based sentiment analysis model with multiple Conv1D and Dense Layers.
+    """
     model = Sequential()
     model.add(Masking(mask_value=0))
     model.add(Conv1D(filters=704, kernel_size=6, strides=7))
@@ -108,6 +165,13 @@ def cnn_22_sec_best():
 
 
 def gru_12_sec_best():
+    """
+    This function defines a GRU classification model with specific configurations.
+    The model is setup for a sentiment analysis task with three output classes ('positive', 'neutral', 'negative').
+
+    Returns:
+    - sequential (tf.keras.Sequential): A GRU-based sentiment analysis model with one GRU and multiple Dense Layers.
+    """
     model = Sequential()
     model.add(Masking(mask_value=0))
     model.add(GRU(units=512))
@@ -125,6 +189,13 @@ def gru_12_sec_best():
 
 
 def bigru_22_sec_best():
+    """
+    This function defines a Bi-GRU classification model with specific configurations.
+    The model is setup for a sentiment analysis task with three output classes ('positive', 'neutral', 'negative').
+
+    Returns:
+    - sequential (tf.keras.Sequential): A Bi-GRU-based sentiment analysis model with multiple Bi-GRU and Dense Layers.
+    """
     model = Sequential()
     model.add(Masking(mask_value=0))
     model.add(Bidirectional(GRU(units=256, return_sequences=True)))
@@ -144,6 +215,13 @@ def bigru_22_sec_best():
 
 
 def lstm_21_sec_best():
+    """
+    This function defines a LSTM classification model with specific configurations.
+    The model is setup for a sentiment analysis task with three output classes ('positive', 'neutral', 'negative').
+
+    Returns:
+    - sequential (tf.keras.Sequential): A LSTM-based sentiment analysis model with multiple LSTM and a Dense Layers.
+    """
     model = Sequential()
     model.add(Masking(mask_value=0))
     model.add(LSTM(units=768, return_sequences=True))
@@ -161,6 +239,13 @@ def lstm_21_sec_best():
 
 
 def bilstm_22_sec_best():
+    """
+    This function defines a Bi-LSTM classification model with specific configurations.
+    The model is setup for a sentiment analysis task with three output classes ('positive', 'neutral', 'negative').
+
+    Returns:
+    - sequential (tf.keras.Sequential): A Bi-LSTM-based sentiment analysis model with multiple Bi-LSTM and Dense Layers.
+    """
     model = Sequential()
     model.add(Masking(mask_value=0))
     model.add(Bidirectional(LSTM(units=768, return_sequences=True)))
@@ -180,7 +265,11 @@ def bilstm_22_sec_best():
 
 
 def main():
-
+    """
+    This is the main function that demonstrates the usage of different classifiers (CNN, GRU, Bi-GRU, LSTM, Bi-LSTM)
+    on a sentiment analysis task. It loads models, weights, data. Preprocesses data, applies various classifiers,
+    and prints confusion matrices for each classifier on both the training and testing sets.
+    """
     def save_model_architecture(model, filename):
         model_json = model.to_json()
         with open(filename, 'w') as json_file:
