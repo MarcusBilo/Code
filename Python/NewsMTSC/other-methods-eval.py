@@ -14,7 +14,6 @@ from keras.losses import categorical_crossentropy
 from transformers import BertTokenizer, TFBertForSequenceClassification
 from keras.metrics import CategoricalAccuracy
 import tensorflow as tf
-import psutil
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # pip install vaderSentiment
 from transformers import logging
 
@@ -23,8 +22,6 @@ logging.set_verbosity_error()
 tf.random.set_seed(2024)
 # spacy.cli.download("en_core_web_lg")
 nlp = spacy.load("en_core_web_lg")
-p = psutil.Process(os.getpid())
-p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 
 def preprocess_sklearn(data):
