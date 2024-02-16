@@ -3,8 +3,6 @@ import os
 import silence_tensorflow.auto  # pip install silence-tensorflow
 import spacy
 import numpy as np
-from tabulate import tabulate
-from tqdm import tqdm
 from sklearn.metrics import accuracy_score
 from sklearn.utils import resample
 from keras.models import Sequential
@@ -22,8 +20,6 @@ from sklearn.metrics import confusion_matrix
 tf.random.set_seed(2024)
 # spacy.cli.download("en_core_web_lg")
 nlp = spacy.load("en_core_web_lg")
-p = psutil.Process(os.getpid())
-p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
 
 
 def preprocess_tensorflow(data):
