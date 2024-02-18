@@ -9,6 +9,7 @@ import (
 
 func main() {
 	http.HandleFunc("/", index)
+	http.HandleFunc("/index2", index2)
 	http.HandleFunc("/data", data)
 	http.HandleFunc("/favicon.ico", favicon)
 	http.HandleFunc("/htmx_v1.9.10.min.js", htmxHandler)
@@ -22,6 +23,10 @@ func main() {
 
 func index(w http.ResponseWriter, _ *http.Request) {
 	renderHTML(w, "index.html")
+}
+
+func index2(w http.ResponseWriter, _ *http.Request) {
+	renderHTML(w, "index2.html")
 }
 
 func data(w http.ResponseWriter, _ *http.Request) {
