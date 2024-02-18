@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMX & Basic CSS Example</title>
+    <script src="htmx_v1.9.10.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link resource="">
+</head>
+
+<body class="custom-body">
+<div id="bodyContent">
+    <div class="custom-div1" style="background-image: url('/3834171_80219.avif'); background-color: #fff;">
+        <h1 class="custom-h1">HTML & CSS - Index2.html</h1>
+        <p class="custom-p">Click the button below to toggle the visibility:</p>
+        <button hx-get="/data"
+                hx-trigger="click once"
+                hx-target="#result"
+                onclick="toggleVisibility()"
+                class="custom-button">
+            Toggle Visibility
+        </button>
+        <script>
+            function toggleVisibility() {
+                const result = document.getElementById('result');
+                if (result.style.visibility === 'visible') {
+                    result.style.visibility = 'hidden';
+                    document.getElementById('additionalButton').style.display = 'none';
+                } else {
+                    result.style.visibility = 'visible';
+                    document.getElementById('additionalButton').style.display = 'block';
+                }
+            }
+        </script>
+    </div>
+    <div id="result" class="custom-div2"></div>
+    <button id="additionalButton"
+            style="display: none;"
+            hx-get="/"
+            hx-trigger="click once"
+            hx-target="#bodyContent"
+            hx-swap="outerHTML"
+            class="custom-button">
+        Switch HTML File
+    </button>
+</div>
+
+</body>
+
+</html>
