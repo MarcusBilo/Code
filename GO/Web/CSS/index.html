@@ -8,16 +8,6 @@
     <script src="htmx_v1.9.10.min.js"></script>
     <link rel="stylesheet" href="styles.css">
     <link resource="">
-    <script>
-        function toggleVisibility() {
-            const result = document.getElementById('result');
-            if (result.style.visibility === 'visible') {
-                result.style.visibility = 'hidden';
-            } else {
-                result.style.visibility = 'visible';
-            }
-        }
-    </script>
 </head>
 
 <body class="custom-body">
@@ -31,8 +21,18 @@
             class="custom-button">
         Toggle Visibility
     </button>
-    <div id="result" class="custom-div2"></div>
+    <script>
+        function toggleVisibility() {
+            const result = document.getElementById('result');
+            if (result.style.visibility === 'visible') {
+                result.style.visibility = 'hidden';
+            } else {
+                result.style.visibility = 'visible';
+            }
+        }
+    </script>
 </div>
+<div id="result" class="custom-div2"></div>
 </body>
 
 </html>
