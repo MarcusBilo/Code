@@ -51,3 +51,9 @@
     text-align: center;
     visibility: hidden;
 }
+#additionalButton {
+    width: 20%;
+    position: fixed;
+    left: 40%; /* Adjust this value based on your desired horizontal centering */
+    text-align: center;
+}
