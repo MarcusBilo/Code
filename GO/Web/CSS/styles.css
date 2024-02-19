@@ -54,6 +54,6 @@
 #additionalButton {
     width: 20%;
     position: fixed;
-    left: 40%; /* Adjust this value based on your desired horizontal centering */
+    left: 40%;
     text-align: center;
 }
