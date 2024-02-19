@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTMX & Basic CSS Example</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="htmx_v1.9.10.min.js"></script>
+    <link resource="">
+</head>
+
+<body class="custom-body">
+<div id="bodyContent3">
+
+    <div class="custom-div1" style="background-image: url('/3834171_80219.avif'); background-color: #fff;">
+        <div style="text-align: center; margin-top: 2rem">
+            <button id="additionalButton1"
+                    hx-get="/index"
+                    hx-push-url="/index"
+                    hx-trigger="click once"
+                    hx-target="#bodyContent3"
+                    hx-swap="innerHTML"
+                    class="custom-add-button">
+                Back to 1st File
+            </button>
+            <button id="additionalButton2"
+                    hx-get="/index2"
+                    hx-push-url="/index2"
+                    hx-trigger="click once"
+                    hx-target="#bodyContent3"
+                    hx-swap="innerHTML"
+                    class="custom-add-button">
+                Back to 2nd File
+            </button>
+        </div>
+    </div>
+
+</div>
+
+</body>
+
+</html>
