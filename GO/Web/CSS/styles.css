@@ -46,14 +46,16 @@
 .custom-button:hover {
     background-color: var(--blue-600);
 }
-.custom-div2 {
-    margin-top: 1.5rem;
-    text-align: center;
-    visibility: hidden;
+.custom-add-button {
+    background-color: var(--blue-500);
+    color: #fff;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    width: 30%;
+    display: block;
+    margin: 1rem auto 0;
 }
-#additionalButton {
-    width: 20%;
-    position: fixed;
-    left: 40%;
-    text-align: center;
+.custom-add-button:hover {
+    background-color: var(--blue-600);
 }
