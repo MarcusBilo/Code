@@ -25,7 +25,7 @@ func main() {
 	})
 	http.HandleFunc("/3834171_80219.avif", func(w http.ResponseWriter, r *http.Request) {
 		// https://www.freepik.com/free-vector/geometric-triangle-pattern-illustration_3834171.htm
-		http.ServeFile(w, r, "3834171_80219.avif")
+		http.ServeFile(w, r, "3834171_80219_crop.avif")
 	})
 
 	http.HandleFunc("/htmx_v1.9.10.min.js", func(w http.ResponseWriter, r *http.Request) {
