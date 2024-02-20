@@ -11,10 +11,10 @@
     padding-top: 2rem;
 }
 .custom-div1 {
+    background-color: #fff;
     max-width: 28rem;
     margin-left: auto;
     margin-right: auto;
-    background-position: center center;
     background-size: cover;
     background-repeat: no-repeat;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
