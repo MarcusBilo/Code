@@ -8,7 +8,7 @@ import (
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/index", http.StatusFound)
+		renderHTML(w, r, "index.html")
 	})
 	http.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {
 		renderHTML(w, r, "index.html")
@@ -27,7 +27,6 @@ func main() {
 		// https://www.freepik.com/free-vector/geometric-triangle-pattern-illustration_3834171.htm
 		http.ServeFile(w, r, "3834171_80219_crop.avif")
 	})
-
 	http.HandleFunc("/htmx_v1.9.10.min.js", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/javascript")
 		http.ServeFile(w, r, "htmx_v1.9.10.min.js")
