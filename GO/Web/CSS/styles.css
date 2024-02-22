@@ -210,7 +210,7 @@
     margin-right: auto;
     background-size: cover;
     background-repeat: no-repeat;
-    box-shadow: 0 4px 6px var(--neutral-600);
+    box-shadow: 0 4px 6px var(--neutral-500);
     border-radius: 0.5rem;
     overflow: hidden;
     padding: 1.5rem;
@@ -226,7 +226,7 @@
 .custom-p {
     margin-bottom: 1rem;
     text-align: center;
-    color: var(--gray-700);
+    color: var(--gray-900);
 }
 .custom-button {
     background-color: var(--blue-500);
@@ -238,6 +238,7 @@
 }
 .custom-button:hover {
     background-color: var(--blue-600);
+    border-color: var(--neutral-700);
 }
 .custom-add-button {
     background-color: var(--blue-500);
@@ -251,4 +252,5 @@
 }
 .custom-add-button:hover {
     background-color: var(--blue-600);
+    border-color: var(--neutral-700);
 }
