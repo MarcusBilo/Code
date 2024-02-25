@@ -10,8 +10,23 @@
     <link resource="">
 </head>
 
-<body class="custom-body">
-<div id="bodyContent3">
+<body id=main class="custom-body">
+
+<div class="navbar">
+    <a href="#">Home</a>
+    <a href="#">News</a>
+    <div class="dropdown">
+        <button class="dropbtn">Dropdown &#11163;
+        </button>
+        <div class="dropdown-content">
+            <a href="#">Link 1</a>
+            <a href="#">Link 2</a>
+            <a href="#">Link 3</a>
+        </div>
+    </div>
+</div>
+
+<div style="padding-top: 2rem">
 
     <div class="custom-div1" style="background-image: url('/3834171_80219.avif'); background-position: 50% 40%">
         <div style="text-align: center; margin-top: 2rem">
@@ -19,7 +34,7 @@
                     hx-get="/index"
                     hx-push-url="/index"
                     hx-trigger="click once"
-                    hx-target="#bodyContent3"
+                    hx-target="#main"
                     hx-swap="innerHTML"
                     class="custom-add-button">
                 Back to 1st File
@@ -28,7 +43,7 @@
                     hx-get="/index2"
                     hx-push-url="/index2"
                     hx-trigger="click once"
-                    hx-target="#bodyContent3"
+                    hx-target="#main"
                     hx-swap="innerHTML"
                     class="custom-add-button">
                 Back to 2nd File
