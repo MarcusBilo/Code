@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="{{.Language}}">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/htmx_v1.9.10.min.js"></script>
+    <link resource="">
+</head>
+
+<body id=main class="custom-body">
+
+<div class="navbar">
+    <a href="#">Home</a>
+    <a href="#">News</a>
+    <div class="dropdown">
+        <button class="dropbtn">Dropdown &#11163;
+        </button>
+        <div class="dropdown-content">
+            <a hx-get="/de/index1"
+               hx-push-url="/de/index1"
+               hx-trigger="click once"
+               hx-target="#main"
+               hx-swap="innerHTML">
+                <img src="/de.svg" alt="DE">
+            </a>
+            <a hx-get="/en/index1"
+               hx-push-url="/en/index1"
+               hx-trigger="click once"
+               hx-target="#main"
+               hx-swap="innerHTML">
+                <img src="/gb.svg" alt="GB">
+            </a>
+        </div>
+    </div>
+</div>
+
+<div style="padding-top: 2rem">
+
+    <div class="custom-div1">
+        <h1 class="custom-h1">{{.H1Content}}</h1>
+        <p class="custom-p">{{.PContent}}</p>
+        <button onclick="toggleVisibility()"
+                class="custom-button">
+            {{.ButtonContent}}
+        </button>
+        <script>
+            function toggleVisibility() {
+                let element = document.getElementById("toggled");
+                let hidden = element.getAttribute("hidden");
+                if (hidden) {
+                    element.removeAttribute("hidden");
+                } else {
+                    element.setAttribute("hidden", "hidden");
+                }
+            }
+        </script>
+    </div>
+
+    <div id="toggled" hidden="hidden" style="text-align: center">
+        <button id="additionalButton1"
+                hx-get="./index2"
+                hx-push-url="./index2"
+                hx-trigger="click once"
+                hx-target="#main"
+                hx-swap="innerHTML"
+                class="custom-add-button">
+            {{.AddButton1Content}}
+        </button>
+        <button id="additionalButton2"
+                hx-get="./index3"
+                hx-push-url="./index3"
+                hx-trigger="click once"
+                hx-target="#main"
+                hx-swap="innerHTML"
+                class="custom-add-button">
+            {{.AddButton2Content}}
+        </button>
+    </div>
+
+</div>
+
+</body>
+
+</html>
