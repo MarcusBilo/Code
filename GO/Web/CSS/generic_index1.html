@@ -21,20 +21,29 @@
         <div class="dropdown-content">
             <a hx-get="/de/index1"
                hx-push-url="/de/index1"
-               hx-trigger="click once"
+               hx-trigger="click[checkGlobalState(event)]"
                hx-target="#main"
                hx-swap="innerHTML">
                 <img src="/de.svg" alt="DE">
             </a>
             <a hx-get="/en/index1"
                hx-push-url="/en/index1"
-               hx-trigger="click once"
+               hx-trigger="click[checkGlobalState(event)]"
                hx-target="#main"
                hx-swap="innerHTML">
                 <img src="/gb.svg" alt="GB">
             </a>
         </div>
     </div>
+    <script>
+        function checkGlobalState(event) {
+            let currentURL = window.location.pathname;
+            let clickedLink = event.target.closest('a');
+            if (clickedLink) {
+                return clickedLink.getAttribute("hx-get") !== currentURL;
+            }
+        }
+    </script>
 </div>
 
 <div style="padding-top: 2rem">
