@@ -267,11 +267,10 @@
 .dropdown:hover .dropdown-content {
     display: block;
 }
-.custom-body {
-    background: linear-gradient(to right, var(--blue-200) 0%, var(--green-200) 100%);
-    margin-top: 0;
-    margin-left: 0;
-    margin-right: 0;
+html, body {
+    height: 100%;
+    margin: 0;
+    background: radial-gradient(var(--neutral-200), var(--neutral-400));
 }
 .custom-div1 {
     background-image: url('/3834171_80219_crop.avif');
