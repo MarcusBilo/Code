@@ -199,6 +199,10 @@
     --rose-800: #9f1239;
     --rose-900: #881337;
 }
+@font-face {
+    font-family: 'Selawik';
+    src: url('/selawksl.ttf') format('truetype');
+}
 /* Navbar container */
 .navbar {
     overflow: hidden;
@@ -271,6 +275,7 @@ html, body {
     height: 100%;
     margin: 0;
     background: radial-gradient(var(--neutral-200), var(--neutral-400));
+    font-family: 'Selawik', sans-serif;
 }
 .custom-div1 {
     background-image: url('/3834171_80219_crop.avif');
@@ -300,29 +305,33 @@ html, body {
     color: var(--gray-900);
 }
 .custom-button {
-    background-color: var(--blue-600);
-    color: var(--neutral-100);
+    background-color: var(--orange-200);
+    color: var(--neutral-800);
     font-weight: 600;
     padding: 0.5rem 1rem;
-    border-radius: 0.25rem;
     width: 100%;
+    border-radius: 0.25rem;
+    border: 2px solid transparent;
 }
 .custom-button:hover {
-    background-color: var(--blue-600);
+    background-color: var(--orange-300);
+    color: var(--neutral-900);
     border-color: var(--neutral-700);
 }
 .custom-add-button {
-    background-color: var(--blue-500);
-    color: var(--neutral-100);
+    background-color: var(--orange-200);
+    color: var(--neutral-800);
     font-weight: 600;
     padding: 0.5rem 1rem;
     border-radius: 0.25rem;
+    border: 2px solid transparent;
     width: 30%;
     display: block;
     margin: 1rem auto 0;
 }
 .custom-add-button:hover {
-    background-color: var(--blue-600);
+    background-color: var(--orange-300);
+    color: var(--neutral-900);
     border-color: var(--neutral-700);
 }
 /* Slider */
