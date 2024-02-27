@@ -29,9 +29,12 @@ func main() {
 			return
 		}
 		switch r.URL.Path {
-		case "/selawksl.ttf":
+		case "/selawksl.woff2":
 			// https://learn.microsoft.com/de-de/typography/font-list/selawik
-			http.ServeFile(w, r, "selawksl.ttf")
+			http.ServeFile(w, r, "selawksl.woff2")
+		case "/JetBrainsMono-Regular.woff2":
+			// https://fonts.google.com/specimen/JetBrains+Mono
+			http.ServeFile(w, r, "JetBrainsMono-Regular.woff2")
 		case "/favicon.ico":
 			// https://www.flaticon.com/free-icon/quality_6294076
 			http.ServeFile(w, r, "quality.png")
