@@ -50,89 +50,78 @@
     </script>
 </div>
 
-<div style="padding-top: 2rem">
 
-    <div class="custom-div1">
-        <h1 class="custom-h1">{{.H1Content}}</h1>
-        <p class="custom-p">{{.PContent}}</p>
-        <button onclick="toggleVisibility()"
-                class="custom-button">
-            {{.ButtonContent}}
-        </button>
-        <script>
-            function toggleVisibility() {
-                let element = document.getElementById("toggled");
-                let hidden = element.getAttribute("hidden");
-                if (hidden) {
-                    element.removeAttribute("hidden");
-                } else {
-                    element.setAttribute("hidden", "hidden");
-                }
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        const cardContainer = document.getElementById("card-container");
+        // Function to fetch the maximum number of cards
+        async function fetchMaxCardNumber() {
+            try {
+                const response = await fetch("/max-card-number");
+                const data = await response.json();
+                return data.maxNumber; // Assuming the response contains the maximum number of cards
+            } catch (error) {
+                console.error("Error fetching max card number:", error);
+                return 0; // Default to 0 if there's an error
             }
-        </script>
-    </div>
+        }
+        // Function to fetch and display cards
+        async function fetchAndDisplayCards() {
+            const maxNumber = await fetchMaxCardNumber();
 
-    <div id="toggled" hidden="hidden" style="text-align: center">
-        <button id="additionalButton1"
-                hx-get="./index2"
-                hx-push-url="./index2"
-                hx-trigger="click once"
-                hx-target="#main"
-                hx-swap="innerHTML"
-                class="custom-add-button">
-            {{.AddButton1Content}}
-        </button>
-        <button id="additionalButton2"
-                hx-get="./index3"
-                hx-push-url="./index3"
-                hx-trigger="click once"
-                hx-target="#main"
-                hx-swap="innerHTML"
-                class="custom-add-button">
-            {{.AddButton2Content}}
-        </button>
-    </div>
+            try {
+                for (let i = maxNumber; i > 0; i--) {
+                    const response = await fetch(`/cards/${i}`);
+                    const data = await response.json();
+                    // Create a new card element from the template
+                    const template = document.getElementById("card-template");
+                    const cardClone = document.importNode(template.content, true);
+                    // Populate card content with data from the server
+                    cardClone.querySelector(".year").textContent = data.year;
+                    cardClone.querySelector(".month-day").textContent = data.monthDay;
+                    cardClone.querySelector(".title").textContent = data.title;
+                    cardClone.querySelector(".description").textContent = data.description;
+                    cardClone.querySelector(".action").href = `/cards/${i}`;
+                    // Append the new card at the end of the card container
+                    cardContainer.appendChild(cardClone);
+                    await new Promise(r => setTimeout(r, 2000)); // js version of sleep
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+        await fetchAndDisplayCards();
+    });
+</script>
 
+
+<div id="card-container">
+    <!-- Cards will be dynamically added here -->
 </div>
-
-
-<input placeholder="Search Title" class="input-style" type="text">
-
-
-
-
 
 <!-- https://uiverse.io/Yaya12085/quiet-bear-76 -->
 
-<div class="card">
-    <div class="date-time-container">
-        <time class="date-time">
-            <span>2022</span>
-            <span class="separator"></span>
-            <span>Oct 10</span>
-        </time>
-    </div>
-    <div class="content">
-
-        <div class="infos">
-        <span class="title">
-         How to make this blog card ?
-        </span>
-
-            <p class="description">
-                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Recusandae
-                dolores, possimus pariatur animi temporibus nesciunt praesentium dolore
-                sed nulla ipsum eveniet corporis quidem, mollitia itaque minus soluta,
-                voluptates neque explicabo tempora nisi culpa eius atque dignissimos.
-                Molestias explicabo corporis voluptatem?
-            </p>
+<template id="card-template">
+    <div class="card">
+        <div class="date-time-container">
+            <time class="date-time">
+                <span class="year"></span>
+                <span class="separator"></span>
+                <span class="month-day"></span>
+            </time>
         </div>
-
-        <a class="action" href="#">
-            Read Blog
-        </a>
+        <div class="content">
+            <div class="infos">
+                <span class="title"></span>
+                <p class="description"></p>
+            </div>
+            <a class="action">Read Blog</a>
+        </div>
     </div>
-</div>
+</template>
 
 </body>
 
