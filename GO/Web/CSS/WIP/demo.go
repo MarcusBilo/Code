@@ -25,10 +25,6 @@ type Card struct {
 	Description string `json:"description"`
 }
 
-type MaxCardNumberResponse struct {
-	MaxNumber int `json:"maxNumber"`
-}
-
 func main() {
 
 	http.HandleFunc("/cards/", func(w http.ResponseWriter, r *http.Request) {
@@ -56,18 +52,11 @@ func main() {
 	})
 
 	http.HandleFunc("/max-card-number", func(w http.ResponseWriter, r *http.Request) {
-		maxNumber := 2
-		response := MaxCardNumberResponse{
-			MaxNumber: maxNumber,
-		}
-		responseJSON, err := json.Marshal(response)
+		maxNumber := getMaxCardNumber()
+		w.Header().Set("Content-Type", "text/plain")
+		_, err := fmt.Fprintf(w, "%d", maxNumber)
 		if err != nil {
-			http.Error(w, "Error encoding JSON", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write(responseJSON)
-		if err != nil {
+			http.Error(w, "Error writing response", http.StatusInternalServerError)
 			return
 		}
 	})
@@ -204,4 +193,9 @@ func fetchCardData(cardNumber int) (*Card, error) {
 	default:
 		return nil, fmt.Errorf("Card not found")
 	}
+}
+
+func getMaxCardNumber() int {
+	// Logic to determine the maximum card number dynamically
+	return 2
 }
