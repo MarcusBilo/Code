@@ -204,19 +204,18 @@
     --rose-900: #881337;
 }
 @font-face {
-    font-family: 'Selawik';
-    src: url('/selawksl.woff2') format('woff2');
+    font-family:'Noto-Sans';
+    src: url('/Noto-Sans-regular.woff2') format('woff2');
 }
 @font-face {
-    font-family: 'JetBrainsMono';
-    /* monospaced font for code blocks*/
+    font-family:'JetBrainsMono';
     src: url('/JetBrainsMono-Regular.woff2') format('woff2');
 }
 html, body {
     height: 100%;
     margin: 0;
     background: radial-gradient(var(--neutral-200), var(--neutral-400));
-    font-family: 'Selawik', sans-serif;
+    font-family: 'Noto-Sans', sans-serif;
 }
 .navbar {
     overflow: hidden;
