@@ -369,6 +369,10 @@ html, body {
 }
 
 
+#card-container {
+    display: flex;
+    flex-direction: column;
+}
 
 .card {
     box-sizing: border-box;
@@ -428,7 +432,6 @@ html, body {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 5;
-    line-clamp: 5;
     margin-top: 0.5rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
