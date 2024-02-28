@@ -20,7 +20,7 @@ type PageData struct {
 
 type Card struct {
 	Year        int    `json:"year"`
-	MonthDay    string `json:"monthDay"`
+	Month       string `json:"month"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 }
@@ -179,14 +179,14 @@ func fetchCardData(cardNumber int) (*Card, error) {
 	case 1:
 		return &Card{
 			Year:        2022,
-			MonthDay:    "January 1",
+			Month:       "01",
 			Title:       "Lorem ipsum",
-			Description: "This is the first card description.",
+			Description: "This is the first card description. This is the first card description. This is the first card description.",
 		}, nil
 	case 2:
 		return &Card{
 			Year:        2022,
-			MonthDay:    "February 14",
+			Month:       "02",
 			Title:       "dolor sit amet",
 			Description: "This is the second card description.",
 		}, nil
