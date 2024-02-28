@@ -20,7 +20,7 @@
     <a href="#">Home</a>
     <a href="#">News</a>
     <div class="dropdown">
-        <button class="dropbtn">Dropdown &#11162;
+        <button class="dropbtn">Dropdown &#11163;
         </button>
         <div class="dropdown-content">
             <a hx-get="/de/index1"
@@ -57,37 +57,32 @@
 <script>
     document.addEventListener("DOMContentLoaded", async function () {
         const cardContainer = document.getElementById("card-container");
-        // Function to fetch the maximum number of cards
         async function fetchMaxCardNumber() {
             try {
                 const response = await fetch("/max-card-number");
-                const maxNumber = await response.text(); // Use text() instead of arrayBuffer()
+                const maxNumber = await response.text();
                 return parseInt(maxNumber, 10);
             } catch (error) {
                 console.error("Error fetching max card number:", error);
-                return 0; // Default to 0 if there's an error
+                return 0;
             }
         }
-        // Function to fetch and display cards
         async function fetchAndDisplayCards() {
             const maxNumber = await fetchMaxCardNumber();
-
             try {
                 for (let i = maxNumber; i > 0; i--) {
                     const response = await fetch(`/cards/${i}`);
                     const data = await response.json();
-                    // Create a new card element from the template
                     const template = document.getElementById("card-template");
                     const cardClone = document.importNode(template.content, true);
-                    // Populate card content with data from the server
-                    cardClone.querySelector(".year").textContent = data.year;
-                    cardClone.querySelector(".month-day").textContent = data.monthDay;
-                    cardClone.querySelector(".title").textContent = data.title;
-                    cardClone.querySelector(".description").textContent = data.description;
+                    cardClone.querySelector(".card").style.marginTop = "1em";
+                    cardClone.querySelectorAll("[hx-target=text]").forEach(element => {
+                        const key = element.classList[0];
+                        element.textContent = data[key];
+                    });
                     cardClone.querySelector(".action").href = `/cards/${i}`;
-                    // Append the new card at the end of the card container
                     cardContainer.appendChild(cardClone);
-                    await new Promise(r => setTimeout(r, 2000)); // js version of sleep
+                    await new Promise(r => setTimeout(r, 10)); // js version of sleep in ms
                 }
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -97,10 +92,7 @@
     });
 </script>
 
-
-<div id="card-container">
-    <!-- Cards will be dynamically added here -->
-</div>
+<div id="card-container" class="card-container"></div>
 
 <!-- https://uiverse.io/Yaya12085/quiet-bear-76 -->
 
@@ -108,15 +100,15 @@
     <div class="card">
         <div class="date-time-container">
             <time class="date-time">
-                <span class="year"></span>
+                <span class="year" hx-target="text"></span>
                 <span class="separator"></span>
-                <span class="month-day"></span>
+                <span class="month" hx-target="text"></span>
             </time>
         </div>
         <div class="content">
             <div class="infos">
-                <span class="title"></span>
-                <p class="description"></p>
+                <span class="title" hx-target="text"></span>
+                <p class="description" hx-target="text"></p>
             </div>
             <a class="action">Read Blog</a>
         </div>
