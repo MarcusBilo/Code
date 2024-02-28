@@ -18,17 +18,13 @@ type PageData struct {
 
 func main() {
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/htmx_v1.9.10.min.js" {
+		switch r.URL.Path {
+		case "/htmx_v1.9.10.min.js":
 			w.Header().Set("Content-Type", "application/javascript")
 			http.ServeFile(w, r, "htmx_v1.9.10.min.js")
-			return
-		}
-		if r.URL.Path == "/styles.css" {
+		case "/styles.css":
 			w.Header().Set("Content-Type", "text/css")
 			http.ServeFile(w, r, "styles.css")
-			return
-		}
-		switch r.URL.Path {
 		case "/Noto-Sans-regular.woff2":
 			// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
 			http.ServeFile(w, r, "Noto-Sans-regular.woff2")
