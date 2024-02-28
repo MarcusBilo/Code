@@ -213,9 +213,10 @@
 }
 html, body {
     height: 100%;
-    margin: 0;
+    align-items: center;
     background: radial-gradient(var(--neutral-200), var(--neutral-400));
     font-family: 'Noto-Sans', sans-serif;
+    margin: 0;
 }
 .navbar {
     overflow: hidden;
@@ -369,15 +370,25 @@ html, body {
 }
 
 
-#card-container {
-    display: flex;
-    flex-direction: column;
+
+.card-container {
+    margin-left: 35%;
+    margin-right: 35%;
+    width: 30%;
+}
+
+@media (max-width: 720px) {
+    .card-container {
+        margin-left: 25%;
+        margin-right: 25%;
+        width: 50%;
+    }
 }
 
 .card {
     box-sizing: border-box;
     display: flex;
-    max-width: 320px;
+    width: 100%;
     background-color: var(--neutral-50);
     box-shadow: 0 4px 6px var(--neutral-500);
     border-radius: 0.5rem;
@@ -410,7 +421,7 @@ html, body {
 
 .content {
     display: flex;
-    flex: 1 1 0%;
+    flex: auto;
     flex-direction: column;
     justify-content: space-between;
 }
@@ -433,9 +444,11 @@ html, body {
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 5;
     margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
     color: rgba(55, 65, 81, 1);
+    text-align: justify;
 }
 
 .action {
@@ -448,7 +461,6 @@ html, body {
     line-height: 1rem;
     font-weight: 700;
     text-transform: uppercase;
-
     border-radius: 0.25rem;
     border: 2px solid transparent;
 }
@@ -456,10 +468,8 @@ html, body {
 .action:hover {
     background-color: var(--orange-300);
     color: var(--neutral-900);
-
     border-color: var(--neutral-700);
 }
-
 
 .input-style {
     background: var(--neutral-50);
