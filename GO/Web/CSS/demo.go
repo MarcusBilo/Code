@@ -29,15 +29,12 @@ func main() {
 			return
 		}
 		switch r.URL.Path {
-		case "/selawksl.woff2":
-			// https://learn.microsoft.com/de-de/typography/font-list/selawik
-			http.ServeFile(w, r, "selawksl.woff2")
+		case "/Noto-Sans-regular.woff2":
+			// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
+			http.ServeFile(w, r, "Noto-Sans-regular.woff2")
 		case "/JetBrainsMono-Regular.woff2":
-			// https://fonts.google.com/specimen/JetBrains+Mono
+			// https://github.com/JetBrains/JetBrainsMono/blob/master/fonts/webfonts/JetBrainsMono-Regular.woff2
 			http.ServeFile(w, r, "JetBrainsMono-Regular.woff2")
-		case "/favicon.ico":
-			// https://www.flaticon.com/free-icon/quality_6294076
-			http.ServeFile(w, r, "quality.png")
 		case "/3834171_80219_crop.avif":
 			// https://www.freepik.com/free-vector/geometric-triangle-pattern-illustration_3834171.htm
 			http.ServeFile(w, r, "3834171_80219_crop.avif")
