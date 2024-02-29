@@ -268,9 +268,7 @@ html, body {
     display: block;
 }
 .custom-div1 {
-    background-image: url('/3834171_80219_crop.avif');
-    background-position: 50% 40%;
-    background-color: var(--neutral-100);
+    background-color: var(--neutral-50);
     max-width: 28rem;
     margin-left: auto;
     margin-right: auto;
@@ -452,6 +450,7 @@ html, body {
 }
 
 .action {
+    pointer-events: auto;
     display: block;
     background-color: var(--orange-200);
     color: var(--neutral-800);
@@ -470,6 +469,7 @@ html, body {
     color: var(--neutral-900);
     border-color: var(--neutral-700);
 }
+
 
 .input-style {
     background: var(--neutral-50);
