@@ -61,71 +61,68 @@
 </div>
 
 
-<label style="text-align: center; display: block; margin-top: 1em;">
-    <input placeholder="Search Title" class="input-style" type="text">
+<label class="custom-label">
+    <input id="searchInput" placeholder="Search Title" class="input-style" type="text">
 </label>
-
 
 <script>
     document.addEventListener("DOMContentLoaded", async function () {
-
         const cardContainer = document.getElementById("card-container");
-        const searchInput = document.querySelector(".input-style");
+        const searchInput = document.getElementById("searchInput");
+        await fetchAndDisplayCards(cardContainer);
+        searchInput.addEventListener("input", function () {filterCards(cardContainer, searchInput)});
+    });
 
-        async function fetchMaxCardNumber() {
-            try {
-                const response = await fetch("/max-card-number");
-                const maxNumber = await response.text();
-                return parseInt(maxNumber, 10);
-            } catch (error) {
-                console.error("Error fetching max card number:", error);
-                return 0;
-            }
+    async function fetchAndDisplayCards(cardContainer) {
+        let maxNumber;
+        let data;
+        try {
+            const response = await fetch("/max-card-number");
+            maxNumber = parseInt(await response.text(), 10)
+        } catch (error) {
+            console.error("Error fetching max card number:", error);
+            return;
         }
-
-        async function fetchAndDisplayCards() {
-            const maxNumber = await fetchMaxCardNumber();
+        for (let i = maxNumber; i > 0; i--) {
             try {
-                for (let i = maxNumber; i > 0; i--) {
-                    const response = await fetch(`/cards/${i}`);
-                    const data = await response.json();
-                    const template = document.getElementById("card-template");
-                    const cardClone = document.importNode(template.content, true);
-                    cardClone.querySelector(".card").style.marginTop = "1em";
-                    cardClone.querySelectorAll("[hx-target=text]").forEach(element => {
-                        const key = element.classList[0];
-                        element.textContent = data[key];
-                    });
-                    cardClone.querySelector(".action").setAttribute("hx-get", `./index${i}`);
-                    cardClone.querySelector(".action").setAttribute("hx-push-url", `./index${i}`);
-                    cardContainer.appendChild(cardClone);
-                    htmx.process(cardContainer); // as we dynamically add elements we need to reevaluate
-                    await new Promise(r => setTimeout(r, 10)); // js version of sleep in ms
-                }
+                const response = await fetch(`/cards/${i}`);
+                data = await response.json();
             } catch (error) {
                 console.error("Error fetching data:", error);
+                return;
+            }
+            try {
+                const template = document.getElementById("card-template");
+                const cardClone = document.importNode(template.content, true);
+                cardClone.querySelector(".card").style.marginTop = "1em";
+                cardClone.querySelectorAll("[hx-target=text]").forEach(element => {
+                    const key = element.classList[0];
+                    element.textContent = data[key];
+                });
+                cardClone.querySelector(".action").setAttribute("hx-get", `./index${i}`);
+                cardClone.querySelector(".action").setAttribute("hx-push-url", `./index${i}`);
+                cardContainer.appendChild(cardClone);
+                htmx.process(cardContainer); // as we dynamically add elements we need to reevaluate
+                await new Promise(r => setTimeout(r, 10)); // js version of sleep in ms
+            } catch (error) {
+                console.error("Error displaying data:", error);
+                return;
             }
         }
+    }
 
-        function filterCards() {
-            const cards = cardContainer.querySelectorAll(".card");
-            const searchTitle = searchInput.value.toLowerCase();
-            cards.forEach(card => {
-                const title = card.querySelector(".title").textContent.toLowerCase();
-                if (searchTitle === "" || title.includes(searchTitle)) {
-                    card.style.display = "flex";
-                } else {
-                    card.style.display = "none";
-                }
-            });
-        }
-
-        searchInput.addEventListener("input", function () {
-            filterCards();
+    function filterCards(cardContainer, searchInput) {
+        const cards = cardContainer.querySelectorAll(".card");
+        const searchTitle = searchInput.value.toLowerCase();
+        cards.forEach(card => {
+            const title = card.querySelector(".title").textContent.toLowerCase();
+            if (searchTitle === "" || title.includes(searchTitle)) {
+                card.style.display = "flex";
+            } else {
+                card.style.display = "none";
+            }
         });
-
-        await fetchAndDisplayCards();
-    });
+    }
 </script>
 
 <div id="card-container" class="card-container"></div>
