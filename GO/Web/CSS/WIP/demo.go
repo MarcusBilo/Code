@@ -69,6 +69,9 @@ func main() {
 		case "/styles.css":
 			w.Header().Set("Content-Type", "text/css")
 			http.ServeFile(w, r, "styles.css")
+		case "/noun-home-5487412.svg":
+			// https://thenounproject.com/icon/home-5487412/
+			http.ServeFile(w, r, "noun-home-5487412.svg")
 		case "/Noto-Sans-regular.woff2":
 			// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
 			http.ServeFile(w, r, "Noto-Sans-regular.woff2")
