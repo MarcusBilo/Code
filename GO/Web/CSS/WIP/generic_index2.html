@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="{{.Language}}">
+
+<!-- Blog Index -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="ogpu">
+    <meta name="description" content="The quick brown fox jumps over the lazy dog">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/htmx_v1.9.10.min.js"></script>
+    <link rel="icon" href="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P438HwHwAGmAKH433eggAAAABJRU5ErkJggg=="><link>
+    <link resource="">
+</head>
+
+<!-- icon: #ff8800 1×1 GIF -->
+<!-- Pfeile: &#11160 bis &#11167 -->
+
+<body id=main>
+
+<div class="navbar">
+    <a hx-get="./index1"
+       hx-push-url="./index1"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">
+        <img src="/noun-home-5487412.svg" alt="Home" style="width: 2em">
+    </a>
+    <a href="#">News</a>
+    <div class="dropdown">
+        <button class="dropbtn">Dropdown &#11163;
+        </button>
+        <div class="dropdown-content">
+            <a hx-get="/de/index1"
+               hx-push-url="/de/index1"
+               hx-trigger="click[checkGlobalState(event)]"
+               hx-target="#main"
+               hx-swap="innerHTML">
+                <img src="/de.svg" alt="DE" style="width: 5.7em">
+            </a>
+            <a hx-get="/en/index1"
+               hx-push-url="/en/index1"
+               hx-trigger="click[checkGlobalState(event)]"
+               hx-target="#main"
+               hx-swap="innerHTML">
+                <img src="/gb.svg" alt="GB" style="width: 5.7em">
+            </a>
+        </div>
+    </div>
+    <script>
+        function checkGlobalState(event) {
+            let currentURL = window.location.pathname;
+            let clickedLink = event.target.closest('a');
+            if (clickedLink) {
+                return clickedLink.getAttribute("hx-get") !== currentURL;
+            }
+        }
+    </script>
+</div>
+
+
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        const cardContainer = document.getElementById("card-container");
+        async function fetchMaxCardNumber() {
+            try {
+                const response = await fetch("/max-card-number");
+                const maxNumber = await response.text();
+                return parseInt(maxNumber, 10);
+            } catch (error) {
+                console.error("Error fetching max card number:", error);
+                return 0;
+            }
+        }
+        async function fetchAndDisplayCards() {
+            const maxNumber = await fetchMaxCardNumber();
+            try {
+                for (let i = maxNumber; i > 0; i--) {
+                    const response = await fetch(`/cards/${i}`);
+                    const data = await response.json();
+                    const template = document.getElementById("card-template");
+                    const cardClone = document.importNode(template.content, true);
+                    cardClone.querySelector(".card").style.marginTop = "1em";
+                    cardClone.querySelectorAll("[hx-target=text]").forEach(element => {
+                        const key = element.classList[0];
+                        element.textContent = data[key];
+                    });
+                    cardClone.querySelector(".action").href = `/cards/${i}`;
+                    cardContainer.appendChild(cardClone);
+                    await new Promise(r => setTimeout(r, 10)); // js version of sleep in ms
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        }
+        await fetchAndDisplayCards();
+    });
+</script>
+
+<div id="card-container" class="card-container"></div>
+
+<!-- https://uiverse.io/Yaya12085/quiet-bear-76 -->
+
+<template id="card-template">
+    <div class="card">
+        <div class="date-time-container">
+            <time class="date-time">
+                <span class="year" hx-target="text"></span>
+                <span class="separator"></span>
+                <span class="month" hx-target="text"></span>
+            </time>
+        </div>
+        <div class="content">
+            <div class="infos">
+                <span class="title" hx-target="text"></span>
+                <p class="description" hx-target="text"></p>
+            </div>
+            <a class="action">Read Blog</a>
+        </div>
+    </div>
+</template>
+
+</body>
+
+</html>
