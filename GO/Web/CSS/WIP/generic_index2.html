@@ -61,12 +61,17 @@
 </div>
 
 
-
+<label style="text-align: center; display: block; margin-top: 1em;">
+    <input placeholder="Search Title" class="input-style" type="text">
+</label>
 
 
 <script>
     document.addEventListener("DOMContentLoaded", async function () {
+
         const cardContainer = document.getElementById("card-container");
+        const searchInput = document.querySelector(".input-style");
+
         async function fetchMaxCardNumber() {
             try {
                 const response = await fetch("/max-card-number");
@@ -77,6 +82,7 @@
                 return 0;
             }
         }
+
         async function fetchAndDisplayCards() {
             const maxNumber = await fetchMaxCardNumber();
             try {
@@ -100,6 +106,24 @@
                 console.error("Error fetching data:", error);
             }
         }
+
+        function filterCards() {
+            const cards = cardContainer.querySelectorAll(".card");
+            const searchTitle = searchInput.value.toLowerCase();
+            cards.forEach(card => {
+                const title = card.querySelector(".title").textContent.toLowerCase();
+                if (searchTitle === "" || title.includes(searchTitle)) {
+                    card.style.display = "flex";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        searchInput.addEventListener("input", function () {
+            filterCards();
+        });
+
         await fetchAndDisplayCards();
     });
 </script>
