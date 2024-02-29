@@ -90,8 +90,10 @@
                         const key = element.classList[0];
                         element.textContent = data[key];
                     });
-                    cardClone.querySelector(".action").href = `/cards/${i}`;
+                    cardClone.querySelector(".action").setAttribute("hx-get", `./index${i}`);
+                    cardClone.querySelector(".action").setAttribute("hx-push-url", `./index${i}`);
                     cardContainer.appendChild(cardClone);
+                    htmx.process(cardContainer); // as we dynamically add elements we need to reevaluate
                     await new Promise(r => setTimeout(r, 10)); // js version of sleep in ms
                 }
             } catch (error) {
@@ -120,7 +122,15 @@
                 <span class="title" hx-target="text"></span>
                 <p class="description" hx-target="text"></p>
             </div>
-            <a class="action">Read Blog</a>
+            <div>
+                <a hx-get="./index1"
+                   hx-push-url="./index1"
+                   hx-trigger="click"
+                   hx-target="#main"
+                   hx-swap="innerHTML"
+                   class="action">Read Blog</a>
+            </div>
+
         </div>
     </div>
 </template>
