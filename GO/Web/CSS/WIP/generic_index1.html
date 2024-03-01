@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{.Language}}">
+<html lang="{{.Language}}" xmlns:hx-on="http://www.w3.org/1999/xhtml">
 
 <!-- Landing Page -->
 
@@ -18,7 +18,9 @@
 <!-- icon: #ff8800 1×1 GIF -->
 <!-- Pfeile: &#11160 bis &#11167 -->
 
-<body id=main>
+<body id="main" hx-on:htmx:after-Settle="initializePage()">
+
+<!-- <div hx-on:htmx:after-Settle="initializePage()"></div> -->
 
 <div class="navbar">
     <a hx-get="./index1"
@@ -28,7 +30,11 @@
        hx-swap="innerHTML">
         <img src="/noun-home-5487412.svg" alt="Home" style="width: 2em">
     </a>
-    <a href="#">News</a>
+    <a hx-get="./index2"
+       hx-push-url="./index2"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Blog</a>
     <div class="dropdown">
         <button class="dropbtn">Dropdown &#11163;
         </button>
@@ -60,14 +66,12 @@
     </script>
 </div>
 
-
 <div style="padding-top: 2rem">
     <div class="custom-div1">
         <h1 class="custom-h1">{{.H1Content}}</h1>
         <p class="custom-p">{{.PContent}}</p>
     </div>
 </div>
-
 
 </body>
 
