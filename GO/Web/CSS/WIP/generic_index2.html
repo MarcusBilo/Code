@@ -30,20 +30,25 @@
        hx-swap="innerHTML">
         <img src="/noun-home-5487412.svg" alt="Home" style="width: 2em">
     </a>
-    <a href="#">News</a>
+    <a hx-get="./index2"
+       hx-push-url="./index2"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Blog
+    </a>
     <div class="dropdown">
         <button class="dropbtn">Dropdown &#11163;
         </button>
         <div class="dropdown-content">
-            <a hx-get="/de/index1"
-               hx-push-url="/de/index1"
+            <a hx-get="/de/index2"
+               hx-push-url="/de/index2"
                hx-trigger="click[checkGlobalState(event)]"
                hx-target="#main"
                hx-swap="innerHTML">
                 <img src="/de.svg" alt="DE" style="width: 5.7em">
             </a>
-            <a hx-get="/en/index1"
-               hx-push-url="/en/index1"
+            <a hx-get="/en/index2"
+               hx-push-url="/en/index2"
                hx-trigger="click[checkGlobalState(event)]"
                hx-target="#main"
                hx-swap="innerHTML">
@@ -61,7 +66,6 @@
         }
     </script>
 </div>
-
 
 <label class="custom-label">
     <input id="searchInput" placeholder="Search Title" class="input-style" type="text">
@@ -91,9 +95,9 @@
                    hx-trigger="click"
                    hx-target="#main"
                    hx-swap="innerHTML"
-                   class="action">Read Blog</a>
+                   class="action">Read Blog
+                </a>
             </div>
-
         </div>
     </div>
 </template>
@@ -108,15 +112,15 @@
     async function initializePage() {
         let fullPath = window.location.pathname;
         let lastPart = fullPath.substring(fullPath.lastIndexOf('/') + 1);
-        console.log(lastPart)
         if (lastPart === "index1") return;
         const cardContainer = document.getElementById("card-container");
         const searchInput = document.getElementById("searchInput");
-        await fetchAndDisplayCards(cardContainer);
+        let firstPart = fullPath.substring(1, fullPath.indexOf('/', 1));
+        await fetchAndDisplayCards(cardContainer, firstPart);
         searchInput.addEventListener("input", function () {filterCards(cardContainer, searchInput)});
     }
 
-    async function fetchAndDisplayCards(cardContainer) {
+    async function fetchAndDisplayCards(cardContainer, language) {
         let maxNumber;
         let data;
         try {
@@ -128,7 +132,7 @@
         }
         for (let i = maxNumber; i > 0; i--) {
             try {
-                const response = await fetch(`/cards/${i}`);
+                const response = await fetch(`/${language}/cards/${i}`);
                 data = await response.json();
             } catch (error) {
                 console.error("Error fetching data:", error);
