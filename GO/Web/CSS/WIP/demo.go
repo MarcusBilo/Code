@@ -27,9 +27,13 @@ type Card struct {
 
 func main() {
 
-	http.HandleFunc("/cards/", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/de/cards/", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Not implemented", http.StatusNotImplemented)
+	})
+
+	http.HandleFunc("/en/cards/", func(w http.ResponseWriter, r *http.Request) {
 		var cardNumber int
-		_, err := fmt.Sscanf(r.URL.Path, "/cards/%d", &cardNumber)
+		_, err := fmt.Sscanf(r.URL.Path, "/en/cards/%d", &cardNumber)
 		if err != nil {
 			http.Error(w, "Invalid card number", http.StatusBadRequest)
 			return
