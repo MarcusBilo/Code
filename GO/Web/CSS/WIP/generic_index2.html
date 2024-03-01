@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{.Language}}">
+<html lang="{{.Language}}" xmlns:hx-on="http://www.w3.org/1999/xhtml">
 
 <!-- Blog Index -->
 
@@ -18,7 +18,9 @@
 <!-- icon: #ff8800 1×1 GIF -->
 <!-- Pfeile: &#11160 bis &#11167 -->
 
-<body id=main>
+<body id="main" hx-on:htmx:after-Settle="initializePage()">
+
+<!-- <div hx-on:htmx:after-Settle="initializePage()"></div> -->
 
 <div class="navbar">
     <a hx-get="./index1"
@@ -65,13 +67,54 @@
     <input id="searchInput" placeholder="Search Title" class="input-style" type="text">
 </label>
 
+<div id="card-container" class="card-container"></div>
+
+<!-- https://uiverse.io/Yaya12085/quiet-bear-76 -->
+
+<template id="card-template">
+    <div class="card">
+        <div class="date-time-container">
+            <time class="date-time">
+                <span class="year" hx-target="text"></span>
+                <span class="separator"></span>
+                <span class="month" hx-target="text"></span>
+            </time>
+        </div>
+        <div class="content">
+            <div class="infos">
+                <span class="title" hx-target="text"></span>
+                <p class="description" hx-target="text"></p>
+            </div>
+            <div>
+                <a hx-get="./index1"
+                   hx-push-url="./index1"
+                   hx-trigger="click"
+                   hx-target="#main"
+                   hx-swap="innerHTML"
+                   class="action">Read Blog</a>
+            </div>
+
+        </div>
+    </div>
+</template>
+
+</body>
+
 <script>
     document.addEventListener("DOMContentLoaded", async function () {
+        await initializePage()
+    });
+
+    async function initializePage() {
+        let fullPath = window.location.pathname;
+        let lastPart = fullPath.substring(fullPath.lastIndexOf('/') + 1);
+        console.log(lastPart)
+        if (lastPart === "index1") return;
         const cardContainer = document.getElementById("card-container");
         const searchInput = document.getElementById("searchInput");
         await fetchAndDisplayCards(cardContainer);
         searchInput.addEventListener("input", function () {filterCards(cardContainer, searchInput)});
-    });
+    }
 
     async function fetchAndDisplayCards(cardContainer) {
         let maxNumber;
@@ -124,38 +167,5 @@
         });
     }
 </script>
-
-<div id="card-container" class="card-container"></div>
-
-<!-- https://uiverse.io/Yaya12085/quiet-bear-76 -->
-
-<template id="card-template">
-    <div class="card">
-        <div class="date-time-container">
-            <time class="date-time">
-                <span class="year" hx-target="text"></span>
-                <span class="separator"></span>
-                <span class="month" hx-target="text"></span>
-            </time>
-        </div>
-        <div class="content">
-            <div class="infos">
-                <span class="title" hx-target="text"></span>
-                <p class="description" hx-target="text"></p>
-            </div>
-            <div>
-                <a hx-get="./index1"
-                   hx-push-url="./index1"
-                   hx-trigger="click"
-                   hx-target="#main"
-                   hx-swap="innerHTML"
-                   class="action">Read Blog</a>
-            </div>
-
-        </div>
-    </div>
-</template>
-
-</body>
 
 </html>
