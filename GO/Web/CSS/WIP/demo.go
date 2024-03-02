@@ -163,6 +163,54 @@ func main() {
 		}
 		renderHTML(w, r, "generic_index2.html", data)
 	})
+	http.HandleFunc("/en/index4", func(w http.ResponseWriter, r *http.Request) {
+		data := PageData{
+			Language:          "en",
+			Title:             "Information",
+			H1Content:         "HTML & CSS - EN.html",
+			PContent:          "Click the button below to toggle the visibility:",
+			ButtonContent:     "Toggle Visibility",
+			AddButton1Content: "Switch to 1nd File",
+			AddButton2Content: "Switch to 3rd File",
+		}
+		renderHTML(w, r, "generic_index4.html", data)
+	})
+	http.HandleFunc("/de/index4", func(w http.ResponseWriter, r *http.Request) {
+		data := PageData{
+			Language:          "de",
+			Title:             "Information",
+			H1Content:         "HTML & CSS - DE.html",
+			PContent:          "Auf den Button klicken um die Sichtbarkeit zu ändern:",
+			ButtonContent:     "Sichtbarkeit umschalten",
+			AddButton1Content: "Wechsel zur 1. Datei",
+			AddButton2Content: "Wechsel zur 3. Datei",
+		}
+		renderHTML(w, r, "generic_index4.html", data)
+	})
+	http.HandleFunc("/en/index5", func(w http.ResponseWriter, r *http.Request) {
+		data := PageData{
+			Language:          "en",
+			Title:             "Contact",
+			H1Content:         "HTML & CSS - EN.html",
+			PContent:          "Click the button below to toggle the visibility:",
+			ButtonContent:     "Toggle Visibility",
+			AddButton1Content: "Switch to 1nd File",
+			AddButton2Content: "Switch to 3rd File",
+		}
+		renderHTML(w, r, "generic_index5.html", data)
+	})
+	http.HandleFunc("/de/index5", func(w http.ResponseWriter, r *http.Request) {
+		data := PageData{
+			Language:          "de",
+			Title:             "Kontakt",
+			H1Content:         "HTML & CSS - DE.html",
+			PContent:          "Auf den Button klicken um die Sichtbarkeit zu ändern:",
+			ButtonContent:     "Sichtbarkeit umschalten",
+			AddButton1Content: "Wechsel zur 1. Datei",
+			AddButton2Content: "Wechsel zur 3. Datei",
+		}
+		renderHTML(w, r, "generic_index5.html", data)
+	})
 	http.HandleFunc("/en/card/1", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
 			Language:          "en",
@@ -199,12 +247,10 @@ func main() {
 		}
 		renderHTML(w, r, "generic_index3.html", data)
 	})
-
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
 
 func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data PageData) {
