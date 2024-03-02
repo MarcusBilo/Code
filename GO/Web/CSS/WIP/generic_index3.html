@@ -28,7 +28,7 @@
             <a id="deutsch"
                hx-trigger="click[checkGlobalState(event)]"
                hx-get="/de/card/"
-               hx-push-url="/de/card/"
+               hx-push-url="true"
                hx-target="#main"
                hx-swap="innerHTML">
                 <img src="/de.svg" alt="DE" style="width: 5.7em">
@@ -36,7 +36,7 @@
             <a id="english"
                hx-trigger="click[checkGlobalState(event)]"
                hx-get="/en/card/"
-               hx-push-url="/en/card/"
+               hx-push-url="true"
                hx-target="#main"
                hx-swap="innerHTML">
                 <img src="/gb.svg" alt="GB" style="width: 5.7em">
@@ -44,26 +44,26 @@
         </div>
     </div>
     <a hx-get="../index1"
-       hx-push-url="../index1"
+       hx-push-url="true"
        hx-trigger="click[checkGlobalState(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <img src="/noun-home-5487412.svg" alt="Home" style="width: 2em">
     </a>
     <a hx-get="../index2"
-       hx-push-url="../index2"
+       hx-push-url="true"
        hx-trigger="click[checkGlobalState(event)]"
        hx-target="#main"
        hx-swap="innerHTML">Blog
     </a>
     <a hx-get="../index4"
-       hx-push-url="../index4"
+       hx-push-url="true"
        hx-trigger="click[checkGlobalState(event)]"
        hx-target="#main"
        hx-swap="innerHTML">Info
     </a>
     <a hx-get="../index5"
-       hx-push-url="../index5"
+       hx-push-url="true"
        hx-trigger="click[checkGlobalState(event)]"
        hx-target="#main"
        hx-swap="innerHTML">Contact
@@ -91,7 +91,7 @@
         <div style="text-align: center; margin-top: 2rem">
             <button id="additionalButton1"
                     hx-get="./index1"
-                    hx-push-url="./index1"
+                    hx-push-url="true"
                     hx-trigger="click once"
                     hx-target="#main"
                     hx-swap="innerHTML"
@@ -100,7 +100,7 @@
             </button>
             <button id="additionalButton2"
                     hx-get="./index2"
-                    hx-push-url="./index2"
+                    hx-push-url="true"
                     hx-trigger="click once"
                     hx-target="#main"
                     hx-swap="innerHTML"
@@ -131,10 +131,8 @@
             if (partialDE && partialEN) {
                 const fullDE = partialDE.concat(lastPart);
                 deFlag.setAttribute("hx-get", fullDE);
-                deFlag.setAttribute("hx-push-url", fullDE);
                 const fullEN = partialEN.concat(lastPart);
                 enFlag.setAttribute("hx-get", fullEN);
-                enFlag.setAttribute("hx-push-url", fullEN);
                 htmx.process(dropdown)
             } else {
                 console.error("hx-get attribute not found on elements");
