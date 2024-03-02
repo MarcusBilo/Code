@@ -56,8 +56,8 @@
     </div>
     <script>
         function checkGlobalState(event) {
-            let currentURL = window.location.pathname;
-            let clickedLink = event.target.closest('a');
+            const currentURL = window.location.pathname;
+            const clickedLink = event.target.closest('a');
             if (clickedLink) {
                 return clickedLink.getAttribute("hx-get") !== currentURL;
             }
