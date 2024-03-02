@@ -55,10 +55,9 @@
         </div>
     </div>
     <script>
-
         function checkGlobalState(event) {
-            let currentURL = window.location.pathname;
-            let clickedLink = event.target.closest('a');
+            const currentURL = window.location.pathname;
+            const clickedLink = event.target.closest('a');
             if (clickedLink) {
                 return clickedLink.getAttribute("hx-get") !== currentURL;
             }
@@ -109,12 +108,12 @@
     });
 
     async function initializePage() {
-        let fullPath = window.location.pathname;
-        let lastPart = fullPath.substring(fullPath.lastIndexOf('/') + 1);
+        const fullPath = window.location.pathname;
+        const lastPart = fullPath.substring(fullPath.lastIndexOf('/') + 1);
         if (lastPart === "index1") return;
         const cardContainer = document.getElementById("card-container");
         const searchInput = document.getElementById("searchInput");
-        let firstPart = fullPath.substring(1, fullPath.indexOf('/', 1));
+        const firstPart = fullPath.substring(1, fullPath.indexOf('/', 1));
         await fetchAndDisplayCards(cardContainer, firstPart);
         searchInput.addEventListener("input", function () {filterCards(cardContainer, searchInput)});
     }
@@ -122,6 +121,7 @@
     async function fetchAndDisplayCards(cardContainer, language) {
         let maxNumber;
         let data;
+        let i;
         try {
             const response = await fetch("/max-card-number");
             maxNumber = parseInt(await response.text(), 10)
@@ -129,7 +129,7 @@
             console.error("Error fetching max card number:", error);
             return;
         }
-        for (let i = maxNumber; i > 0; i--) {
+        for (i = maxNumber; i > 0; i--) {
             try {
                 const response = await fetch(`/${language}/cards/${i}`);
                 data = await response.json();
@@ -148,13 +148,12 @@
                 cardClone.querySelector(".action").setAttribute("hx-get", `./card/${i}`);
                 cardClone.querySelector(".action").setAttribute("hx-push-url", `./card/${i}`);
                 cardContainer.appendChild(cardClone);
-                htmx.process(cardContainer); // as we dynamically add elements we need to reevaluate
-                await new Promise(r => setTimeout(r, 10)); // js version of sleep in ms
             } catch (error) {
                 console.error("Error displaying data:", error);
                 return;
             }
         }
+        htmx.process(cardContainer);
     }
 
     function filterCards(cardContainer, searchInput) {
