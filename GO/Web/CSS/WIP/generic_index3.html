@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="{{.Language}}" xmlns:hx-on="http://www.w3.org/1999/xhtml">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/htmx_v1.9.10.min.js"></script>
+    <link rel="icon" href="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P438HwHwAGmAKH433eggAAAABJRU5ErkJggg=="><link>
+    <link resource="">
+</head>
+
+<!-- #ff8800 1×1 GIF -->
+
+<body id="main" hx-on:htmx:after-Settle="initializePage()">
+
+<div class="navbar">
+    <a hx-get="../index1"
+       hx-push-url="../index1"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">
+        <img src="/noun-home-5487412.svg" alt="Home" style="width: 2em">
+    </a>
+    <a hx-get="../index2"
+       hx-push-url="../index2"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Blog
+    </a>
+    <div id="dropdown" class="dropdown">
+        <button class="dropbtn">Dropdown &#11163;
+        </button>
+        <div class="dropdown-content">
+            <a id="deutsch"
+               hx-trigger="click[checkGlobalState(event)]"
+               hx-get="/de/card/"
+               hx-push-url="/de/card/"
+               hx-target="#main"
+               hx-swap="innerHTML">
+                <img src="/de.svg" alt="DE" style="width: 5.7em">
+            </a>
+            <a id="english"
+               hx-trigger="click[checkGlobalState(event)]"
+               hx-get="/en/card/"
+               hx-push-url="/en/card/"
+               hx-target="#main"
+               hx-swap="innerHTML">
+                <img src="/gb.svg" alt="GB" style="width: 5.7em">
+            </a>
+        </div>
+    </div>
+    <script>
+        function checkGlobalState(event) {
+            let currentURL = window.location.pathname;
+            let clickedLink = event.target.closest('a');
+            if (clickedLink) {
+                return clickedLink.getAttribute("hx-get") !== currentURL;
+            }
+        }
+    </script>
+</div>
+
+<div style="padding-top: 2rem">
+
+    <div class="custom-div1">
+        <div style="text-align: center; margin-top: 2rem">
+            <button id="additionalButton1"
+                    hx-get="./index1"
+                    hx-push-url="./index1"
+                    hx-trigger="click once"
+                    hx-target="#main"
+                    hx-swap="innerHTML"
+                    class="custom-add-button">
+                {{.AddButton1Content}}
+            </button>
+            <button id="additionalButton2"
+                    hx-get="./index2"
+                    hx-push-url="./index2"
+                    hx-trigger="click once"
+                    hx-target="#main"
+                    hx-swap="innerHTML"
+                    class="custom-add-button">
+                {{.AddButton2Content}}
+            </button>
+        </div>
+    </div>
+
+</div>
+
+</body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", async function () {
+        await initializePage()
+    });
+
+    async function initializePage() {
+        let fullPath = window.location.pathname;
+        let lastPart = fullPath.substring(fullPath.lastIndexOf('/') + 1);
+        const deFlag = document.querySelector("#deutsch");
+        const enFlag = document.querySelector("#english");
+        const dropdown = document.querySelector("#dropdown")
+        if (deFlag && enFlag) {
+            let hxget1 = deFlag.getAttribute("hx-get");
+            let hxget2 = enFlag.getAttribute("hx-get");
+            if (hxget1 && hxget2) {
+                hxget1 = hxget1.concat(lastPart);
+                hxget2 = hxget2.concat(lastPart);
+                deFlag.setAttribute("hx-get", hxget1);
+                deFlag.setAttribute("hx-push-url", hxget1);
+                enFlag.setAttribute("hx-get", hxget2);
+                enFlag.setAttribute("hx-push-url", hxget2);
+                htmx.process(dropdown)
+            } else {
+                console.error("hx-get attribute not found on elements");
+            }
+        } else {
+            console.error("Elements with IDs 'deutsch' and/or 'english' not found");
+        }
+    }
+</script>
+
+</html>
