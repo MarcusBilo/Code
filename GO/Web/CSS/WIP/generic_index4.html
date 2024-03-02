@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="{{.Language}}" xmlns:hx-on="http://www.w3.org/1999/xhtml">
+
+<!-- Info Page -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="ogpu">
+    <meta name="description" content="The quick brown fox jumps over the lazy dog">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/htmx_v1.9.10.min.js"></script>
+    <link rel="icon" href="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P438HwHwAGmAKH433eggAAAABJRU5ErkJggg=="><link>
+    <link resource="">
+</head>
+
+<!-- icon: #ff8800 1×1 GIF -->
+<!-- Pfeile: &#11160 bis &#11167 -->
+
+<body id="main" hx-on:htmx:after-Settle="initializePage()">
+
+<div class="navbar">
+    <div class="dropdown">
+        <button class="dropbtn">Dropdown &#11163;
+        </button>
+        <div id="dropdown-content" class="dropdown-content">
+            <a hx-get="/de/index4"
+               hx-push-url="/de/index4"
+               hx-trigger="click[checkGlobalState(event)]"
+               hx-target="#main"
+               hx-swap="innerHTML">
+                <img src="/de.svg" alt="DE" style="width: 5.7em">
+            </a>
+            <a hx-get="/en/index4"
+               hx-push-url="/en/index4"
+               hx-trigger="click[checkGlobalState(event)]"
+               hx-target="#main"
+               hx-swap="innerHTML">
+                <img src="/gb.svg" alt="GB" style="width: 5.7em">
+            </a>
+        </div>
+    </div>
+    <a hx-get="./index1"
+       hx-push-url="./index1"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">
+        <img src="/noun-home-5487412.svg" alt="Home" style="width: 2em">
+    </a>
+    <a hx-get="./index2"
+       hx-push-url="./index2"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Blog
+    </a>
+    <a hx-get="./index4"
+       hx-push-url="./index4"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Info
+    </a>
+    <a hx-get="./index5"
+       hx-push-url="./index5"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Contact
+    </a>
+    <script>
+        function checkGlobalState(event) {
+            const currentURL = window.location.pathname;
+            const clickedLink = event.target.closest('a');
+            const lastPart = currentURL.substring(currentURL.lastIndexOf('/') + 1);
+            const hxget = clickedLink.getAttribute("hx-get")
+            const hxgetPart = hxget.substring(hxget.lastIndexOf('/') + 1);
+            const closestDiv = clickedLink.closest('div');
+            if (closestDiv.id === 'dropdown-content') {
+                return hxget !== currentURL;
+            } else {
+                return hxgetPart !== lastPart;
+            }
+        }
+    </script>
+</div>
+
+<div style="padding-top: 2rem">
+    <div class="custom-div1">
+        <h1 class="custom-h1">{{.H1Content}}</h1>
+        <p class="custom-p">{{.PContent}}</p>
+    </div>
+</div>
+
+</body>
+
+<script>
+    async function initializePage() {
+    }
+</script>
+
+</html>
