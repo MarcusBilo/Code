@@ -20,8 +20,6 @@
 
 <body id="main" hx-on:htmx:after-Settle="initializePage()">
 
-<!-- <div hx-on:htmx:after-Settle="initializePage()"></div> -->
-
 <div class="navbar">
     <a hx-get="./index1"
        hx-push-url="./index1"
@@ -34,7 +32,8 @@
        hx-push-url="./index2"
        hx-trigger="click[checkGlobalState(event)]"
        hx-target="#main"
-       hx-swap="innerHTML">Blog</a>
+       hx-swap="innerHTML">Blog
+    </a>
     <div class="dropdown">
         <button class="dropbtn">Dropdown &#11163;
         </button>
@@ -74,5 +73,10 @@
 </div>
 
 </body>
+
+<script>
+    async function initializePage() {
+    }
+</script>
 
 </html>
