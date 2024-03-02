@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="{{.Language}}" xmlns:hx-on="http://www.w3.org/1999/xhtml">
 
+<!-- Blog Post -->
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,28 +13,16 @@
     <link resource="">
 </head>
 
-<!-- #ff8800 1×1 GIF -->
+<!-- icon: #ff8800 1×1 GIF -->
+<!-- Pfeile: &#11160 bis &#11167 -->
 
 <body id="main" hx-on:htmx:after-Settle="initializePage()">
 
 <div class="navbar">
-    <a hx-get="../index1"
-       hx-push-url="../index1"
-       hx-trigger="click[checkGlobalState(event)]"
-       hx-target="#main"
-       hx-swap="innerHTML">
-        <img src="/noun-home-5487412.svg" alt="Home" style="width: 2em">
-    </a>
-    <a hx-get="../index2"
-       hx-push-url="../index2"
-       hx-trigger="click[checkGlobalState(event)]"
-       hx-target="#main"
-       hx-swap="innerHTML">Blog
-    </a>
     <div id="dropdown" class="dropdown">
         <button class="dropbtn">Dropdown &#11163;
         </button>
-        <div class="dropdown-content">
+        <div id="dropdown-content" class="dropdown-content">
             <a id="deutsch"
                hx-trigger="click[checkGlobalState(event)]"
                hx-get="/de/card/"
@@ -51,12 +41,43 @@
             </a>
         </div>
     </div>
+    <a hx-get="../index1"
+       hx-push-url="../index1"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">
+        <img src="/noun-home-5487412.svg" alt="Home" style="width: 2em">
+    </a>
+    <a hx-get="../index2"
+       hx-push-url="../index2"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Blog
+    </a>
+    <a hx-get="../index4"
+       hx-push-url="../index4"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Info
+    </a>
+    <a hx-get="../index5"
+       hx-push-url="../index5"
+       hx-trigger="click[checkGlobalState(event)]"
+       hx-target="#main"
+       hx-swap="innerHTML">Contact
+    </a>
     <script>
         function checkGlobalState(event) {
             const currentURL = window.location.pathname;
             const clickedLink = event.target.closest('a');
-            if (clickedLink) {
-                return clickedLink.getAttribute("hx-get") !== currentURL;
+            const lastPart = currentURL.substring(currentURL.lastIndexOf('/') + 1);
+            const hxget = clickedLink.getAttribute("hx-get")
+            const hxgetPart = hxget.substring(hxget.lastIndexOf('/') + 1);
+            const closestDiv = clickedLink.closest('div');
+            if (closestDiv.id === 'dropdown-content') {
+                return hxget !== currentURL;
+            } else {
+                return hxgetPart !== lastPart;
             }
         }
     </script>
