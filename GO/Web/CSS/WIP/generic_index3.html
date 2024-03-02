@@ -53,8 +53,8 @@
     </div>
     <script>
         function checkGlobalState(event) {
-            let currentURL = window.location.pathname;
-            let clickedLink = event.target.closest('a');
+            const currentURL = window.location.pathname;
+            const clickedLink = event.target.closest('a');
             if (clickedLink) {
                 return clickedLink.getAttribute("hx-get") !== currentURL;
             }
@@ -97,21 +97,21 @@
     });
 
     async function initializePage() {
-        let fullPath = window.location.pathname;
-        let lastPart = fullPath.substring(fullPath.lastIndexOf('/') + 1);
+        const fullPath = window.location.pathname;
+        const lastPart = fullPath.substring(fullPath.lastIndexOf('/') + 1);
         const deFlag = document.querySelector("#deutsch");
         const enFlag = document.querySelector("#english");
         const dropdown = document.querySelector("#dropdown")
         if (deFlag && enFlag) {
-            let hxget1 = deFlag.getAttribute("hx-get");
-            let hxget2 = enFlag.getAttribute("hx-get");
-            if (hxget1 && hxget2) {
-                hxget1 = hxget1.concat(lastPart);
-                hxget2 = hxget2.concat(lastPart);
-                deFlag.setAttribute("hx-get", hxget1);
-                deFlag.setAttribute("hx-push-url", hxget1);
-                enFlag.setAttribute("hx-get", hxget2);
-                enFlag.setAttribute("hx-push-url", hxget2);
+            const partialDE = deFlag.getAttribute("hx-get");
+            const partialEN = enFlag.getAttribute("hx-get");
+            if (partialDE && partialEN) {
+                const fullDE = partialDE.concat(lastPart);
+                deFlag.setAttribute("hx-get", fullDE);
+                deFlag.setAttribute("hx-push-url", fullDE);
+                const fullEN = partialEN.concat(lastPart);
+                enFlag.setAttribute("hx-get", fullEN);
+                enFlag.setAttribute("hx-push-url", fullEN);
                 htmx.process(dropdown)
             } else {
                 console.error("hx-get attribute not found on elements");
