@@ -152,6 +152,14 @@
             return;
         }
         for (i = maxNumber; i > 0; i--) {
+
+            // die checkGlobalState function vllt in eine scripts.js datei packen und jedes mal nur referenzieren statt laden
+
+            // no need for cardContainer parameter -- no need for the whole javascript code (if it works as intended)
+            // hx-get=`/${language}/cards/${i}`
+            // hx-swap="beforeend"
+            // hx-target="#card-container"
+
             try {
                 const response = await fetch(`/${language}/cards/${i}`);
                 data = await response.json();
