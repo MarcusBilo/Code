@@ -278,7 +278,7 @@ html, body {
     border-radius: 0.5rem;
     overflow: hidden;
     padding: 1.5rem;
-    height: 12rem;
+    height: fit-content
 }
 .custom-h1 {
     font-size: 1.875rem;
@@ -470,6 +470,11 @@ html, body {
     border-color: var(--neutral-700);
 }
 
+.custom-label {
+    text-align: center;
+    display: block;
+    margin-top: 1em;
+}
 
 .input-style {
     background: var(--neutral-50);
