@@ -118,19 +118,20 @@
     }
 
     async function fetchAndDisplayCards(cardContainer, language) {
-        if (executedOnce) return Promise.resolve();
-        return new Promise(async (resolve) => {
+        if (executedOnce) return;
+        let i, maxNumber;
+        try {
             const response = await fetch("/max-card-number");
-            const maxNumber = parseInt(await response.text(), 10);
-            await Promise.all(
-                Array.from({ length: maxNumber }, (_, index) => index + 1).map(async (i) => {
-                    await htmx.ajax('GET', `/${language}/cards/${i}`, { target: '#card-container', swap: 'beforeend' });
-                })
-            );
-            executedOnce = true;
-            resolve();
-        });
-    }
+            maxNumber = parseInt(await response.text(), 10);
+        } catch (error) {
+            console.error("Error fetching max card number:", error);
+            return;
+        }
+        for (i = maxNumber; i > 0; i--) {
+            htmx.ajax('GET', `/${language}/cards/${i}`, { target: '#card-container', swap: 'beforeend' });
+        }
+        executedOnce = true;
+        }
 
     function filterCards(cardContainer, searchInput) {
         const cards = cardContainer.querySelectorAll(".card");
