@@ -68,7 +68,7 @@
     </a>
     <script>
         function checkGlobalState(event) {
-            let isLoopExecuted = false
+            let executedOnce = false
             const currentURL = window.location.pathname;
             const clickedLink = event.target.closest('a');
             const lastPart = currentURL.substring(currentURL.lastIndexOf('/') + 1);
@@ -93,35 +93,43 @@
 </body>
 
 <script>
-    isLoopExecuted = false;
+    executedOnce = false;
 
     document.addEventListener("DOMContentLoaded", async function () {
-        await initializePage()
+        await initializePage();
     });
 
-    async function initializePage() {
-        const cardContainer = document.getElementById("card-container");
-        const searchInput = document.getElementById("searchInput");
-        const firstPart = window.location.pathname.substring(1, window.location.pathname.indexOf('/', 1));
-        await fetchAndDisplayCards(cardContainer, firstPart);
+    htmx.on("#searchInput", "popstate", initializeSearch())
+
+    async function initializeSearch() {
+        const cardContainer = document.querySelector("#card-container");
+        const searchInput = document.querySelector("#searchInput");
+        searchInput.value = null;
+        const cards = cardContainer.querySelectorAll(".card");
+        cards.forEach(card => {card.style.display = "flex"});
         searchInput.addEventListener("input", function () {filterCards(cardContainer, searchInput)});
     }
 
+    async function initializePage() {
+        const firstPart = window.location.pathname.substring(1, window.location.pathname.indexOf('/', 1));
+        const cardContainer = document.querySelector("#card-container");
+        await fetchAndDisplayCards(cardContainer, firstPart);
+        await initializeSearch()
+    }
+
     async function fetchAndDisplayCards(cardContainer, language) {
-        if (isLoopExecuted) return;
-        let maxNumber;
-        let i;
-        try {
+        if (executedOnce) return Promise.resolve();
+        return new Promise(async (resolve) => {
             const response = await fetch("/max-card-number");
-            maxNumber = parseInt(await response.text(), 10)
-        } catch (error) {
-            console.error("Error fetching max card number:", error);
-            return;
-        }
-        for (i = maxNumber; i > 0; i--) {
-            htmx.ajax('GET', `/${language}/cards/${i}`, {target:'#card-container', swap:'beforeend'});
-        }
-        isLoopExecuted = true;
+            const maxNumber = parseInt(await response.text(), 10);
+            await Promise.all(
+                Array.from({ length: maxNumber }, (_, index) => index + 1).map(async (i) => {
+                    await htmx.ajax('GET', `/${language}/cards/${i}`, { target: '#card-container', swap: 'beforeend' });
+                })
+            );
+            executedOnce = true;
+            resolve();
+        });
     }
 
     function filterCards(cardContainer, searchInput) {
