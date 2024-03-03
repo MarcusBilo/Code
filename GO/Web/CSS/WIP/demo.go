@@ -11,19 +11,26 @@ type PageData struct {
 	Language          string
 	Title             string
 	H1Content         string
-	PContent          string
+	PContent1         string
+	PContent2         string
 	ButtonContent     string
 	AddButton1Content string
 	AddButton2Content string
 }
 
 type CardData struct {
+	Language    string
 	Year        int
 	Month       int
 	Title       string
 	Description string
 	Get         string
 	Blog        string
+	H1Content   string
+	PContent1   string
+	PContent2   string
+	PContent3   string
+	PContent4   string
 }
 
 var enCardDataMap = map[int]CardData{
@@ -64,33 +71,53 @@ var deCardDataMap = map[int]CardData{
 	},
 }
 
-var enBlogDataMap = map[int]PageData{
+var enBlogDataMap = map[int]CardData{
 	1: {
-		Language:          "en",
-		Title:             "HTMX & Basic CSS Example",
-		AddButton1Content: "Back to 1st File",
-		AddButton2Content: "Back to 2nd File",
+		Language:    "en",
+		Year:        2022,
+		Month:       1,
+		Title:       "Lorem Card 1 Title",
+		Description: "Description Card 1.",
+		PContent1:   "text1",
+		PContent2:   "text2",
+		PContent3:   "text3",
+		PContent4:   "text4",
 	},
 	2: {
-		Language:          "en",
-		Title:             "HTMX & Basic CSS 2 Example",
-		AddButton1Content: "Back to 1st File",
-		AddButton2Content: "Back to 2nd File",
+		Language:    "en",
+		Year:        2022,
+		Month:       2,
+		Title:       "Lorem Card 2 Title",
+		Description: "Description Card 2.",
+		PContent1:   "text1",
+		PContent2:   "text2",
+		PContent3:   "text3",
+		PContent4:   "text4",
 	},
 }
 
-var deBlogDataMap = map[int]PageData{
+var deBlogDataMap = map[int]CardData{
 	1: {
-		Language:          "de",
-		Title:             "HTMX & Basic CSS Beispiel",
-		AddButton1Content: "Zurück zur 1. Datei",
-		AddButton2Content: "Zurück zur 2. Datei",
+		Language:    "de",
+		Year:        2022,
+		Month:       1,
+		Title:       "Lorem Card 1 Titel",
+		Description: "Beschreibung Card 1.",
+		PContent1:   "text1",
+		PContent2:   "text2",
+		PContent3:   "text3",
+		PContent4:   "text4",
 	},
 	2: {
-		Language:          "de",
-		Title:             "HTMX & Basic CSS 2 Beispiel",
-		AddButton1Content: "Zurück zur 1. Datei",
-		AddButton2Content: "Zurück zur 2. Datei",
+		Language:    "de",
+		Year:        2022,
+		Month:       2,
+		Title:       "Lorem Card 2 Titel",
+		Description: "Beschreibung Card 2.",
+		PContent1:   "text1",
+		PContent2:   "text2",
+		PContent3:   "text3",
+		PContent4:   "text4",
 	},
 }
 
@@ -175,106 +202,82 @@ func main() {
 
 	http.HandleFunc("/en/index1", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
-			Language:          "en",
-			Title:             "HTMX & Basic CSS Example",
-			H1Content:         "HTML & CSS - Index1EN.html",
-			PContent:          "Click the button below to toggle the visibility:",
-			ButtonContent:     "Toggle Visibility",
-			AddButton1Content: "Switch to 2nd File",
-			AddButton2Content: "Switch to 3rd File",
+			Language:  "en",
+			Title:     "HTMX & Basic CSS",
+			H1Content: "HTMX & Basic CSS - Index1EN.html",
+			PContent1: "Landing Page with filler content",
 		}
 		renderHTML(w, r, "generic_index1.html", data)
 	})
 	http.HandleFunc("/de/index1", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
-			Language:          "de",
-			Title:             "HTMX & Basic CSS Beispiel",
-			H1Content:         "HTML & CSS - Index1DE.html",
-			PContent:          "Auf den Button klicken um die Sichtbarkeit zu ändern:",
-			ButtonContent:     "Sichtbarkeit umschalten",
-			AddButton1Content: "Wechsel zur 2. Datei",
-			AddButton2Content: "Wechsel zur 3. Datei",
+			Language:  "de",
+			Title:     "HTMX & Basic CSS",
+			H1Content: "HTMX & Basic CSS - Index1DE.html",
+			PContent1: "Startseite mit Füllinhalten",
 		}
 		renderHTML(w, r, "generic_index1.html", data)
 	})
-	
+
 	// ########################
-	
+
 	http.HandleFunc("/en/index2", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
-			Language:          "en",
-			Title:             "HTMX & Basic CSS Example",
-			H1Content:         "HTML & CSS - Index2EN.html",
-			PContent:          "Click the button below to toggle the visibility:",
-			ButtonContent:     "Toggle Visibility",
-			AddButton1Content: "Switch to 1nd File",
-			AddButton2Content: "Switch to 3rd File",
+			Language: "en",
+			Title:    "HTMX & Basic CSS",
 		}
 		renderHTML(w, r, "generic_index2.html", data)
 	})
 	http.HandleFunc("/de/index2", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
-			Language:          "de",
-			Title:             "HTMX & Basic CSS Beispiel",
-			H1Content:         "HTML & CSS - Index2DE.html",
-			PContent:          "Auf den Button klicken um die Sichtbarkeit zu ändern:",
-			ButtonContent:     "Sichtbarkeit umschalten",
-			AddButton1Content: "Wechsel zur 1. Datei",
-			AddButton2Content: "Wechsel zur 3. Datei",
+			Language: "de",
+			Title:    "HTMX & Basic CSS",
 		}
 		renderHTML(w, r, "generic_index2.html", data)
 	})
-	
+
 	// ########################
-	
+
 	http.HandleFunc("/en/index4", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
-			Language:          "en",
-			Title:             "Information",
-			H1Content:         "HTML & CSS - EN.html",
-			PContent:          "Click the button below to toggle the visibility:",
-			ButtonContent:     "Toggle Visibility",
-			AddButton1Content: "Switch to 1nd File",
-			AddButton2Content: "Switch to 3rd File",
+			Language:  "en",
+			Title:     "Information",
+			H1Content: "Exampleweb",
+			PContent1: "Main Street 123",
+			PContent2: "Zip Code: 12345",
 		}
 		renderHTML(w, r, "generic_index4.html", data)
 	})
 	http.HandleFunc("/de/index4", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
-			Language:          "de",
-			Title:             "Information",
-			H1Content:         "HTML & CSS - DE.html",
-			PContent:          "Auf den Button klicken um die Sichtbarkeit zu ändern:",
-			ButtonContent:     "Sichtbarkeit umschalten",
-			AddButton1Content: "Wechsel zur 1. Datei",
-			AddButton2Content: "Wechsel zur 3. Datei",
+			Language:  "de",
+			Title:     "Information",
+			H1Content: "Exampleweb",
+			PContent1: "Hauptstraße 123",
+			PContent2: "Postleitzahl: 12345",
 		}
 		renderHTML(w, r, "generic_index4.html", data)
 	})
 
 	// ########################
-	
+
 	http.HandleFunc("/en/index5", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
-			Language:          "en",
-			Title:             "Contact",
-			H1Content:         "HTML & CSS - EN.html",
-			PContent:          "Click the button below to toggle the visibility:",
-			ButtonContent:     "Toggle Visibility",
-			AddButton1Content: "Switch to 1nd File",
-			AddButton2Content: "Switch to 3rd File",
+			Language:  "en",
+			Title:     "Contact",
+			H1Content: "Send us an e-mail to",
+			PContent1: "support@exampleweb.com",
+			PContent2: "or write to us on social media",
 		}
 		renderHTML(w, r, "generic_index5.html", data)
 	})
 	http.HandleFunc("/de/index5", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
-			Language:          "de",
-			Title:             "Kontakt",
-			H1Content:         "HTML & CSS - DE.html",
-			PContent:          "Auf den Button klicken um die Sichtbarkeit zu ändern:",
-			ButtonContent:     "Sichtbarkeit umschalten",
-			AddButton1Content: "Wechsel zur 1. Datei",
-			AddButton2Content: "Wechsel zur 3. Datei",
+			Language:  "de",
+			Title:     "Kontakt",
+			H1Content: "Senden Sie uns eine E-Mail an",
+			PContent1: "support@exampleweb.com",
+			PContent2: "oder schreiben Sie uns auf Social Media an",
 		}
 		renderHTML(w, r, "generic_index5.html", data)
 	})
@@ -315,7 +318,7 @@ func main() {
 	// ########################
 	// ########################
 	// ########################
-	
+
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
