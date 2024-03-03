@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -18,24 +17,94 @@ type PageData struct {
 	AddButton2Content string
 }
 
-type Card struct {
-	Year        int    `json:"year"`
-	Month       string `json:"month"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
+type CardData struct {
+	Year        int
+	Month       int
+	Title       string
+	Description string
+	Get         string
+	Blog        string
+}
+
+var enCardDataMap = map[int]CardData{
+	1: {
+		Year:        2022,
+		Month:       1,
+		Title:       "Lorem Card 1 Title",
+		Description: "Description for Card 1.",
+		Get:         "./card/1",
+		Blog:        "Read Blog",
+	},
+	2: {
+		Year:        2022,
+		Month:       2,
+		Title:       "Ipsum Card 2 Title",
+		Description: "Description for Card 2.",
+		Get:         "./card/2",
+		Blog:        "Read Blog",
+	},
+}
+
+var deCardDataMap = map[int]CardData{
+	1: {
+		Year:        2022,
+		Month:       1,
+		Title:       "Lorem Card 1 Titel",
+		Description: "Beschreibung für Card 1.",
+		Get:         "./card/1",
+		Blog:        "Blog lesen",
+	},
+	2: {
+		Year:        2022,
+		Month:       2,
+		Title:       "Ipsum Card 2 Titel",
+		Description: "Beschreibung für Card 2.",
+		Get:         "./card/2",
+		Blog:        "Blog lesen",
+	},
+}
+
+var enBlogDataMap = map[int]PageData{
+	1: {
+		Language:          "en",
+		Title:             "HTMX & Basic CSS Example",
+		AddButton1Content: "Back to 1st File",
+		AddButton2Content: "Back to 2nd File",
+	},
+	2: {
+		Language:          "en",
+		Title:             "HTMX & Basic CSS 2 Example",
+		AddButton1Content: "Back to 1st File",
+		AddButton2Content: "Back to 2nd File",
+	},
+}
+
+var deBlogDataMap = map[int]PageData{
+	1: {
+		Language:          "de",
+		Title:             "HTMX & Basic CSS Beispiel",
+		AddButton1Content: "Zurück zur 1. Datei",
+		AddButton2Content: "Zurück zur 2. Datei",
+	},
+	2: {
+		Language:          "de",
+		Title:             "HTMX & Basic CSS 2 Beispiel",
+		AddButton1Content: "Zurück zur 1. Datei",
+		AddButton2Content: "Zurück zur 2. Datei",
+	},
 }
 
 func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case "/styles.css":
+			w.Header().Set("Content-Type", "text/css")
+			http.ServeFile(w, r, "styles.css")
 		case "/htmx_v1.9.10.min.js":
 			// https://unpkg.com/browse/htmx.org@1.9.10/dist/
 			w.Header().Set("Content-Type", "application/javascript")
 			http.ServeFile(w, r, "htmx_v1.9.10.min.js")
-		case "/styles.css":
-			w.Header().Set("Content-Type", "text/css")
-			http.ServeFile(w, r, "styles.css")
 		case "/noun-home-5487412.svg":
 			// https://thenounproject.com/icon/home-5487412/
 			http.ServeFile(w, r, "noun-home-5487412.svg")
@@ -55,7 +124,7 @@ func main() {
 			// https://flagicons.lipis.dev/
 			http.ServeFile(w, r, "gb.svg")
 		case "/max-card-number":
-			maxNumber := getMaxCardNumber()
+			maxNumber := len(enCardDataMap)
 			w.Header().Set("Content-Type", "text/plain")
 			_, err := fmt.Fprintf(w, "%d", maxNumber)
 			if err != nil {
@@ -67,29 +136,9 @@ func main() {
 		}
 	})
 
-	http.HandleFunc("/de/cards/", func(w http.ResponseWriter, r *http.Request) {
-		var cardNumber int
-		_, err := fmt.Sscanf(r.URL.Path, "/de/cards/%d", &cardNumber)
-		if err != nil {
-			http.Error(w, "Invalid card number", http.StatusBadRequest)
-			return
-		}
-		cardData, err := fetchDeCardData(cardNumber)
-		if err != nil {
-			http.Error(w, "Error fetching card data", http.StatusInternalServerError)
-			return
-		}
-		jsonData, err := json.Marshal(cardData)
-		if err != nil {
-			http.Error(w, "Error converting to JSON", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write(jsonData)
-		if err != nil {
-			return
-		}
-	})
+	// ########################
+	// ########################
+	// ########################
 
 	http.HandleFunc("/en/cards/", func(w http.ResponseWriter, r *http.Request) {
 		var cardNumber int
@@ -98,22 +147,31 @@ func main() {
 			http.Error(w, "Invalid card number", http.StatusBadRequest)
 			return
 		}
-		cardData, err := fetchEnCardData(cardNumber)
-		if err != nil {
-			http.Error(w, "Error fetching card data", http.StatusInternalServerError)
+		data, ok := enCardDataMap[cardNumber]
+		if !ok {
+			http.Error(w, "Card not found", http.StatusNotFound)
 			return
 		}
-		jsonData, err := json.Marshal(cardData)
-		if err != nil {
-			http.Error(w, "Error converting to JSON", http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		_, err = w.Write(jsonData)
-		if err != nil {
-			return
-		}
+		renderHTML(w, r, "card-template.html", data)
 	})
+	http.HandleFunc("/de/cards/", func(w http.ResponseWriter, r *http.Request) {
+		var cardNumber int
+		_, err := fmt.Sscanf(r.URL.Path, "/de/cards/%d", &cardNumber)
+		if err != nil {
+			http.Error(w, "Invalid card number", http.StatusBadRequest)
+			return
+		}
+		data, ok := deCardDataMap[cardNumber]
+		if !ok {
+			http.Error(w, "Card not found", http.StatusNotFound)
+			return
+		}
+		renderHTML(w, r, "card-template.html", data)
+	})
+
+	// ########################
+	// ########################
+	// ########################
 
 	http.HandleFunc("/en/index1", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
@@ -139,6 +197,9 @@ func main() {
 		}
 		renderHTML(w, r, "generic_index1.html", data)
 	})
+	
+	// ########################
+	
 	http.HandleFunc("/en/index2", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
 			Language:          "en",
@@ -163,6 +224,9 @@ func main() {
 		}
 		renderHTML(w, r, "generic_index2.html", data)
 	})
+	
+	// ########################
+	
 	http.HandleFunc("/en/index4", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
 			Language:          "en",
@@ -187,6 +251,9 @@ func main() {
 		}
 		renderHTML(w, r, "generic_index4.html", data)
 	})
+
+	// ########################
+	
 	http.HandleFunc("/en/index5", func(w http.ResponseWriter, r *http.Request) {
 		data := PageData{
 			Language:          "en",
@@ -211,49 +278,51 @@ func main() {
 		}
 		renderHTML(w, r, "generic_index5.html", data)
 	})
-	http.HandleFunc("/en/card/1", func(w http.ResponseWriter, r *http.Request) {
-		data := PageData{
-			Language:          "en",
-			Title:             "HTMX & Basic CSS Example",
-			AddButton1Content: "Back to 1st File",
-			AddButton2Content: "Back to 2nd File",
+
+	// ########################
+	// ########################
+	// ########################
+
+	http.HandleFunc("/en/card/", func(w http.ResponseWriter, r *http.Request) {
+		var cardNumber int
+		_, err := fmt.Sscanf(r.URL.Path, "/en/card/%d", &cardNumber)
+		if err != nil {
+			http.Error(w, "Invalid blog number", http.StatusBadRequest)
+			return
+		}
+		data, exists := enBlogDataMap[cardNumber]
+		if !exists {
+			http.Error(w, "Blog not found", http.StatusNotFound)
+			return
 		}
 		renderHTML(w, r, "generic_index3.html", data)
 	})
-	http.HandleFunc("/de/card/1", func(w http.ResponseWriter, r *http.Request) {
-		data := PageData{
-			Language:          "de",
-			Title:             "HTMX & Basic CSS Beispiel",
-			AddButton1Content: "Zurück zur 1. Datei",
-			AddButton2Content: "Zurück zur 2. Datei",
+	http.HandleFunc("/de/card/", func(w http.ResponseWriter, r *http.Request) {
+		var cardNumber int
+		_, err := fmt.Sscanf(r.URL.Path, "/de/card/%d", &cardNumber)
+		if err != nil {
+			http.Error(w, "Invalid blog number", http.StatusBadRequest)
+			return
+		}
+		data, exists := deBlogDataMap[cardNumber]
+		if !exists {
+			http.Error(w, "Blog not found", http.StatusNotFound)
+			return
 		}
 		renderHTML(w, r, "generic_index3.html", data)
 	})
-	http.HandleFunc("/en/card/2", func(w http.ResponseWriter, r *http.Request) {
-		data := PageData{
-			Language:          "en",
-			Title:             "HTMX & Basic CSS 2 Example",
-			AddButton1Content: "Back to 1st File",
-			AddButton2Content: "Back to 2nd File",
-		}
-		renderHTML(w, r, "generic_index3.html", data)
-	})
-	http.HandleFunc("/de/card/2", func(w http.ResponseWriter, r *http.Request) {
-		data := PageData{
-			Language:          "de",
-			Title:             "HTMX & Basic CSS 2 Beispiel",
-			AddButton1Content: "Zurück zur 1. Datei",
-			AddButton2Content: "Zurück zur 2. Datei",
-		}
-		renderHTML(w, r, "generic_index3.html", data)
-	})
+
+	// ########################
+	// ########################
+	// ########################
+	
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data PageData) {
+func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
 	tmpl, err := template.ParseFiles(templateFile)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -263,50 +332,4 @@ func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, dat
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-}
-
-func fetchDeCardData(cardNumber int) (*Card, error) {
-	switch cardNumber {
-	case 1:
-		return &Card{
-			Year:        2022,
-			Month:       "01",
-			Title:       "Lorem ipsum",
-			Description: "Dies ist die erste Kartenbeschreibung. Dies ist die erste Kartenbeschreibung. Dies ist die erste Kartenbeschreibung.",
-		}, nil
-	case 2:
-		return &Card{
-			Year:        2022,
-			Month:       "02",
-			Title:       "dolor sit amet",
-			Description: "Dies ist die zweite Kartenbeschreibung.",
-		}, nil
-	default:
-		return nil, fmt.Errorf("DE Card not found")
-	}
-}
-
-func fetchEnCardData(cardNumber int) (*Card, error) {
-	switch cardNumber {
-	case 1:
-		return &Card{
-			Year:        2022,
-			Month:       "01",
-			Title:       "Lorem ipsum",
-			Description: "This is the first card description. This is the first card description. This is the first card description.",
-		}, nil
-	case 2:
-		return &Card{
-			Year:        2022,
-			Month:       "02",
-			Title:       "dolor sit amet",
-			Description: "This is the second card description.",
-		}, nil
-	default:
-		return nil, fmt.Errorf("EN Card not found")
-	}
-}
-
-func getMaxCardNumber() int {
-	return 2
 }
