@@ -120,11 +120,9 @@
     });
 
     async function initializePage() {
-        const fullPath = window.location.pathname;
-        const lastPart = fullPath.substring(fullPath.lastIndexOf('/') + 1);
+        const lastPart = window.location.pathname.substring(window.location.pathname.lastIndexOf('/') + 1);
         const deFlag = document.querySelector("#deutsch");
         const enFlag = document.querySelector("#english");
-        const dropdown = document.querySelector("#dropdown")
         if (deFlag && enFlag) {
             const partialDE = deFlag.getAttribute("hx-get");
             const partialEN = enFlag.getAttribute("hx-get");
@@ -133,7 +131,7 @@
                 deFlag.setAttribute("hx-get", fullDE);
                 const fullEN = partialEN.concat(lastPart);
                 enFlag.setAttribute("hx-get", fullEN);
-                htmx.process(dropdown)
+                htmx.process(document.querySelector("#dropdown"))
             } else {
                 console.error("hx-get attribute not found on elements");
             }
