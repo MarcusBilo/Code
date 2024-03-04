@@ -39,18 +39,9 @@ func handleBaseRequest() http.HandlerFunc {
 			// https://unpkg.com/browse/htmx.org@1.9.10/dist/
 			w.Header().Set("Content-Type", "application/javascript")
 			http.ServeFile(w, r, "htmx_v1.9.10.min.js")
-		case "/noun-home-5487412.svg":
-			// https://thenounproject.com/icon/home-5487412/
-			http.ServeFile(w, r, "noun-home-5487412.svg")
 		case "/Noto-Sans-regular.woff2":
 			// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
 			http.ServeFile(w, r, "Noto-Sans-regular.woff2")
-		case "/de.svg":
-			// https://flagicons.lipis.dev/
-			http.ServeFile(w, r, "de.svg")
-		case "/gb.svg":
-			// https://flagicons.lipis.dev/
-			http.ServeFile(w, r, "gb.svg")
 		default:
 			http.Redirect(w, r, "/en/index/1", http.StatusMovedPermanently)
 		}
@@ -111,12 +102,12 @@ func handleCardsRequest(cardDataMap map[int]CardData, lang string) http.HandlerF
 		format := "/" + lang + "/cards/%d"
 		_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
 		if err != nil {
-			http.Error(w, "Invalid card number", http.StatusBadRequest)
+			http.Error(w, "Invalid cards number", http.StatusBadRequest)
 			return
 		}
 		data, ok := cardDataMap[cardNumber]
 		if !ok {
-			http.Error(w, "Card not found", http.StatusNotFound)
+			http.Error(w, "Cards not found", http.StatusNotFound)
 			return
 		}
 		renderHTML(w, r, "card-template.html", data)
