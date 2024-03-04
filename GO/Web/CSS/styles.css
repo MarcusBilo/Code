@@ -3,7 +3,7 @@
     --gray-700: #374151;
     --gray-800: #1f2937;
     --gray-900: #111827;
-    --gray-trans-900: #1118271A;
+    --gray-10trans-900: #1118271A;
     --neutral-50: #fafafa;
     --neutral-200: #e5e5e5;
     --neutral-250: #dddddd;
@@ -139,7 +139,7 @@ html, body {
 .separator {
     width: 1px;
     flex: 1 1 0;
-    background-color: var(--gray-trans-900);
+    background-color: var(--gray-10trans-900);
 }
 .content {
     display: flex;
@@ -148,7 +148,7 @@ html, body {
     justify-content: space-between;
 }
 .infos {
-    border-left: 1px solid var(--gray-trans-900);
+    border-left: 1px solid var(--gray-10trans-900);
     padding: 1rem;
 }
 .title {
