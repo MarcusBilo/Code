@@ -5,22 +5,31 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func main() {
 
 	http.HandleFunc("/", handleBaseRequest())
 	http.HandleFunc("/max-card-number", handleMaxNumRequest())
+	http.HandleFunc("/en/index/1/", handleTrailingSlash())
+	http.HandleFunc("/de/index/1/", handleTrailingSlash())
 	http.HandleFunc("/en/index/1", handleIndexRequest(enIndexMap, "generic_index1.html", "en"))
 	http.HandleFunc("/de/index/1", handleIndexRequest(deIndexMap, "generic_index1.html", "de"))
+	http.HandleFunc("/en/index/2/", handleTrailingSlash())
+	http.HandleFunc("/de/index/2/", handleTrailingSlash())
 	http.HandleFunc("/en/index/2", handleIndexRequest(enIndexMap, "generic_index2.html", "en"))
 	http.HandleFunc("/de/index/2", handleIndexRequest(deIndexMap, "generic_index2.html", "de"))
+	http.HandleFunc("/en/index/4/", handleTrailingSlash())
+	http.HandleFunc("/de/index/4/", handleTrailingSlash())
 	http.HandleFunc("/en/index/4", handleIndexRequest(enIndexMap, "generic_index4.html", "en"))
 	http.HandleFunc("/de/index/4", handleIndexRequest(deIndexMap, "generic_index4.html", "de"))
+	http.HandleFunc("/en/index/5/", handleTrailingSlash())
+	http.HandleFunc("/de/index/5/", handleTrailingSlash())
 	http.HandleFunc("/en/index/5", handleIndexRequest(enIndexMap, "generic_index5.html", "en"))
 	http.HandleFunc("/de/index/5", handleIndexRequest(deIndexMap, "generic_index5.html", "de"))
-	http.HandleFunc("/en/cards/", handleCardsRequest(enCardDataMap, "en"))
-	http.HandleFunc("/de/cards/", handleCardsRequest(deCardDataMap, "de"))
+	http.HandleFunc("/en/cards/", handleCards(enCardDataMap, "en"))
+	http.HandleFunc("/de/cards/", handleCards(deCardDataMap, "de"))
 	http.HandleFunc("/en/card/", handleCardRequest(enBlogDataMap, "en"))
 	http.HandleFunc("/de/card/", handleCardRequest(deBlogDataMap, "de"))
 
@@ -55,6 +64,16 @@ func handleMaxNumRequest() http.HandlerFunc {
 		_, err := fmt.Fprintf(w, "%d", maxNumber)
 		if err != nil {
 			http.Error(w, "Error writing response", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func handleTrailingSlash() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			newURL := strings.TrimSuffix(r.URL.Path, "/")
+			http.Redirect(w, r, newURL, http.StatusMovedPermanently)
 			return
 		}
 	}
@@ -96,7 +115,7 @@ func handleCardRequest(blogDataMap map[int]CardData, lang string) http.HandlerFu
 	}
 }
 
-func handleCardsRequest(cardDataMap map[int]CardData, lang string) http.HandlerFunc {
+func handleCards(cardDataMap map[int]CardData, lang string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var cardNumber int
 		format := "/" + lang + "/cards/%d"
