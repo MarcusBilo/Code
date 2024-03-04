@@ -244,8 +244,7 @@ html, body {
     margin: 0;
 }
 .navbar a:hover, .dropdown:hover .dropbtn {
-    background-color: var(--orange-400);
-    color: var(--neutral-950);
+    background-color: var(--neutral-900);
 }
 .dropdown-content {
     display: none;
