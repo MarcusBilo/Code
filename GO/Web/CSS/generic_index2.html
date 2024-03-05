@@ -12,11 +12,9 @@
     <link rel="stylesheet" href="/styles.css">
     <script src="/htmx_v1.9.10.min.js"></script>
     <link rel="icon" href="data:image/gif;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2P438HwHwAGmAKH433eggAAAABJRU5ErkJggg=="><link>
-    <link resource="">
 </head>
 
 <!-- icon: #ff8800 1×1 GIF -->
-<!-- Pfeile: &#11160 bis &#11167 -->
 
 <body id="main" hx-on:htmx:after-Settle="initializePage()">
 
@@ -100,7 +98,7 @@
     <a href="https://flagicons.lipis.dev/" style="float: right; display: flex; align-items: center; justify-content: center">Flag-Icons</a>
     <script>
         function checkGlobalState(event) {
-            let executedOnce = false
+            let executedOnce = false // avoid let redeclaration
             const currentURL = window.location.pathname;
             const clickedLink = event.target.closest('a');
             const lastPart = currentURL.substring(currentURL.lastIndexOf('/') + 1);
