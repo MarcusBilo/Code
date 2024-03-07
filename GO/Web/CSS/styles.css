@@ -28,7 +28,6 @@ html, body {
     background: radial-gradient(var(--neutral-200), var(--neutral-400));
     font-family: 'Noto-Sans', sans-serif;
     margin: 0;
-    min-width: 570px;
 }
 .navbar {
     overflow: hidden;
@@ -42,6 +41,20 @@ html, body {
     padding: 16px;
     text-decoration: none;
     height: 36px;
+}
+.navbar a.link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    float: right;
+}
+@media (min-width: 570px) {
+    #lineAwesomeLink:after {
+        content: "\00a0 Awesome";
+    }
+    #flagIconsLink:after {
+        content: "-Icons";
+    }
 }
 .dropdown {
     float: left;
