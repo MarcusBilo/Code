@@ -13,70 +13,46 @@ import (
 
 func main() {
 
-	http.HandleFunc("/", handleBaseRequest())
-	http.HandleFunc("/max-card-number", handleMaxNumRequest())
-
-	http.Handle("GET /{language}/index/{index}/", http.HandlerFunc(handleTrailingSlash))
+	http.Handle("GET /", http.HandlerFunc(handleBaseRequest))
+	http.Handle("GET /max-card-number", http.HandlerFunc(handleMaxNumRequest))
+	http.Handle("GET /{language}/index/{index}/", http.HandlerFunc(removeTrailingSlash))
 	http.Handle("GET /{language}/index/{index}", http.HandlerFunc(handleIndexRequest))
-
-	/*
-		http.HandleFunc("/en/index/1", handleIndexRequest(enIndexMap, "generic_index1.html", "en"))
-		http.HandleFunc("/de/index/1", handleIndexRequest(deIndexMap, "generic_index1.html", "de"))
-		http.HandleFunc("/en/index/2/", handleTrailingSlash())
-		http.HandleFunc("/de/index/2/", handleTrailingSlash())
-		http.HandleFunc("/en/index/2", handleIndexRequest(enIndexMap, "generic_index2.html", "en"))
-		http.HandleFunc("/de/index/2", handleIndexRequest(deIndexMap, "generic_index2.html", "de"))
-		http.HandleFunc("/en/index/4/", handleTrailingSlash())
-		http.HandleFunc("/de/index/4/", handleTrailingSlash())
-		http.HandleFunc("/en/index/4", handleIndexRequest(enIndexMap, "generic_index4.html", "en"))
-		http.HandleFunc("/de/index/4", handleIndexRequest(deIndexMap, "generic_index4.html", "de"))
-		http.HandleFunc("/en/index/5/", handleTrailingSlash())
-		http.HandleFunc("/de/index/5/", handleTrailingSlash())
-		http.HandleFunc("/en/index/5", handleIndexRequest(enIndexMap, "generic_index5.html", "en"))
-		http.HandleFunc("/de/index/5", handleIndexRequest(deIndexMap, "generic_index5.html", "de"))
-	*/
-	http.HandleFunc("/en/cards/", handleCards(enCardDataMap, "en"))
-	http.HandleFunc("/de/cards/", handleCards(deCardDataMap, "de"))
-	http.HandleFunc("/en/card/", handleCardRequest(enBlogDataMap, "en"))
-	http.HandleFunc("/de/card/", handleCardRequest(deBlogDataMap, "de"))
+	http.Handle("GET /{language}/cards/", http.HandlerFunc(handleAllCards))
+	http.Handle("GET /{language}/card/", http.HandlerFunc(handleSingleCard))
 
 	if err := http.ListenAndServe(":8080", nil); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func handleBaseRequest() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/styles.css":
-			w.Header().Set("Content-Type", "text/css")
-			http.ServeFile(w, r, "styles.css")
-		case "/htmx_v1.9.10.min.js":
-			// https://unpkg.com/browse/htmx.org@1.9.10/dist/
-			w.Header().Set("Content-Type", "application/javascript")
-			http.ServeFile(w, r, "htmx_v1.9.10.min.js")
-		case "/Noto-Sans-regular.woff2":
-			// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
-			http.ServeFile(w, r, "Noto-Sans-regular.woff2")
-		default:
-			http.Redirect(w, r, "/en/index/1", http.StatusMovedPermanently)
-		}
+func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
+	switch r.URL.Path {
+	case "/styles.css":
+		w.Header().Set("Content-Type", "text/css")
+		http.ServeFile(w, r, "styles.css")
+	case "/htmx_v1.9.10.min.js":
+		// https://unpkg.com/browse/htmx.org@1.9.10/dist/
+		w.Header().Set("Content-Type", "application/javascript")
+		http.ServeFile(w, r, "htmx_v1.9.10.min.js")
+	case "/Noto-Sans-regular.woff2":
+		// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
+		http.ServeFile(w, r, "Noto-Sans-regular.woff2")
+	default:
+		http.Redirect(w, r, "/en/index/1", http.StatusMovedPermanently)
 	}
 }
 
-func handleMaxNumRequest() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		maxNumber := len(enCardDataMap)
-		w.Header().Set("Content-Type", "text/plain")
-		_, err := fmt.Fprintf(w, "%d", maxNumber)
-		if err != nil {
-			http.Error(w, "Error writing response", http.StatusInternalServerError)
-			return
-		}
+func handleMaxNumRequest(w http.ResponseWriter, r *http.Request) {
+	maxNumber := len(enCardDataMap)
+	w.Header().Set("Content-Type", "text/plain")
+	_, err := fmt.Fprintf(w, "%d", maxNumber)
+	if err != nil {
+		http.Error(w, "Error writing response", http.StatusInternalServerError)
+		return
 	}
 }
 
-func handleTrailingSlash(w http.ResponseWriter, r *http.Request) {
+func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
 	if strings.HasSuffix(r.URL.Path, "/") {
 		newURL := strings.TrimSuffix(r.URL.Path, "/")
 		http.Redirect(w, r, newURL, http.StatusMovedPermanently)
@@ -101,47 +77,61 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error with Index Map Language", http.StatusInternalServerError)
 	}
 	if !ok {
-		http.Error(w, "Error accessing Index Map", http.StatusNotFound)
+		http.Error(w, "Error accessing Index Map", http.StatusInternalServerError)
 		return
 	}
 	htmlTemplate := "generic_index" + indexString + ".html"
 	renderHTML(w, r, htmlTemplate, data)
 }
 
-func handleCardRequest(blogDataMap map[int]CardData, lang string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var cardNumber int
-		format := "/" + lang + "/card/%d"
-		_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
-		if err != nil {
-			http.Error(w, "Invalid card number", http.StatusBadRequest)
-			return
-		}
-		data, ok := blogDataMap[cardNumber]
-		if !ok {
-			http.Error(w, "Card not found", http.StatusNotFound)
-			return
-		}
-		renderHTML(w, r, "generic_index3.html", data)
+func handleSingleCard(w http.ResponseWriter, r *http.Request) {
+	var data CardData
+	var ok bool
+	var cardNumber int
+	language := r.PathValue("language")
+	format := "/" + language + "/card/%d"
+	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
+	if err != nil {
+		http.Error(w, "Invalid card number", http.StatusInternalServerError)
+		return
 	}
+	if language == "en" {
+		data, ok = enBlogDataMap[cardNumber]
+	} else if language == "de" {
+		data, ok = deBlogDataMap[cardNumber]
+	} else {
+		http.Error(w, "Error with Blog Data Map Language", http.StatusInternalServerError)
+	}
+	if !ok {
+		http.Error(w, "Error accessing Blog Data Map", http.StatusInternalServerError)
+		return
+	}
+	renderHTML(w, r, "generic_index3.html", data)
 }
 
-func handleCards(cardDataMap map[int]CardData, lang string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var cardNumber int
-		format := "/" + lang + "/cards/%d"
-		_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
-		if err != nil {
-			http.Error(w, "Invalid cards number", http.StatusBadRequest)
-			return
-		}
-		data, ok := cardDataMap[cardNumber]
-		if !ok {
-			http.Error(w, "Cards not found", http.StatusNotFound)
-			return
-		}
-		renderHTML(w, r, "card-template.html", data)
+func handleAllCards(w http.ResponseWriter, r *http.Request) {
+	var data CardData
+	var ok bool
+	var cardNumber int
+	language := r.PathValue("language")
+	format := "/" + language + "/cards/%d"
+	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
+	if err != nil {
+		http.Error(w, "Invalid cards number", http.StatusInternalServerError)
+		return
 	}
+	if language == "en" {
+		data, ok = enCardDataMap[cardNumber]
+	} else if language == "de" {
+		data, ok = deCardDataMap[cardNumber]
+	} else {
+		http.Error(w, "Error with Card Data Map Language", http.StatusInternalServerError)
+	}
+	if !ok {
+		http.Error(w, "Error accessing Card Data Map", http.StatusInternalServerError)
+		return
+	}
+	renderHTML(w, r, "card-template.html", data)
 }
 
 func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
