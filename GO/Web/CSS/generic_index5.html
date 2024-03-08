@@ -29,7 +29,7 @@
             <a href="/de/index/5"
                hx-get="/de/index/5"
                hx-push-url="true"
-               hx-trigger="click[checkGlobalState(event)]"
+               hx-trigger="click[checkIfSwap(event)]"
                hx-target="#main"
                hx-swap="innerHTML">
                 <svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-de" viewBox="0 0 640 480" class="flag">
@@ -41,7 +41,7 @@
             <a href="/en/index/5"
                hx-get="/en/index/5"
                hx-push-url="true"
-               hx-trigger="click[checkGlobalState(event)]"
+               hx-trigger="click[checkIfSwap(event)]"
                hx-target="#main"
                hx-swap="innerHTML">
                 <svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-gb" viewBox="0 0 640 480" class="flag">
@@ -57,7 +57,7 @@
     <a href="../index/1"
        hx-get="../index/1"
        hx-push-url="true"
-       hx-trigger="click[checkGlobalState(event)]"
+       hx-trigger="click[checkIfSwap(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="icon">
@@ -67,7 +67,7 @@
     <a href="../index/2"
        hx-get="../index/2"
        hx-push-url="true"
-       hx-trigger="click[checkGlobalState(event)]"
+       hx-trigger="click[checkIfSwap(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="icon">
@@ -77,7 +77,7 @@
     <a href="../index/4"
        hx-get="../index/4"
        hx-push-url="true"
-       hx-trigger="click[checkGlobalState(event)]"
+       hx-trigger="click[checkIfSwap(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="icon">
@@ -87,7 +87,7 @@
     <a href="../index/5"
        hx-get="../index/5"
        hx-push-url="true"
-       hx-trigger="click[checkGlobalState(event)]"
+       hx-trigger="click[checkIfSwap(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="icon">
@@ -97,17 +97,26 @@
     <a href="https://icons8.com/line-awesome" id="lineAwesomeLink" class="link">Line</a>
     <a href="https://flagicons.lipis.dev/" id="flagIconsLink" class="link">Flag</a>
     <script>
-        function checkGlobalState(event) {
-            const currentURL = window.location.pathname;
-            const clickedLink = event.target.closest('a');
-            const lastPart = currentURL.substring(currentURL.lastIndexOf('/') + 1);
-            const hxget = clickedLink.getAttribute("hx-get")
-            const hxgetPart = hxget.substring(hxget.lastIndexOf('/') + 1);
-            const closestDiv = clickedLink.closest('div');
+        function checkIfSwap(event) {
+            let swap;
+            const currentPath = window.location.pathname;
+            const clickedElement = event.target.closest('a');
+            const currentPathLastPart = currentPath.substring(currentPath.lastIndexOf('/') + 1);
+            const hxget = clickedElement.getAttribute("hx-get")
+            const hxgetLastPart = hxget.substring(hxget.lastIndexOf('/') + 1);
+            const closestDiv = clickedElement.closest('div');
             if (closestDiv.id === 'dropdown-content') {
-                return hxget !== currentURL;
+                if (hxget !== currentPath) {
+                    return swap=true
+                } else {
+                    return swap=false
+                }
             } else {
-                return hxgetPart !== lastPart;
+                if (hxgetLastPart !== currentPathLastPart) {
+                    return swap=true
+                } else {
+                    return swap=false
+                }
             }
         }
     </script>
