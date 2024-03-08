@@ -16,7 +16,7 @@ func main() {
 	http.HandleFunc("/", handleBaseRequest())
 	http.HandleFunc("/max-card-number", handleMaxNumRequest())
 
-	http.Handle("GET /{language}/index/{index}/", handleTrailingSlash(handleIndexRequest))
+	http.Handle("GET /{language}/index/{index}/", http.HandlerFunc(handleTrailingSlash))
 	http.Handle("GET /{language}/index/{index}", http.HandlerFunc(handleIndexRequest))
 
 	/*
@@ -76,14 +76,11 @@ func handleMaxNumRequest() http.HandlerFunc {
 	}
 }
 
-func handleTrailingSlash(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasSuffix(r.URL.Path, "/") {
-			newURL := strings.TrimSuffix(r.URL.Path, "/")
-			http.Redirect(w, r, newURL, http.StatusMovedPermanently)
-			return
-		}
-		next(w, r)
+func handleTrailingSlash(w http.ResponseWriter, r *http.Request) {
+	if strings.HasSuffix(r.URL.Path, "/") {
+		newURL := strings.TrimSuffix(r.URL.Path, "/")
+		http.Redirect(w, r, newURL, http.StatusMovedPermanently)
+		return
 	}
 }
 
