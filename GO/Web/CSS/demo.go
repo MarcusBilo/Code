@@ -5,29 +5,36 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
+
+// Go 1.22rc2
 
 func main() {
 
 	http.HandleFunc("/", handleBaseRequest())
 	http.HandleFunc("/max-card-number", handleMaxNumRequest())
-	http.HandleFunc("/en/index/1/", handleTrailingSlash())
-	http.HandleFunc("/de/index/1/", handleTrailingSlash())
-	http.HandleFunc("/en/index/1", handleIndexRequest(enIndexMap, "generic_index1.html", "en"))
-	http.HandleFunc("/de/index/1", handleIndexRequest(deIndexMap, "generic_index1.html", "de"))
-	http.HandleFunc("/en/index/2/", handleTrailingSlash())
-	http.HandleFunc("/de/index/2/", handleTrailingSlash())
-	http.HandleFunc("/en/index/2", handleIndexRequest(enIndexMap, "generic_index2.html", "en"))
-	http.HandleFunc("/de/index/2", handleIndexRequest(deIndexMap, "generic_index2.html", "de"))
-	http.HandleFunc("/en/index/4/", handleTrailingSlash())
-	http.HandleFunc("/de/index/4/", handleTrailingSlash())
-	http.HandleFunc("/en/index/4", handleIndexRequest(enIndexMap, "generic_index4.html", "en"))
-	http.HandleFunc("/de/index/4", handleIndexRequest(deIndexMap, "generic_index4.html", "de"))
-	http.HandleFunc("/en/index/5/", handleTrailingSlash())
-	http.HandleFunc("/de/index/5/", handleTrailingSlash())
-	http.HandleFunc("/en/index/5", handleIndexRequest(enIndexMap, "generic_index5.html", "en"))
-	http.HandleFunc("/de/index/5", handleIndexRequest(deIndexMap, "generic_index5.html", "de"))
+
+	http.Handle("GET /{language}/index/{index}/", handleTrailingSlash(handleIndexRequest))
+	http.Handle("GET /{language}/index/{index}", http.HandlerFunc(handleIndexRequest))
+
+	/*
+		http.HandleFunc("/en/index/1", handleIndexRequest(enIndexMap, "generic_index1.html", "en"))
+		http.HandleFunc("/de/index/1", handleIndexRequest(deIndexMap, "generic_index1.html", "de"))
+		http.HandleFunc("/en/index/2/", handleTrailingSlash())
+		http.HandleFunc("/de/index/2/", handleTrailingSlash())
+		http.HandleFunc("/en/index/2", handleIndexRequest(enIndexMap, "generic_index2.html", "en"))
+		http.HandleFunc("/de/index/2", handleIndexRequest(deIndexMap, "generic_index2.html", "de"))
+		http.HandleFunc("/en/index/4/", handleTrailingSlash())
+		http.HandleFunc("/de/index/4/", handleTrailingSlash())
+		http.HandleFunc("/en/index/4", handleIndexRequest(enIndexMap, "generic_index4.html", "en"))
+		http.HandleFunc("/de/index/4", handleIndexRequest(deIndexMap, "generic_index4.html", "de"))
+		http.HandleFunc("/en/index/5/", handleTrailingSlash())
+		http.HandleFunc("/de/index/5/", handleTrailingSlash())
+		http.HandleFunc("/en/index/5", handleIndexRequest(enIndexMap, "generic_index5.html", "en"))
+		http.HandleFunc("/de/index/5", handleIndexRequest(deIndexMap, "generic_index5.html", "de"))
+	*/
 	http.HandleFunc("/en/cards/", handleCards(enCardDataMap, "en"))
 	http.HandleFunc("/de/cards/", handleCards(deCardDataMap, "de"))
 	http.HandleFunc("/en/card/", handleCardRequest(enBlogDataMap, "en"))
@@ -69,32 +76,39 @@ func handleMaxNumRequest() http.HandlerFunc {
 	}
 }
 
-func handleTrailingSlash() http.HandlerFunc {
+func handleTrailingSlash(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/") {
 			newURL := strings.TrimSuffix(r.URL.Path, "/")
 			http.Redirect(w, r, newURL, http.StatusMovedPermanently)
 			return
 		}
+		next(w, r)
 	}
 }
 
-func handleIndexRequest(indexMap map[int]PageData, template string, lang string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var indexNumber int
-		format := "/" + lang + "/index/%d"
-		_, err := fmt.Sscanf(r.URL.Path, format, &indexNumber)
-		if err != nil {
-			http.Error(w, "Invalid index number", http.StatusBadRequest)
-			return
-		}
-		data, ok := indexMap[indexNumber]
-		if !ok {
-			http.Error(w, "Index not found", http.StatusNotFound)
-			return
-		}
-		renderHTML(w, r, template, data)
+func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
+	var data PageData
+	var ok bool
+	language := r.PathValue("language")
+	indexString := r.PathValue("index")
+	indexInt, err := strconv.Atoi(indexString)
+	if err != nil {
+		http.Error(w, "Error converting Path", http.StatusInternalServerError)
 	}
+	if language == "en" {
+		data, ok = enIndexMap[indexInt]
+	} else if language == "de" {
+		data, ok = deIndexMap[indexInt]
+	} else {
+		http.Error(w, "Error with Index Map Language", http.StatusInternalServerError)
+	}
+	if !ok {
+		http.Error(w, "Error accessing Index Map", http.StatusNotFound)
+		return
+	}
+	htmlTemplate := "generic_index" + indexString + ".html"
+	renderHTML(w, r, htmlTemplate, data)
 }
 
 func handleCardRequest(blogDataMap map[int]CardData, lang string) http.HandlerFunc {
