@@ -69,12 +69,14 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Error converting Path", http.StatusInternalServerError)
 	}
-	if language == "en" {
+	switch language {
+	case "en":
 		data, ok = enIndexMap[indexInt]
-	} else if language == "de" {
+	case "de":
 		data, ok = deIndexMap[indexInt]
-	} else {
+	default:
 		http.Error(w, "Error with Index Map Language", http.StatusInternalServerError)
+		return
 	}
 	if !ok {
 		http.Error(w, "Error accessing Index Map", http.StatusInternalServerError)
@@ -95,12 +97,14 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid card number", http.StatusInternalServerError)
 		return
 	}
-	if language == "en" {
+	switch language {
+	case "en":
 		data, ok = enBlogDataMap[cardNumber]
-	} else if language == "de" {
+	case "de":
 		data, ok = deBlogDataMap[cardNumber]
-	} else {
+	default:
 		http.Error(w, "Error with Blog Data Map Language", http.StatusInternalServerError)
+		return
 	}
 	if !ok {
 		http.Error(w, "Error accessing Blog Data Map", http.StatusInternalServerError)
@@ -120,12 +124,14 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid cards number", http.StatusInternalServerError)
 		return
 	}
-	if language == "en" {
+	switch language {
+	case "en":
 		data, ok = enCardDataMap[cardNumber]
-	} else if language == "de" {
+	case "de":
 		data, ok = deCardDataMap[cardNumber]
-	} else {
+	default:
 		http.Error(w, "Error with Card Data Map Language", http.StatusInternalServerError)
+		return
 	}
 	if !ok {
 		http.Error(w, "Error accessing Card Data Map", http.StatusInternalServerError)
