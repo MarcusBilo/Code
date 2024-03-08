@@ -27,7 +27,7 @@
         </button>
         <div id="dropdown-content" class="dropdown-content">
             <a id="deutsch"
-               hx-trigger="click[checkGlobalState(event)]"
+               hx-trigger="click[checkIfSwap(event)]"
                href="/de/card/"
                hx-get="/de/card/"
                hx-push-url="true"
@@ -40,7 +40,7 @@
                 </svg>
             </a>
             <a id="english"
-               hx-trigger="click[checkGlobalState(event)]"
+               hx-trigger="click[checkIfSwap(event)]"
                href="/en/card/"
                hx-get="/en/card/"
                hx-push-url="true"
@@ -59,7 +59,7 @@
     <a href="../index/1"
        hx-get="../index/1"
        hx-push-url="true"
-       hx-trigger="click[checkGlobalState(event)]"
+       hx-trigger="click[checkIfSwap(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="icon">
@@ -69,7 +69,7 @@
     <a href="../index/2"
        hx-get="../index/2"
        hx-push-url="true"
-       hx-trigger="click[checkGlobalState(event)]"
+       hx-trigger="click[checkIfSwap(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="icon">
@@ -79,7 +79,7 @@
     <a href="../index/4"
        hx-get="../index/4"
        hx-push-url="true"
-       hx-trigger="click[checkGlobalState(event)]"
+       hx-trigger="click[checkIfSwap(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="icon">
@@ -89,7 +89,7 @@
     <a href="../index/5"
        hx-get="../index/5"
        hx-push-url="true"
-       hx-trigger="click[checkGlobalState(event)]"
+       hx-trigger="click[checkIfSwap(event)]"
        hx-target="#main"
        hx-swap="innerHTML">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="icon">
@@ -99,15 +99,20 @@
     <a href="https://icons8.com/line-awesome" id="lineAwesomeLink" class="link">Line</a>
     <a href="https://flagicons.lipis.dev/" id="flagIconsLink" class="link">Flag</a>
     <script>
-        function checkGlobalState(event) {
-            const currentURL = window.location.pathname;
-            const clickedLink = event.target.closest('a');
-            const hxget = clickedLink.getAttribute("hx-get")
-            const closestDiv = clickedLink.closest('div');
+        function checkIfSwap(event) {
+            let swap;
+            const currentPath = window.location.pathname;
+            const clickedElement = event.target.closest('a');
+            const hxget = clickedElement.getAttribute("hx-get")
+            const closestDiv = clickedElement.closest('div');
             if (closestDiv.id === 'dropdown-content') {
-                return hxget !== currentURL;
+                if (hxget !== currentPath) {
+                    return swap=true
+                } else {
+                    return swap=false
+                }
             } else {
-                return true;
+                return swap=true
             }
         }
     </script>
