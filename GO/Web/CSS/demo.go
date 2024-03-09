@@ -12,7 +12,6 @@ import (
 // Go 1.22rc2
 
 func main() {
-
 	http.Handle("GET /", http.HandlerFunc(handleBaseRequest))
 	http.Handle("GET /max-card-number", http.HandlerFunc(handleMaxNumRequest))
 	http.Handle("GET /{language}/index/{index}/", http.HandlerFunc(removeTrailingSlash))
@@ -37,8 +36,10 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 	case "/Noto-Sans-regular.woff2":
 		// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
 		http.ServeFile(w, r, "Noto-Sans-regular.woff2")
-	default:
+	case "/":
 		http.Redirect(w, r, "/en/index/1", http.StatusMovedPermanently)
+	default:
+		http.NotFound(w, r)
 	}
 }
 
