@@ -44,7 +44,7 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleMaxNumRequest(w http.ResponseWriter, r *http.Request) {
-	maxNumber := len(enCardDataMap)
+	maxNumber := len(enCardDataSlice) - 1
 	w.Header().Set("Content-Type", "text/plain")
 	_, err := fmt.Fprintf(w, "%d", maxNumber)
 	if err != nil {
@@ -89,8 +89,8 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 
 func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 	var data CardData
-	var ok bool
 	var cardNumber int
+	var cardSlice []CardData
 	language := r.PathValue("language")
 	format := "/" + language + "/card/%d"
 	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
@@ -100,24 +100,25 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 	}
 	switch language {
 	case "en":
-		data, ok = enBlogDataMap[cardNumber]
+		cardSlice = enBlogDataSlice
 	case "de":
-		data, ok = deBlogDataMap[cardNumber]
+		cardSlice = deBlogDataSlice
 	default:
 		http.Error(w, "Error with Blog Data Map Language", http.StatusInternalServerError)
 		return
 	}
-	if !ok {
-		http.Error(w, "Error accessing Blog Data Map", http.StatusInternalServerError)
+	if cardNumber < 0 || cardNumber >= len(cardSlice) {
+		http.Error(w, "Card number out of bounds", http.StatusNotFound)
 		return
 	}
+	data = cardSlice[cardNumber]
 	renderHTML(w, r, "generic_index3.html", data)
 }
 
 func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	var data CardData
-	var ok bool
 	var cardNumber int
+	var cardSlice []CardData
 	language := r.PathValue("language")
 	format := "/" + language + "/cards/%d"
 	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
@@ -127,17 +128,20 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	}
 	switch language {
 	case "en":
-		data, ok = enCardDataMap[cardNumber]
+		data = enCardDataSlice[cardNumber]
+		cardSlice = enCardDataSlice
 	case "de":
-		data, ok = deCardDataMap[cardNumber]
+		data = deCardDataSlice[cardNumber]
+		cardSlice = deCardDataSlice
 	default:
 		http.Error(w, "Error with Card Data Map Language", http.StatusInternalServerError)
 		return
 	}
-	if !ok {
-		http.Error(w, "Error accessing Card Data Map", http.StatusInternalServerError)
+	if cardNumber < 0 || cardNumber >= len(cardSlice) {
+		http.Error(w, "Card number out of bounds", http.StatusNotFound)
 		return
 	}
+	data = cardSlice[cardNumber]
 	renderHTML(w, r, "card-template.html", data)
 }
 
@@ -169,9 +173,10 @@ type PageData struct {
 }
 
 type CardData struct {
+	Id          uint
 	Language    string
-	Year        int
-	Month       int
+	Year        uint
+	Month       uint
 	Title       string
 	Description string
 	Get         string
@@ -183,8 +188,16 @@ type CardData struct {
 	PContent4   string
 }
 
-var enCardDataMap = map[int]CardData{
-	1: {
+var enCardDataSlice = []CardData{
+	{
+		Id:          0,
+		Year:        1970,
+		Month:       1,
+		Title:       "Unix epoch",
+		Description: "Start of time",
+	},
+	{
+		Id:          1,
 		Year:        2022,
 		Month:       1,
 		Title:       "Lorem Card 1 Title",
@@ -192,7 +205,8 @@ var enCardDataMap = map[int]CardData{
 		Get:         "../card/1",
 		Blog:        "Read Card",
 	},
-	2: {
+	{
+		Id:          2,
 		Year:        2022,
 		Month:       2,
 		Title:       "Ipsum Card 2 Title",
@@ -202,8 +216,16 @@ var enCardDataMap = map[int]CardData{
 	},
 }
 
-var deCardDataMap = map[int]CardData{
-	1: {
+var deCardDataSlice = []CardData{
+	{
+		Id:          0,
+		Year:        1970,
+		Month:       1,
+		Title:       "Unix epoch",
+		Description: "Start of time",
+	},
+	{
+		Id:          1,
 		Year:        2022,
 		Month:       1,
 		Title:       "Lorem Card 1 Titel",
@@ -211,7 +233,8 @@ var deCardDataMap = map[int]CardData{
 		Get:         "../card/1",
 		Blog:        "Card lesen",
 	},
-	2: {
+	{
+		Id:          2,
 		Year:        2022,
 		Month:       2,
 		Title:       "Ipsum Card 2 Titel",
@@ -221,8 +244,16 @@ var deCardDataMap = map[int]CardData{
 	},
 }
 
-var enBlogDataMap = map[int]CardData{
-	1: {
+var enBlogDataSlice = []CardData{
+	{
+		Id:          0,
+		Year:        1970,
+		Month:       1,
+		Title:       "Unix epoch",
+		Description: "Start of time",
+	},
+	{
+		Id:          1,
 		Language:    "en",
 		Year:        2022,
 		Month:       1,
@@ -233,7 +264,8 @@ var enBlogDataMap = map[int]CardData{
 		PContent3:   "text3",
 		PContent4:   "text4",
 	},
-	2: {
+	{
+		Id:          2,
 		Language:    "en",
 		Year:        2022,
 		Month:       2,
@@ -246,8 +278,16 @@ var enBlogDataMap = map[int]CardData{
 	},
 }
 
-var deBlogDataMap = map[int]CardData{
-	1: {
+var deBlogDataSlice = []CardData{
+	{
+		Id:          0,
+		Year:        1970,
+		Month:       1,
+		Title:       "Unix epoch",
+		Description: "Start of time",
+	},
+	{
+		Id:          1,
 		Language:    "de",
 		Year:        2022,
 		Month:       1,
@@ -258,7 +298,8 @@ var deBlogDataMap = map[int]CardData{
 		PContent3:   "text3",
 		PContent4:   "text4",
 	},
-	2: {
+	{
+		Id:          2,
 		Language:    "de",
 		Year:        2022,
 		Month:       2,
