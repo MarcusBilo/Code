@@ -54,11 +54,8 @@ func handleMaxNumRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
-	if strings.HasSuffix(r.URL.Path, "/") {
-		newURL := strings.TrimSuffix(r.URL.Path, "/")
-		http.Redirect(w, r, newURL, http.StatusMovedPermanently)
-		return
-	}
+	newURL := strings.TrimSuffix(r.URL.Path, "/")
+	http.Redirect(w, r, newURL, http.StatusMovedPermanently)
 }
 
 func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +66,7 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 	indexInt, err := strconv.Atoi(indexString)
 	if err != nil {
 		http.Error(w, "Error converting Path", http.StatusInternalServerError)
+		return
 	}
 	switch language {
 	case "en":
@@ -128,10 +126,8 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	}
 	switch language {
 	case "en":
-		data = enCardDataSlice[cardNumber]
 		cardSlice = enCardDataSlice
 	case "de":
-		data = deCardDataSlice[cardNumber]
 		cardSlice = deCardDataSlice
 	default:
 		http.Error(w, "Error with Card Data Map Language", http.StatusInternalServerError)
@@ -154,6 +150,7 @@ func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, dat
 	err = tmpl.Execute(w, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
