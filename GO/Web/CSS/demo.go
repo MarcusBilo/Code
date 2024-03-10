@@ -13,17 +13,21 @@ import (
 // Go 1.22rc2
 
 func main() {
-	http.Handle("GET /", http.HandlerFunc(handleBaseRequest))
-	http.Handle("GET /max-card-number", http.HandlerFunc(handleMaxNumRequest))
-	http.Handle("GET /{language}/index/{index}/", http.HandlerFunc(removeTrailingSlash))
-	http.Handle("GET /{language}/index/{index}", http.HandlerFunc(handleIndexRequest))
-	http.Handle("GET /{language}/cards/", http.HandlerFunc(handleAllCards))
-	http.Handle("GET /{language}/card/", http.HandlerFunc(handleSingleCard))
+	http.Handle("/", http.HandlerFunc(handleBaseRequest))
+	http.Handle("/max-card-number", http.HandlerFunc(handleMaxNumRequest))
+	http.Handle("/{language}/index/{index}/", http.HandlerFunc(removeTrailingSlash))
+	http.Handle("/{language}/index/{index}", http.HandlerFunc(handleIndexRequest))
+	http.Handle("/{language}/cards/", http.HandlerFunc(handleAllCards))
+	http.Handle("/{language}/card/", http.HandlerFunc(handleSingleCard))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
+		return
+	}
 	switch r.URL.Path {
 	case "/styles.css":
 		w.Header().Set("Content-Type", "text/css")
@@ -42,7 +46,11 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleMaxNumRequest(w http.ResponseWriter, _ *http.Request) {
+func handleMaxNumRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
+		return
+	}
 	maxNumber := len(enCardDataSlice) - 1
 	w.Header().Set("Content-Type", "text/plain")
 	_, err := fmt.Fprint(w, maxNumber)
@@ -53,11 +61,19 @@ func handleMaxNumRequest(w http.ResponseWriter, _ *http.Request) {
 }
 
 func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
+		return
+	}
 	newURL := strings.TrimSuffix(r.URL.Path, "/")
 	http.Redirect(w, r, newURL, http.StatusMovedPermanently)
 }
 
 func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
+		return
+	}
 	var indexMap map[string]PageData
 	var data PageData
 	var ok bool
@@ -83,6 +99,10 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleSingleCard(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
+		return
+	}
 	var cardSlice []CardData
 	var cardNumber int
 	language := r.PathValue("language")
@@ -111,6 +131,10 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleAllCards(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
+		return
+	}
 	var cardSlice []CardData
 	var cardNumber int
 	language := r.PathValue("language")
