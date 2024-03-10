@@ -5,7 +5,9 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"runtime"
 	"strings"
+	"time"
 )
 
 // Go 1.22rc2
@@ -45,7 +47,7 @@ func handleMaxNumRequest(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	_, err := fmt.Fprint(w, maxNumber)
 	if err != nil {
-		http.Error(w, "Error writing response", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
@@ -67,7 +69,7 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 	case "de":
 		indexMap = deIndexMap
 	default:
-		http.Error(w, "Error with Index Map Language", http.StatusInternalServerError)
+		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
 	}
 	data, ok = indexMap[indexString]
@@ -75,7 +77,8 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 		templateFile := "generic_index" + indexString + ".html"
 		renderHTML(w, r, templateFile, data)
 	} else {
-		http.Error(w, "Error accessing Index Map", http.StatusInternalServerError)
+		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -86,7 +89,7 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 	format := "/" + language + "/card/%d"
 	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
 	if err != nil {
-		http.Error(w, "Invalid card number", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	switch language {
@@ -95,14 +98,15 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 	case "de":
 		cardSlice = deBlogDataSlice
 	default:
-		http.Error(w, "Error with Blog Data Map Language", http.StatusInternalServerError)
+		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
 	}
 	if cardNumber >= 0 && cardNumber < len(cardSlice) {
 		data := cardSlice[cardNumber]
 		renderHTML(w, r, "generic_index3.html", data)
 	} else {
-		http.Error(w, "Card number out of bounds", http.StatusNotFound)
+		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -113,7 +117,7 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	format := "/" + language + "/cards/%d"
 	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
 	if err != nil {
-		http.Error(w, "Invalid cards number", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	switch language {
@@ -122,14 +126,15 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	case "de":
 		cardSlice = deCardDataSlice
 	default:
-		http.Error(w, "Error with Card Data Map Language", http.StatusInternalServerError)
+		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
 	}
 	if cardNumber >= 0 && cardNumber < len(cardSlice) {
 		data := cardSlice[cardNumber]
 		renderHTML(w, r, "card-template.html", data)
 	} else {
-		http.Error(w, "Card number out of bounds", http.StatusNotFound)
+		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -144,6 +149,12 @@ func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, dat
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+}
+
+func getLineAndTime() string {
+	_, _, line, _ := runtime.Caller(1)
+	timestamp := time.Now().Format("2006-01-02 15:04:05")
+	return fmt.Sprintf("%s | Line: %d", timestamp, line)
 }
 
 // ###############################################################################
