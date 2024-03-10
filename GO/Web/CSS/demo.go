@@ -5,7 +5,6 @@ import (
 	"html/template"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -44,7 +43,7 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 func handleMaxNumRequest(w http.ResponseWriter, _ *http.Request) {
 	maxNumber := len(enCardDataSlice) - 1
 	w.Header().Set("Content-Type", "text/plain")
-	_, err := fmt.Fprintf(w, "%d", maxNumber)
+	_, err := fmt.Fprint(w, maxNumber)
 	if err != nil {
 		http.Error(w, "Error writing response", http.StatusInternalServerError)
 		return
@@ -57,16 +56,11 @@ func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
-	var indexMap map[int]PageData
+	var indexMap map[string]PageData
 	var data PageData
 	var ok bool
 	language := r.PathValue("language")
 	indexString := r.PathValue("index")
-	indexInt, err := strconv.Atoi(indexString)
-	if err != nil {
-		http.Error(w, "Error converting Path", http.StatusInternalServerError)
-		return
-	}
 	switch language {
 	case "en":
 		indexMap = enIndexMap
@@ -76,7 +70,7 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error with Index Map Language", http.StatusInternalServerError)
 		return
 	}
-	data, ok = indexMap[indexInt]
+	data, ok = indexMap[indexString]
 	if ok {
 		templateFile := "generic_index" + indexString + ".html"
 		renderHTML(w, r, templateFile, data)
@@ -168,10 +162,10 @@ type PageData struct {
 }
 
 type CardData struct {
-	Id          uint
+	Id          uint32
+	Year        uint16
+	Month       uint8
 	Language    string
-	Year        uint
-	Month       uint
 	Title       string
 	Description string
 	Get         string
@@ -249,9 +243,9 @@ var enBlogDataSlice = []CardData{
 	},
 	{
 		Id:          1,
-		Language:    "en",
 		Year:        2022,
 		Month:       1,
+		Language:    "en",
 		Title:       "Lorem Card 1 Title",
 		Description: "Description Card 1.",
 		PContent1:   "text1",
@@ -261,9 +255,9 @@ var enBlogDataSlice = []CardData{
 	},
 	{
 		Id:          2,
-		Language:    "en",
 		Year:        2022,
 		Month:       2,
+		Language:    "en",
 		Title:       "Lorem Card 2 Title",
 		Description: "Description Card 2.",
 		PContent1:   "text1",
@@ -283,9 +277,9 @@ var deBlogDataSlice = []CardData{
 	},
 	{
 		Id:          1,
-		Language:    "de",
 		Year:        2022,
 		Month:       1,
+		Language:    "de",
 		Title:       "Lorem Card 1 Titel",
 		Description: "Beschreibung Card 1.",
 		PContent1:   "text1",
@@ -295,9 +289,9 @@ var deBlogDataSlice = []CardData{
 	},
 	{
 		Id:          2,
-		Language:    "de",
 		Year:        2022,
 		Month:       2,
+		Language:    "de",
 		Title:       "Lorem Card 2 Titel",
 		Description: "Beschreibung Card 2.",
 		PContent1:   "text1",
@@ -307,25 +301,25 @@ var deBlogDataSlice = []CardData{
 	},
 }
 
-var enIndexMap = map[int]PageData{
-	1: {
+var enIndexMap = map[string]PageData{
+	"1": {
 		Language:  "en",
 		Title:     "HTMX & Basic CSS",
 		H1Content: "HTMX & Basic CSS - Index1EN.html",
 		PContent1: "Landing Page with filler content",
 	},
-	2: {
+	"2": {
 		Language: "en",
 		Title:    "HTMX & Basic CSS",
 	},
-	4: {
+	"4": {
 		Language:  "en",
 		Title:     "Information",
 		H1Content: "Exampleweb",
 		PContent1: "Main Street 123",
 		PContent2: "Zip Code: 12345",
 	},
-	5: {
+	"5": {
 		Language:  "en",
 		Title:     "Contact",
 		H1Content: "Send us an e-mail to",
@@ -334,25 +328,25 @@ var enIndexMap = map[int]PageData{
 	},
 }
 
-var deIndexMap = map[int]PageData{
-	1: {
+var deIndexMap = map[string]PageData{
+	"1": {
 		Language:  "de",
 		Title:     "HTMX & Basic CSS",
 		H1Content: "HTMX & Basic CSS - Index1DE.html",
 		PContent1: "Startseite mit Füllinhalten",
 	},
-	2: {
+	"2": {
 		Language: "de",
 		Title:    "HTMX & Basic CSS",
 	},
-	4: {
+	"4": {
 		Language:  "de",
 		Title:     "Information",
 		H1Content: "Exampleweb",
 		PContent1: "Hauptstraße 123",
 		PContent2: "Postleitzahl: 12345",
 	},
-	5: {
+	"5": {
 		Language:  "de",
 		Title:     "Kontakt",
 		H1Content: "Senden Sie uns eine E-Mail an",
