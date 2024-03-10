@@ -13,21 +13,27 @@ import (
 // Go 1.22rc2
 
 func main() {
-	http.Handle("/", http.HandlerFunc(handleBaseRequest))
-	http.Handle("/max-card-number", http.HandlerFunc(handleMaxNumRequest))
-	http.Handle("/{language}/index/{index}/", http.HandlerFunc(removeTrailingSlash))
-	http.Handle("/{language}/index/{index}", http.HandlerFunc(handleIndexRequest))
-	http.Handle("/{language}/cards/", http.HandlerFunc(handleAllCards))
-	http.Handle("/{language}/card/", http.HandlerFunc(handleSingleCard))
+	http.Handle("/", onlyHandleGET(http.HandlerFunc(handleBaseRequest)))
+	http.Handle("/max-card-number", onlyHandleGET(http.HandlerFunc(handleMaxNumRequest)))
+	http.Handle("/{language}/index/{index}/", onlyHandleGET(http.HandlerFunc(removeTrailingSlash)))
+	http.Handle("/{language}/index/{index}", onlyHandleGET(http.HandlerFunc(handleIndexRequest)))
+	http.Handle("/{language}/cards/", onlyHandleGET(http.HandlerFunc(handleAllCards)))
+	http.Handle("/{language}/card/", onlyHandleGET(http.HandlerFunc(handleSingleCard)))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+func onlyHandleGET(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "GET" {
+			http.Error(w, getLineAndTime(), http.StatusNotImplemented)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
-		return
-	}
 	switch r.URL.Path {
 	case "/styles.css":
 		w.Header().Set("Content-Type", "text/css")
@@ -47,10 +53,6 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleMaxNumRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
-		return
-	}
 	maxNumber := len(enCardDataSlice) - 1
 	w.Header().Set("Content-Type", "text/plain")
 	_, err := fmt.Fprint(w, maxNumber)
@@ -61,19 +63,11 @@ func handleMaxNumRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
-		return
-	}
 	newURL := strings.TrimSuffix(r.URL.Path, "/")
 	http.Redirect(w, r, newURL, http.StatusMovedPermanently)
 }
 
 func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
-		return
-	}
 	var indexMap map[string]PageData
 	language := r.PathValue("language")
 	indexString := r.PathValue("index")
@@ -97,10 +91,6 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleSingleCard(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
-		return
-	}
 	var cardSlice []CardData
 	var cardNumber int
 	language := r.PathValue("language")
@@ -129,10 +119,6 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleAllCards(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, getLineAndTime(), http.StatusNotImplemented)
-		return
-	}
 	var cardSlice []CardData
 	var cardNumber int
 	language := r.PathValue("language")
