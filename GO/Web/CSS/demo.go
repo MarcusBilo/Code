@@ -19,9 +19,7 @@ func main() {
 	http.Handle("GET /{language}/cards/", http.HandlerFunc(handleAllCards))
 	http.Handle("GET /{language}/card/", http.HandlerFunc(handleSingleCard))
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal(err)
-	}
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +41,7 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleMaxNumRequest(w http.ResponseWriter, r *http.Request) {
+func handleMaxNumRequest(w http.ResponseWriter, _ *http.Request) {
 	maxNumber := len(enCardDataSlice) - 1
 	w.Header().Set("Content-Type", "text/plain")
 	_, err := fmt.Fprintf(w, "%d", maxNumber)
@@ -59,6 +57,7 @@ func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
+	var indexMap map[int]PageData
 	var data PageData
 	var ok bool
 	language := r.PathValue("language")
@@ -70,25 +69,25 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	switch language {
 	case "en":
-		data, ok = enIndexMap[indexInt]
+		indexMap = enIndexMap
 	case "de":
-		data, ok = deIndexMap[indexInt]
+		indexMap = deIndexMap
 	default:
 		http.Error(w, "Error with Index Map Language", http.StatusInternalServerError)
 		return
 	}
-	if !ok {
+	data, ok = indexMap[indexInt]
+	if ok {
+		templateFile := "generic_index" + indexString + ".html"
+		renderHTML(w, r, templateFile, data)
+	} else {
 		http.Error(w, "Error accessing Index Map", http.StatusInternalServerError)
-		return
 	}
-	htmlTemplate := "generic_index" + indexString + ".html"
-	renderHTML(w, r, htmlTemplate, data)
 }
 
 func handleSingleCard(w http.ResponseWriter, r *http.Request) {
-	var data CardData
-	var cardNumber int
 	var cardSlice []CardData
+	var cardNumber int
 	language := r.PathValue("language")
 	format := "/" + language + "/card/%d"
 	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
@@ -105,18 +104,17 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error with Blog Data Map Language", http.StatusInternalServerError)
 		return
 	}
-	if cardNumber < 0 || cardNumber >= len(cardSlice) {
+	if cardNumber >= 0 && cardNumber < len(cardSlice) {
+		data := cardSlice[cardNumber]
+		renderHTML(w, r, "generic_index3.html", data)
+	} else {
 		http.Error(w, "Card number out of bounds", http.StatusNotFound)
-		return
 	}
-	data = cardSlice[cardNumber]
-	renderHTML(w, r, "generic_index3.html", data)
 }
 
 func handleAllCards(w http.ResponseWriter, r *http.Request) {
-	var data CardData
-	var cardNumber int
 	var cardSlice []CardData
+	var cardNumber int
 	language := r.PathValue("language")
 	format := "/" + language + "/cards/%d"
 	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
@@ -133,12 +131,12 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Error with Card Data Map Language", http.StatusInternalServerError)
 		return
 	}
-	if cardNumber < 0 || cardNumber >= len(cardSlice) {
+	if cardNumber >= 0 && cardNumber < len(cardSlice) {
+		data := cardSlice[cardNumber]
+		renderHTML(w, r, "card-template.html", data)
+	} else {
 		http.Error(w, "Card number out of bounds", http.StatusNotFound)
-		return
 	}
-	data = cardSlice[cardNumber]
-	renderHTML(w, r, "card-template.html", data)
 }
 
 func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
