@@ -75,8 +75,6 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var indexMap map[string]PageData
-	var data PageData
-	var ok bool
 	language := r.PathValue("language")
 	indexString := r.PathValue("index")
 	switch language {
@@ -88,7 +86,7 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
 	}
-	data, ok = indexMap[indexString]
+	data, ok := indexMap[indexString]
 	if ok {
 		templateFile := "generic_index" + indexString + ".html"
 		renderHTML(w, r, templateFile, data)
