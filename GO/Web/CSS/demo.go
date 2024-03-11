@@ -41,10 +41,11 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/htmx_v1.9.10.min.js":
 		// https://unpkg.com/browse/htmx.org@1.9.10/dist/
-		w.Header().Set("Content-Type", "application/javascript")
+		w.Header().Set("Content-Type", "text/javascript")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/Noto-Sans-regular.woff2":
 		// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
+		w.Header().Set("Content-Type", "font/woff2")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/":
 		http.Redirect(w, r, "/en/index/1", http.StatusMovedPermanently)
