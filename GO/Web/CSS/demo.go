@@ -183,8 +183,8 @@ type PageData struct {
 }
 
 type CardData struct {
-	Id          uint32
-	Year        uint16
+	Id          uint8
+	Year        uint8
 	Month       uint8
 	Language    string
 	Title       string
@@ -201,14 +201,14 @@ type CardData struct {
 var enCardDataSlice = []CardData{
 	{
 		Id:          0,
-		Year:        1970,
+		Year:        00,
 		Month:       1,
-		Title:       "Unix epoch",
-		Description: "Start of time",
+		Title:       "January 2000",
+		Description: "Turn of the Millennium",
 	},
 	{
 		Id:          1,
-		Year:        2022,
+		Year:        22,
 		Month:       1,
 		Title:       "Lorem Card 1 Title",
 		Description: "Description for Card 1.",
@@ -217,7 +217,7 @@ var enCardDataSlice = []CardData{
 	},
 	{
 		Id:          2,
-		Year:        2022,
+		Year:        22,
 		Month:       2,
 		Title:       "Ipsum Card 2 Title",
 		Description: "Description for Card 2.",
@@ -229,14 +229,14 @@ var enCardDataSlice = []CardData{
 var deCardDataSlice = []CardData{
 	{
 		Id:          0,
-		Year:        1970,
+		Year:        00,
 		Month:       1,
-		Title:       "Unix epoch",
-		Description: "Start of time",
+		Title:       "Januar 2000",
+		Description: "Jahrtausendwende",
 	},
 	{
 		Id:          1,
-		Year:        2022,
+		Year:        22,
 		Month:       1,
 		Title:       "Lorem Card 1 Titel",
 		Description: "Beschreibung für Card 1.",
@@ -245,7 +245,7 @@ var deCardDataSlice = []CardData{
 	},
 	{
 		Id:          2,
-		Year:        2022,
+		Year:        22,
 		Month:       2,
 		Title:       "Ipsum Card 2 Titel",
 		Description: "Beschreibung für Card 2.",
@@ -257,14 +257,14 @@ var deCardDataSlice = []CardData{
 var enBlogDataSlice = []CardData{
 	{
 		Id:          0,
-		Year:        1970,
+		Year:        00,
 		Month:       1,
-		Title:       "Unix epoch",
-		Description: "Start of time",
+		Title:       "January 2000",
+		Description: "Turn of the Millennium",
 	},
 	{
 		Id:          1,
-		Year:        2022,
+		Year:        22,
 		Month:       1,
 		Language:    "en",
 		Title:       "Lorem Card 1 Title",
@@ -276,7 +276,7 @@ var enBlogDataSlice = []CardData{
 	},
 	{
 		Id:          2,
-		Year:        2022,
+		Year:        22,
 		Month:       2,
 		Language:    "en",
 		Title:       "Lorem Card 2 Title",
@@ -291,14 +291,14 @@ var enBlogDataSlice = []CardData{
 var deBlogDataSlice = []CardData{
 	{
 		Id:          0,
-		Year:        1970,
+		Year:        00,
 		Month:       1,
-		Title:       "Unix epoch",
-		Description: "Start of time",
+		Title:       "Januar 2000",
+		Description: "Jahrtausendwende",
 	},
 	{
 		Id:          1,
-		Year:        2022,
+		Year:        22,
 		Month:       1,
 		Language:    "de",
 		Title:       "Lorem Card 1 Titel",
@@ -310,7 +310,7 @@ var deBlogDataSlice = []CardData{
 	},
 	{
 		Id:          2,
-		Year:        2022,
+		Year:        22,
 		Month:       2,
 		Language:    "de",
 		Title:       "Lorem Card 2 Titel",
