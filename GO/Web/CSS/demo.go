@@ -7,17 +7,25 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
 // Go 1.22rc2
 
+var (
+	indexCache           map[string]PageData
+	indexCacheMutex      sync.Mutex
+	lastIndexCacheUpdate time.Time
+)
+
 func main() {
+	indexCache = make(map[string]PageData)
+
 	http.Handle("/", onlyHandleGET(http.HandlerFunc(handleBaseRequest)))
-	http.Handle("/max-card-number", onlyHandleGET(http.HandlerFunc(handleMaxNumRequest)))
 	http.Handle("/{language}/index/{index}/", onlyHandleGET(http.HandlerFunc(removeTrailingSlash)))
 	http.Handle("/{language}/index/{index}", onlyHandleGET(http.HandlerFunc(handleIndexRequest)))
-	http.Handle("/{language}/cards/", onlyHandleGET(http.HandlerFunc(handleAllCards)))
+	http.Handle("/{language}/all-cards", onlyHandleGET(http.HandlerFunc(handleAllCards)))
 	http.Handle("/{language}/card/", onlyHandleGET(http.HandlerFunc(handleSingleCard)))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -54,25 +62,27 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleMaxNumRequest(w http.ResponseWriter, r *http.Request) {
-	maxNumber := len(enCardDataSlice) - 1
-	w.Header().Set("Content-Type", "text/plain")
-	_, err := fmt.Fprint(w, maxNumber)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
 func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
 	newURL := strings.TrimSuffix(r.URL.Path, "/")
 	http.Redirect(w, r, newURL, http.StatusMovedPermanently)
 }
 
 func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
-	var indexMap map[string]PageData
 	language := r.PathValue("language")
-	indexString := r.PathValue("index")
+	index := r.PathValue("index")
+	indexCacheMutex.Lock()
+	defer indexCacheMutex.Unlock()
+	data, exist := indexCache[language+"_"+index]
+	if exist && time.Since(lastIndexCacheUpdate) < time.Minute {
+		templateFile := "generic_index" + index + ".html"
+		renderHTML(w, r, templateFile, data)
+	} else {
+		cacheAndRenderIndexData(language, index, w, r)
+	}
+}
+
+func cacheAndRenderIndexData(language string, index string, w http.ResponseWriter, r *http.Request) {
+	var indexMap map[string]PageData
 	switch language {
 	case "en":
 		indexMap = enIndexMap
@@ -82,13 +92,14 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
 	}
-	data, ok := indexMap[indexString]
+	data, ok := indexMap[index]
 	if ok {
-		templateFile := "generic_index" + indexString + ".html"
+		indexCache[language+"_"+index] = data
+		lastIndexCacheUpdate = time.Now()
+		templateFile := "generic_index" + index + ".html"
 		renderHTML(w, r, templateFile, data)
 	} else {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
-		return
 	}
 }
 
@@ -111,6 +122,7 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
 	}
+	cardNumber = cardNumber - 1
 	if cardNumber >= 0 && cardNumber < len(cardSlice) {
 		data := cardSlice[cardNumber]
 		renderHTML(w, r, "generic_index3.html", data)
@@ -122,14 +134,7 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 
 func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	var cardSlice []CardData
-	var cardNumber int
 	language := r.PathValue("language")
-	format := "/" + language + "/cards/%d"
-	_, err := fmt.Sscanf(r.URL.Path, format, &cardNumber)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	switch language {
 	case "en":
 		cardSlice = enCardDataSlice
@@ -139,12 +144,10 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
 	}
-	if cardNumber >= 0 && cardNumber < len(cardSlice) {
-		data := cardSlice[cardNumber]
+	maxIndex := len(cardSlice) - 1
+	for i := maxIndex; i >= 0; i-- {
+		data := cardSlice[i]
 		renderHTML(w, r, "card-template.html", data)
-	} else {
-		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
-		return
 	}
 }
 
@@ -200,13 +203,6 @@ type CardData struct {
 
 var enCardDataSlice = []CardData{
 	{
-		Id:          0,
-		Year:        00,
-		Month:       1,
-		Title:       "January 2000",
-		Description: "Turn of the Millennium",
-	},
-	{
 		Id:          1,
 		Year:        22,
 		Month:       1,
@@ -228,13 +224,6 @@ var enCardDataSlice = []CardData{
 
 var deCardDataSlice = []CardData{
 	{
-		Id:          0,
-		Year:        00,
-		Month:       1,
-		Title:       "Januar 2000",
-		Description: "Jahrtausendwende",
-	},
-	{
 		Id:          1,
 		Year:        22,
 		Month:       1,
@@ -255,13 +244,6 @@ var deCardDataSlice = []CardData{
 }
 
 var enBlogDataSlice = []CardData{
-	{
-		Id:          0,
-		Year:        00,
-		Month:       1,
-		Title:       "January 2000",
-		Description: "Turn of the Millennium",
-	},
 	{
 		Id:          1,
 		Year:        22,
@@ -289,13 +271,6 @@ var enBlogDataSlice = []CardData{
 }
 
 var deBlogDataSlice = []CardData{
-	{
-		Id:          0,
-		Year:        00,
-		Month:       1,
-		Title:       "Januar 2000",
-		Description: "Jahrtausendwende",
-	},
 	{
 		Id:          1,
 		Year:        22,
