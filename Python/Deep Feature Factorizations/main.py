@@ -1,9 +1,6 @@
 import warnings
-
-warnings.filterwarnings('ignore')
 import numpy as np
 import requests
-import cv2
 import torch
 from pytorch_grad_cam import DeepFeatureFactorization
 from pytorch_grad_cam.utils.image import preprocess_image, show_factorization_on_image
@@ -37,18 +34,27 @@ def create_labels(concept_scores, top_k=2):
     concept_labels_topk = []
     for concept_index in range(concept_categories.shape[0]):
         categories = concept_categories[concept_index, :]
-        concept_labels = []
-        for category in categories:
-            score = concept_scores[concept_index, category]
-            label = f"{labels[category].split(',')[0]}:{score:.2f}"
-            concept_labels.append(label)
-        concept_labels_topk.append("\n".join(concept_labels))
+        concept_labels = [f"{labels[category].split(',')[0]}:{concept_scores[concept_index, category]:.2f}" for category
+                          in categories]
+        sorted_labels = sorted(concept_labels, key=lambda x: float(x.split(':')[1]), reverse=True)
+        concept_labels_topk.append("\n".join(sorted_labels))
     return concept_labels_topk
 
 
-model = resnet50(pretrained=True)
-model.eval()
-print("Loaded model")
+def create_labels_v2(concept_scores, top_k=5):
+    """ Create a list with the image-net category names of the top scoring categories,
+    along with their scores"""
+    imagenet_categories_url = \
+        "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
+    labels = eval(requests.get(imagenet_categories_url).text)
+    concept_categories = np.argsort(concept_scores, axis=1)[:, ::-1][:, :top_k]
+    concept_labels_topk = []
+    for concept_index in range(concept_categories.shape[0]):
+        categories = concept_categories[concept_index, :]
+        concept_labels = [f"{labels[category].split(',')[0]}:{concept_scores[concept_index, category]:.2f}" for category
+                          in categories]
+        concept_labels_topk.append("\n".join(concept_labels))
+    return concept_labels_topk
 
 
 def visualize_image(model, img_url, n_components=5, top_k=2):
@@ -66,17 +72,38 @@ def visualize_image(model, img_url, n_components=5, top_k=2):
                                                 concept_labels=concept_label_strings)
 
     result = np.hstack((img, visualization))
-
-    # Just for the jupyter notebook, so the large images won't weight a lot:
-    if result.shape[0] > 500:
-        result = cv2.resize(result, (result.shape[1] // 4, result.shape[0] // 4))
-
     return result
 
 
-image = (Image.fromarray(visualize_image(model,
-                                        "https://th.bing.com/th/id/R.94b33a074b9ceeb27b1c7fba0f66db74?rik=wN27mvigyFlXGg&riu=http%3a%2f%2fimages5.fanpop.com%2fimage%2fphotos%2f31400000%2fBear-Wallpaper-bears-31446777-1600-1200.jpg&ehk=oD0JPpRVTZZ6yizZtGQtnsBGK2pAap2xv3sU3A4bIMc%3d&risl=&pid=ImgRaw&r=0",
-                                        n_components=2)))
+# ----------------------------------------------------------------------------------------------------------------------
 
+warnings.filterwarnings('ignore')
+
+model = resnet50(pretrained=True)
+model.eval()
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+_, _, input_tensor = get_image_from_url(
+    "https://github.com/jacobgil/pytorch-grad-cam/blob/master/examples/both.png?raw=true")
+
+with torch.no_grad():
+    model.eval()
+    outputs = model(input_tensor)
+
+predicted_classes = create_labels_v2(outputs.numpy(), top_k=10)
+
+print("Top predicted classes:")
+for i, labels in enumerate(predicted_classes[0].split("\n"), 1):
+    print(f"{i}. {labels}")
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+f0 = plt.figure(0)
+
+image = visualize_image(model,
+                        "https://github.com/jacobgil/pytorch-grad-cam/blob/master/examples/both.png?raw=true",
+                        n_components=2, top_k=2)
 plt.imshow(image)
 plt.show()
