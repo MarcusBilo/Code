@@ -1,23 +1,25 @@
+# pip install grad-cam
 import warnings
 import numpy as np
 import requests
 import torch
+import torchvision
 from pytorch_grad_cam import DeepFeatureFactorization
 from pytorch_grad_cam.utils.image import preprocess_image, show_factorization_on_image
-from torchvision.models import resnet50
+from torchvision.models import resnet50, resnet18
+import torchvision.transforms as transforms
 from PIL import Image
 import matplotlib.pyplot as plt
+from torch.utils.data import DataLoader
+from datasets import load_dataset
+import os
+import torch.nn as nn
+import torch.optim as optim
+import pickle
 
 
-# pip install grad-cam
-
-
-def get_image_from_url(url):
-    """A function that gets a URL of an image, 
-    and returns a numpy image and a preprocessed
-    torch tensor ready to pass to the model """
-
-    img = np.array(Image.open(requests.get(url, stream=True).raw))
+def get_image_from_file(image):
+    img = np.array(image)
     rgb_img_float = np.float32(img) / 255
     input_tensor = preprocess_image(rgb_img_float,
                                     mean=[0.485, 0.456, 0.406],
@@ -57,8 +59,8 @@ def create_labels_v2(concept_scores, top_k=5):
     return concept_labels_topk
 
 
-def visualize_image(model, img_url, n_components=5, top_k=2):
-    img, rgb_img_float, input_tensor = get_image_from_url(img_url)
+def visualize_image(model, image, n_components=1, top_k=1):
+    img, rgb_img_float, input_tensor = get_image_from_file(image)
     classifier = model.fc
     dff = DeepFeatureFactorization(model=model, target_layer=model.layer4,
                                    computation_on_concepts=classifier)
@@ -79,13 +81,16 @@ def visualize_image(model, img_url, n_components=5, top_k=2):
 
 warnings.filterwarnings('ignore')
 
-model = resnet50(pretrained=True)
+model = resnet18(pretrained=True)
 model.eval()
+
+train_data = torchvision.datasets.Imagenette(root="Imagenette/train", split="train", size="320px")  # 9469
+val_data = torchvision.datasets.Imagenette(root="Imagenette/val", split="val", size="320px")  # 3925
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-_, _, input_tensor = get_image_from_url(
-    "https://github.com/jacobgil/pytorch-grad-cam/blob/master/examples/both.png?raw=true")
+image, _ = train_data[0]
+_, _, input_tensor = get_image_from_file(image)
 
 with torch.no_grad():
     model.eval()
@@ -99,11 +104,140 @@ for i, labels in enumerate(predicted_classes[0].split("\n"), 1):
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-
 f0 = plt.figure(0)
 
-image = visualize_image(model,
-                        "https://github.com/jacobgil/pytorch-grad-cam/blob/master/examples/both.png?raw=true",
-                        n_components=2, top_k=2)
-plt.imshow(image)
+ima = visualize_image(model, image, n_components=3, top_k=3)
+plt.imshow(ima)
 plt.show()
+
+"""
+
+# Freeze the parameters in the pre-trained layers
+for param in model.parameters():
+    param.requires_grad = False
+
+# Modify the last fully connected layer to match the number of classes in your dataset
+num_classes = len(train_data.classes)  # Assuming train_data is loaded properly
+model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+# Define data transforms
+transform = transforms.Compose([
+    transforms.Resize((320, 320)),
+    transforms.ToTensor(),
+])
+
+
+def preprocess_and_save_data_if_not_exist(root_dir, split, size, transform, save_path):
+    if not os.path.exists(save_path):
+        dataset = torchvision.datasets.Imagenette(root=root_dir, split=split, size=size, transform=transform)
+        with open(save_path, 'wb') as f:
+            pickle.dump(dataset, f)
+
+
+# Define paths
+root_dir_train = "Imagenette/train"
+root_dir_val = "Imagenette/val"
+split_train = "train"
+split_val = "val"
+size = "320px"
+transformed_data_train_path = "transformed_train_dataset.pkl"
+transformed_data_val_path = "transformed_val_dataset.pkl"
+
+# Preprocess and save training data if not exist
+preprocess_and_save_data_if_not_exist(root_dir_train, split_train, size, transform, transformed_data_train_path)
+
+# Preprocess and save validation data if not exist
+preprocess_and_save_data_if_not_exist(root_dir_val, split_val, size, transform, transformed_data_val_path)
+
+# Load transformed datasets
+with open(transformed_data_train_path, 'rb') as f:
+    train_data = pickle.load(f)
+
+with open(transformed_data_val_path, 'rb') as f:
+    val_data = pickle.load(f)
+
+# Load pre-trained ResNet model
+model = torchvision.models.resnet18(pretrained=True)
+
+# Freeze the parameters in the pre-trained layers
+for param in model.parameters():
+    param.requires_grad = False
+
+# Modify the last fully connected layer to match the number of classes in your dataset
+num_classes = len(train_data.classes)
+model.fc = nn.Linear(model.fc.in_features, num_classes)
+
+# Set batch size and create data loaders
+batch_size = 10
+train_loader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
+val_loader = torch.utils.data.DataLoader(val_data, batch_size=batch_size, shuffle=False)
+
+# Define loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+
+# Train the model
+num_epochs = 2
+best_accuracy = 0.0
+
+# Training loop
+for epoch in range(num_epochs):
+    print(f"Epoch {epoch + 1}/{num_epochs}")
+
+    # Set model to training mode
+    model.train()
+
+    # Initialize running loss for this epoch
+    running_loss = 0.0
+
+    # Iterate over training data
+    for batch_idx, (inputs, labels) in enumerate(train_loader, 1):
+        # Zero the parameter gradients
+        optimizer.zero_grad()
+
+        # Forward pass
+        outputs = model(inputs)
+
+        # Calculate the loss
+        loss = criterion(outputs, labels)
+
+        # Backward pass and optimization
+        loss.backward()
+        optimizer.step()
+
+        # Accumulate the running loss
+        running_loss += loss.item() * inputs.size(0)
+
+        # Print mini-batch progress
+        if batch_idx % 100 == 0:
+            print(f"    Batch [{batch_idx}/{len(train_loader)}], Loss: {loss.item():.4f}")
+
+    # Calculate average training loss for the epoch
+    epoch_loss = running_loss / len(train_loader.dataset)
+
+    # Validation
+    model.eval()
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for inputs, labels in val_loader:
+            outputs = model(inputs)
+            _, predicted = torch.max(outputs, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    # Calculate accuracy on validation set
+    epoch_accuracy = correct / total
+
+    # Print epoch statistics
+    print(f"    Training Loss: {epoch_loss:.4f}, Validation Accuracy: {epoch_accuracy:.2%}")
+
+    # Save the model if it performs better than the previous best
+    if epoch_accuracy > best_accuracy:
+        best_accuracy = epoch_accuracy
+        torch.save(model.state_dict(), "best_model.pth")
+        print("    Model saved as best_model.pth")
+
+print("Training completed.")
+"""
