@@ -1,4 +1,5 @@
 # pip install grad-cam
+# pip install streamlit
 import warnings
 import numpy as np
 import requests
@@ -9,6 +10,18 @@ from torchvision.models import resnet50, resnet18
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 from torchvision.datasets import Imagenette
+import streamlit as st
+
+# streamlit run C:/Users/Marcus/PycharmProjects/pythonProject1/main.py
+
+st.sidebar.header('Enter Numbers')
+num1 = st.sidebar.number_input('index', min_value=0, step=1, value=0, format='%d')
+num2 = st.sidebar.number_input('n comp', min_value=1, step=1, value=1, format='%d')
+num3 = st.sidebar.number_input('top k', min_value=1, step=1, value=1, format='%d')
+
+image_index = int(num1)
+n_components = int(num2)
+top_k = int(num3)
 
 
 def get_image_from_file(image):
@@ -21,7 +34,6 @@ def get_image_from_file(image):
 
 
 def create_labels(concept_scores, top_k=2):
-    """ Create a list with the image-net category names of the top scoring categories"""
     imagenet_categories_url = \
         "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
     labels = eval(requests.get(imagenet_categories_url).text)
@@ -37,8 +49,6 @@ def create_labels(concept_scores, top_k=2):
 
 
 def create_labels_v2(concept_scores, top_k=5):
-    """ Create a list with the image-net category names of the top scoring categories,
-    along with their scores"""
     imagenet_categories_url = \
         "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
     labels = eval(requests.get(imagenet_categories_url).text)
@@ -52,6 +62,9 @@ def create_labels_v2(concept_scores, top_k=5):
     return concept_labels_topk
 
 
+plt.rcParams['figure.dpi'] = 80
+
+
 def visualize_image(model, image, n_components=1, top_k=1):
     img, rgb_img_float, input_tensor = get_image_from_file(image)
     classifier = model.fc
@@ -63,12 +76,14 @@ def visualize_image(model, image, n_components=1, top_k=1):
     concept_label_strings = create_labels(concept_outputs, top_k=top_k)
     visualization = show_factorization_on_image(rgb_img_float,
                                                 batch_explanations[0],
-                                                image_weight=0.3,
+                                                image_weight=0.5,
                                                 concept_labels=concept_label_strings)
 
     result = np.hstack((img, visualization))
     return result
 
+
+# ----------------------------------------------------------------------------------------------------------------------
 
 warnings.filterwarnings('ignore')
 model = resnet18(pretrained=True)
@@ -80,11 +95,20 @@ transform = transforms.Compose([
 train_data = Imagenette(root="Imagenette/train", split="train", size="320px", transform=transform)  # 9469
 val_data = Imagenette(root="Imagenette/val", split="val", size="320px", transform=transform)  # 3925
 
-# label 0 = tench, label 1 = english springer, label 2 = casette player, , label 3 = chain saw, label 4 = church
-# label 5 = french horn, label 6 = garbage truck, label 7 = gas pump, label 8 = golf ball, label 9 = parachute
+label_map = {
+    0: "tench",
+    1: "English springer",
+    2: "cassette player",
+    3: "chain saw",
+    4: "church",
+    5: "French horn",
+    6: "garbage truck",
+    7: "gas pump",
+    8: "golf ball",
+    9: "parachute"
+}
 
-image, label = train_data[1003]
-print(label)
+image, label = train_data[image_index]
 _, _, input_tensor = get_image_from_file(image)
 
 model.eval()
@@ -94,16 +118,24 @@ for param in model.parameters():
 
 outputs = model(input_tensor)
 
-predicted_classes = create_labels_v2(outputs.numpy(), top_k=10)
-
-print("Top predicted classes:")
-for i, labels in enumerate(predicted_classes[0].split("\n"), 1):
-    print(f"{i}. {labels}")
+predicted_classes = create_labels_v2(outputs.numpy(), top_k=3)
 
 f0 = plt.figure(0)
-
-ima = visualize_image(model, image, n_components=3, top_k=3)
+ima = visualize_image(model, image, n_components=n_components, top_k=top_k)
 plt.imshow(ima)
 plt.show()
+
+if image is not None:
+    st.pyplot(f0, use_container_width=True)
+    col1, col2 = st.columns([2, 1])
+
+    with col1:
+        st.write("Top 3 predicted classes:")
+        for i, labels in enumerate(predicted_classes[0].split("\n"), 1):
+            st.write(f"{i}. {labels}")
+
+    with col2:
+        st.write("True class:\n")
+        st.write(label_map[label])
 
 # TODO: https://shap.readthedocs.io/en/latest/example_notebooks/image_examples/image_classification/Explain%20ResNet50%20using%20the%20Partition%20explainer.html
