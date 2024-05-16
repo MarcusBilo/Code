@@ -59,56 +59,67 @@ func main() {
 				return
 			}
 
-			uniqueEntries := make(map[string][]int)
+			uniqueEntries := findUniqueEntries(records)
 
-			for i, record := range records {
-				if i == 0 {
-					continue
-				}
-				if len(record) > 8 {
-					entry := record[8]
-					uniqueEntries[entry] = append(uniqueEntries[entry], i)
-				}
-			}
-
-			wb := xlsx.NewFile()
-			sheet, err := wb.AddSheet("Entries")
-			if err != nil {
-				return
-			}
-
-			row := sheet.AddRow()
-			row.AddCell().Value = "Artikelnummer"
-			row.AddCell().Value = "Artikelbezeichnung"
-			row.AddCell().Value = "Anzahl Bestellungen"
-			row.AddCell().Value = "Durchschnittliche Menge je Bestellung"
-			row.AddCell().Value = "Durchschnittlicher Bestellpreis"
-			row.AddCell().Value = "Gesamtkosten"
-
-			for entry, rows := range uniqueEntries {
-				row := sheet.AddRow()
-				row.AddCell().Value = entry
-				row.AddCell().Value = records[rows[0]][10]
-				row.AddCell().SetInt(len(rows))
-
-				sumAmount := 0
-				sumPrice := 0
-				for _, row := range rows {
-					amount, _ := strconv.Atoi(records[row][12])
-					sumAmount += amount
-					price, _ := strconv.Atoi(records[row][11])
-					sumPrice += price
-				}
-				row.AddCell().SetInt(sumAmount / len(rows))
-				row.AddCell().SetInt(sumPrice / len(rows))
-				row.AddCell().SetInt((sumAmount / len(rows)) * (sumPrice / len(rows)) * len(rows))
-			}
-
-			fileName := file.Name()
-			base := fileName[:len(fileName)-len(filepath.Ext(fileName))]
-			if err := wb.Save(base + ".xlsx"); err != nil {
+			if err := saveAsXlsx(file.Name(), uniqueEntries, records); err != nil {
 				return
 			}
 		}
 	}
+}
+
+func findUniqueEntries(records [][]string) map[string][]int {
+	uniqueEntries := make(map[string][]int)
+
+	for i, record := range records {
+		if i == 0 {
+			continue
+		}
+		if len(record) > 8 {
+			entry := record[8]
+			uniqueEntries[entry] = append(uniqueEntries[entry], i)
+		}
+	}
+	return uniqueEntries
+}
+
+func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]string) error {
+	wb := xlsx.NewFile()
+	sheet, err := wb.AddSheet("Entries")
+	if err != nil {
+		return err
+	}
+
+	row := sheet.AddRow()
+	row.AddCell().Value = "Artikelnummer"
+	row.AddCell().Value = "Artikelbezeichnung"
+	row.AddCell().Value = "Anzahl Bestellungen"
+	row.AddCell().Value = "Durchschnittliche Menge je Bestellung"
+	row.AddCell().Value = "Durchschnittlicher Bestellpreis"
+	row.AddCell().Value = "Gesamtkosten"
+
+	for entry, rows := range uniqueEntries {
+		row := sheet.AddRow()
+		row.AddCell().Value = entry
+		row.AddCell().Value = records[rows[0]][10]
+		row.AddCell().SetInt(len(rows))
+
+		sumAmount := 0
+		sumPrice := 0
+		for _, row := range rows {
+			amount, _ := strconv.Atoi(records[row][12])
+			sumAmount += amount
+			price, _ := strconv.Atoi(records[row][11])
+			sumPrice += price
+		}
+		row.AddCell().SetInt(sumAmount / len(rows))
+		row.AddCell().SetInt(sumPrice / len(rows))
+		row.AddCell().SetInt((sumAmount / len(rows)) * (sumPrice / len(rows)) * len(rows))
+	}
+
+	base := fileName[:len(fileName)-len(filepath.Ext(fileName))]
+	if err := wb.Save(base + ".xlsx"); err != nil {
+		return err
+	}
+	return nil
 }
