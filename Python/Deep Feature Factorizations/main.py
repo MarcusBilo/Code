@@ -12,7 +12,10 @@ import matplotlib.pyplot as plt
 from torchvision.datasets import Imagenette
 import streamlit as st
 
+# https://github.com/jacobgil/pytorch-grad-cam
 # streamlit run C:/Users/Marcus/PycharmProjects/pythonProject1/main.py
+
+"""
 
 st.sidebar.header('Enter Numbers')
 num1 = st.sidebar.number_input('index', min_value=0, step=1, value=0, format='%d')
@@ -138,4 +141,93 @@ if image is not None:
         st.write("True class:\n")
         st.write(label_map[label])
 
-# TODO: https://shap.readthedocs.io/en/latest/example_notebooks/image_examples/image_classification/Explain%20ResNet50%20using%20the%20Partition%20explainer.html
+"""
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+# https://www.kaggle.com/code/antwerp/where-is-the-model-looking-for-gradcam-pytorch
+
+from pytorch_grad_cam import GradCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad, HiResCAM
+from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+from pytorch_grad_cam.utils.image import show_cam_on_image
+from torchvision.models import resnet18
+from PIL import Image
+import torch
+
+warnings.filterwarnings('ignore')
+
+
+def create_labels_v3(concept_scores, top_k=5):
+    imagenet_categories_url = \
+        "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
+    labels = eval(requests.get(imagenet_categories_url).text)
+    concept_categories = np.argsort(concept_scores, axis=1)[:, ::-1][:, :top_k]
+    concept_labels_topk = []
+    for concept_index in range(concept_categories.shape[0]):
+        categories = concept_categories[concept_index, :]
+        concept_labels = [f"{labels[category].split(',')[0]}:{concept_scores[concept_index, category]:.2f}" for category
+                          in categories]
+        concept_labels_topk.append("\n".join(concept_labels))
+    return concept_labels_topk
+
+
+# Load model resnet18
+model = resnet18(pretrained=True)
+
+# Pick up layers for visualization
+target_layers = [model.layer4[-1]]
+
+path = "ILSVRC2012_val_00009346.JPEG"
+rgb_img = Image.open(path).convert('RGB')
+transform = transforms.Compose([
+    transforms.Resize((320, 320)),
+])
+rgb_img = transform(rgb_img)
+rgb_img = np.float32(rgb_img) / 255
+input_tensor = preprocess_image(rgb_img,
+                                mean=[0.485, 0.456, 0.406],
+                                std=[0.229, 0.224, 0.225])
+
+#
+
+# Forward pass the input through the model
+with torch.no_grad():
+    model.eval()
+    outputs = model(input_tensor)
+
+# Apply softmax to get probabilities
+probabilities = torch.nn.functional.softmax(outputs, dim=1)
+
+# Get the top predicted classes and their probabilities
+top_k = 3
+_, predicted_indices = torch.topk(probabilities, top_k)
+predicted_indices = predicted_indices.squeeze().tolist()
+
+# Get concept labels for the top predicted classes
+concept_labels = create_labels_v3(probabilities.numpy(), top_k)
+
+for i, labels in enumerate(concept_labels[0].split("\n"), 1):
+    print(f"{i}. {labels}")
+
+#
+
+# cam = GradCAM(model=model, target_layers=target_layers)
+cam = HiResCAM(model=model, target_layers=target_layers)
+
+# You can also use it within a with statement, to make sure it is freed,
+# In case you need to re-create it inside an outer loop:
+# with GradCAM(model=model, target_layers=target_layers) as cam:
+#   ...
+
+# We have to specify the target we want to generate
+# the Class Activation Maps for.
+# If targets is None, the highest scoring category
+# will be used.
+
+grayscale_cam = cam(input_tensor=input_tensor)
+grayscale_cam = grayscale_cam[0, :]
+visualization = show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
+
+fig = Image.fromarray(visualization, 'RGB')
+plt.imshow(fig)
+plt.show()
