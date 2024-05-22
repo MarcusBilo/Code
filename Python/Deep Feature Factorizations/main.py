@@ -4,20 +4,15 @@ import warnings
 import numpy as np
 import requests
 import torch
-from pytorch_grad_cam import DeepFeatureFactorization
 from pytorch_grad_cam.utils.image import preprocess_image, show_factorization_on_image
-from torchvision.models import resnet50, resnet18
 import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
 from torchvision.datasets import Imagenette
 import streamlit as st
-
-from pytorch_grad_cam import GradCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad, HiResCAM
-from pytorch_grad_cam.utils.model_targets import ClassifierOutputTarget
+from pytorch_grad_cam import DeepFeatureFactorization, GradCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad, HiResCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torchvision.models import resnet18
 from PIL import Image
-import torch
 
 # https://github.com/jacobgil/pytorch-grad-cam
 # streamlit run C:/Users/Marcus/PycharmProjects/pythonProject1/main.py
@@ -159,9 +154,6 @@ else:
     predicted_indices = predicted_indices.squeeze().tolist()
     probabilities_np = probabilities.detach().numpy()
     concept_labels = create_labels(probabilities_np, 1)
-
-    for i, labels in enumerate(concept_labels[0].split("\n"), 1):
-        print(f"{i}. {labels}")
 
     cam = HiResCAM(model=model, target_layers=target_layers)
     grayscale_cam = cam(input_tensor=input_tensor)
