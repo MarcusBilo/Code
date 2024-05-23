@@ -6,129 +6,142 @@ import (
 	"encoding/csv"
 	"fmt"
 	ods "github.com/LIJUCHACKO/ods2csv"
-	"github.com/tawesoft/golib/v2/dialog"
+	"github.com/ncruces/zenity"
 	"github.com/tealeg/xlsx/v3"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
 
 	executablePath, err := os.Executable()
 	if err != nil {
-		os.Exit(1)
+		handleError(err, "")
+		return
 	}
 
 	directory := filepath.Dir(executablePath)
 	dir, err := os.Open(directory)
 	if err != nil {
-		os.Exit(1)
+		handleError(err, directory)
+		return
 	}
 
-	defer func(dir *os.File) {
-		err := dir.Close()
-		if err != nil {
+	defer func() {
+		if err = dir.Close(); err != nil {
+			handleError(err, directory)
+			return
 		}
-	}(dir)
+	}()
 
 	files, err := dir.Readdir(-1)
 	if err != nil {
-		os.Exit(1)
+		handleError(err, directory)
+		return
 	}
 
 	for _, file := range files {
-		if strings.HasSuffix(file.Name(), ".ods") {
-			fileContent, err := ods.ReadODSFile(directory + "/" + file.Name())
+		fileName := file.Name()
+		if !strings.HasSuffix(fileName, ".ods") {
+			continue
+		}
+		fileContent, err := ods.ReadODSFile(directory + "/" + fileName)
+		if err != nil {
+			handleError(err, fileName)
+			continue
+		}
+		sheet := fileContent.Sheets[1]
+		var outputContent []string
+		for i, row := range sheet.Rows {
+			rowString := ""
+			for j, cell := range row.Cells {
+				if i == 0 && j == len(row.Cells)-1 { // Check if it's the last cell in the first row
+					continue // if so skip it, as "Charge" is always empty
+					//
+					// nur die letzte spalte entfernen sofern es eine header spalte mehr gibt als werte
+					// und auch nur entfernen wenn die letzte spalte "Charge" ist ?
+					// zumindest checken ob es nicht vllt doch einen wert in charge gibt
+					// falls doch dann nicht löschen?
+				}
+				rowString = rowString + cell.Text + ";" // Add semicolon delimiter
+			}
+			outputContent = append(outputContent, rowString)
+		}
+
+		// Remove the last semicolon from each string in outputContent
+		for i := range outputContent {
+			if len(outputContent[i]) > 0 && outputContent[i][len(outputContent[i])-1] == ';' {
+				outputContent[i] = outputContent[i][:len(outputContent[i])-1]
+			}
+		}
+
+		var buf bytes.Buffer
+		w := bufio.NewWriter(&buf)
+		for _, line := range outputContent {
+			_, err := fmt.Fprintln(w, line+"\r")
 			if err != nil {
-				_ = dialog.Warning("Error reading ODS file:", err)
+				handleError(err, fileName)
+				break
 			}
-			sheet := fileContent.Sheets[1]
-			var outputContent []string
-			for i, row := range sheet.Rows {
-				rowString := ""
-				for j, cell := range row.Cells {
-					if i == 0 && j == len(row.Cells)-1 { // Check if it's the last cell in the first row
-						continue // if so skip it, as "Charge" is always empty
-					}
-					rowString = rowString + cell.Text + ";" // Add semicolon delimiter
-				}
-				outputContent = append(outputContent, rowString)
+		}
+		err = w.Flush()
+		if err != nil {
+			handleError(err, fileName)
+			continue
+		}
+
+		// Now you have the CSV content in the buffer 'buf'.
+		// You can read it line by line.
+
+		reader := csv.NewReader(&buf)
+		reader.Comma = ';'
+		records, err := reader.ReadAll()
+		if err != nil {
+			handleError(err, fileName)
+			continue
+		}
+
+		// -------------------------------------------------------------------------------------------------------------
+
+		uniqueAGs := findUniqueAG(records)
+		var combinedArray [][]interface{}
+
+		for AG, occurrences := range uniqueAGs {
+			uniqueValues := make(map[string]struct{})
+			for _, rowIndex := range occurrences {
+				value := records[rowIndex][8]
+				uniqueValues[value] = struct{}{}
 			}
-
-			// Remove the last semicolon from each string in outputContent
-			for i := range outputContent {
-				if len(outputContent[i]) > 0 && outputContent[i][len(outputContent[i])-1] == ';' {
-					outputContent[i] = outputContent[i][:len(outputContent[i])-1]
-				}
+			uniqueValueArray := make([]string, 0, len(uniqueValues))
+			for value := range uniqueValues {
+				uniqueValueArray = append(uniqueValueArray, value)
 			}
+			combinedArray = append(combinedArray, []interface{}{AG, uniqueValueArray})
+		}
 
-			var buf bytes.Buffer
-			w := bufio.NewWriter(&buf)
-			for _, line := range outputContent {
-				_, err := fmt.Fprintln(w, line+"\r")
-				if err != nil {
-					_ = dialog.Warning("Error writing buffer", err)
-					return
-				}
-			}
-			err = w.Flush()
-			if err != nil {
-				_ = dialog.Warning("Error flushing buffer", err)
-				return
-			}
+		// Sorting combinedArray based on AG
+		sort.Slice(combinedArray, func(i, j int) bool {
+			return combinedArray[i][0].(string) > combinedArray[j][0].(string)
+		})
 
-			// Now you have the CSV content in the buffer 'buf'.
-			// You can read it line by line.
+		for _, arr := range combinedArray {
+			secondPart := arr[1].([]string)
+			sort.Strings(secondPart)
+		}
 
-			reader := csv.NewReader(&buf)
-			reader.Comma = ';'
-			records, err := reader.ReadAll()
-			if err != nil {
-				_ = dialog.Warning("Error reading CSV content:", err)
-				return
-			}
+		uniqueEntries := findUniqueAN(records)
 
-			// ---------------------------------------------------------------------------------------------------------
+		base := fileName[:len(fileName)-len(filepath.Ext(fileName))]
 
-			uniqueAGs := findUniqueAG(records)
-			var combinedArray [][]interface{}
-
-			for AG, occurrences := range uniqueAGs {
-				uniqueValues := make(map[string]struct{})
-				for _, rowIndex := range occurrences {
-					value := records[rowIndex][8]
-					uniqueValues[value] = struct{}{}
-				}
-				uniqueValueArray := make([]string, 0, len(uniqueValues))
-				for value := range uniqueValues {
-					uniqueValueArray = append(uniqueValueArray, value)
-				}
-				combinedArray = append(combinedArray, []interface{}{AG, uniqueValueArray})
-			}
-
-			// Sorting combinedArray based on AG
-			sort.Slice(combinedArray, func(i, j int) bool {
-				return combinedArray[i][0].(string) > combinedArray[j][0].(string)
-			})
-
-			for _, arr := range combinedArray {
-				secondPart := arr[1].([]string)
-				sort.Strings(secondPart)
-			}
-
-			uniqueEntries := findUniqueAN(records)
-
-			fileName := file.Name()
-			base := fileName[:len(fileName)-len(filepath.Ext(fileName))]
-
-			err = saveAsXlsx(base+"-info.xlsx", uniqueEntries, records, combinedArray)
-			if err != nil {
-				_ = dialog.Warning("Error creating xlsx file:", err)
-				return
-			}
+		err = saveAsXlsx(base+"-info.xlsx", uniqueEntries, records, combinedArray)
+		if err != nil {
+			handleError(err, fileName)
+			continue
 		}
 	}
 }
@@ -248,9 +261,10 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 			count := len(uniqueEntries[value])
 			for _, index := range uniqueEntries[value] {
 				val, err := strconv.ParseFloat(records[index][11], 64) // 11 = Preis pro Einheit
-				if err == nil {
-					sum += val
+				if err != nil {
+					return err
 				}
+				sum += val
 			}
 			avgValue := "N/A"
 			if count > 0 {
@@ -266,10 +280,14 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 			for _, index := range uniqueEntries[value] {
 				if index < len(records) && len(records[index]) > 14 {
 					val13, err := strconv.ParseFloat(records[index][12], 64) // 12 = Menge pro Einheit
-					val15, err := strconv.ParseFloat(records[index][14], 64) // 14 = Menge pro Artikel
-					if err == nil {
-						sumColumn13Column15 += val13 * val15
+					if err != nil {
+						return err
 					}
+					val15, err := strconv.ParseFloat(records[index][14], 64) // 14 = Menge pro Artikel
+					if err != nil {
+						return err
+					}
+					sumColumn13Column15 += val13 * val15
 				}
 			}
 			cell5 := row.AddCell()
@@ -291,9 +309,10 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 			sum = 0.0
 			for _, index := range uniqueEntries[value] {
 				val, err := strconv.ParseFloat(records[index][18], 64) // 18 = Brutto-Rabattpreis
-				if err == nil {
-					sum += val
+				if err != nil {
+					return err
 				}
+				sum += val
 			}
 			avgValue = "N/A"
 			sumValue := strconv.FormatFloat(sum, 'f', 2, 64)
@@ -336,4 +355,31 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 	}
 
 	return nil
+}
+
+func handleError(originalErr error, fileOrDirName string) {
+	timestamp := time.Now().Format("2006-01-02_15-04-05")
+	fileName := fmt.Sprintf("crash_%s.txt", timestamp)
+	_, _, line, _ := runtime.Caller(1)
+	err := zenity.Error("See crash.txt", zenity.Title("Error"), zenity.ErrorIcon)
+
+	f, err := os.Create(fileName)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	errorMessage := fmt.Sprintf("Error: %v\nOccurred at line: %d\n", originalErr.Error(), line)
+	if fileOrDirName != "" {
+		errorMessage += fmt.Sprintf("Related file or directory: %s\n", fileOrDirName)
+	}
+	_, err = f.WriteString(errorMessage)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer func() {
+		if err = f.Close(); err != nil {
+			fmt.Println(err)
+		}
+	}()
 }
