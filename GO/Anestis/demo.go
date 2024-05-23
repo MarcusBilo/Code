@@ -56,6 +56,9 @@ func main() {
 			handleError(err, fileName)
 			continue
 		}
+		
+		// ########################################################
+		
 		sheet := fileContent.Sheets[1]
 		var outputContent []string
 		for i, row := range sheet.Rows {
@@ -68,6 +71,7 @@ func main() {
 					// und auch nur entfernen wenn die letzte spalte "Charge" ist ?
 					// zumindest checken ob es nicht vllt doch einen wert in charge gibt
 					// falls doch dann nicht löschen?
+					//
 				}
 				rowString = rowString + cell.Text + ";" // Add semicolon delimiter
 			}
@@ -75,11 +79,15 @@ func main() {
 		}
 
 		// Remove the last semicolon from each string in outputContent
+		// Ist mit der Charge änderung drin
+		// muss sich ebenfalls angeschaut werden
 		for i := range outputContent {
 			if len(outputContent[i]) > 0 && outputContent[i][len(outputContent[i])-1] == ';' {
 				outputContent[i] = outputContent[i][:len(outputContent[i])-1]
 			}
 		}
+
+		// ########################################################
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
@@ -106,8 +114,6 @@ func main() {
 			handleError(err, fileName)
 			continue
 		}
-
-		// -------------------------------------------------------------------------------------------------------------
 
 		uniqueAGs := findUniqueAG(records)
 
@@ -365,14 +371,14 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 				emptyCell.SetStyle(currentStyle)
 			}
 		} else {
-			for j = firstRowOfGroup[i] + 1; j <= firstRowOfGroup[i+1]; j++ {
+			for j = firstRowOfGroup[i]; j < firstRowOfGroup[i+1]; j++ {
 				emptyCell, _ := sheet.Cell(j, 6)
 				emptyCell.SetStyle(currentStyle)
 			}
 		}
 
 	}
-	fmt.Println(j)
+
 	emptyCell, _ := sheet.Cell(j, 6)
 	emptyCell.SetStyle(currentStyle)
 
