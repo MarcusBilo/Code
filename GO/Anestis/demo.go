@@ -6,8 +6,8 @@ import (
 	"encoding/csv"
 	"fmt"
 	ods "github.com/LIJUCHACKO/ods2csv"
+	"github.com/tawesoft/golib/v2/dialog"
 	"github.com/tealeg/xlsx/v3"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -43,16 +43,8 @@ func main() {
 		if strings.HasSuffix(file.Name(), ".ods") {
 			fileContent, err := ods.ReadODSFile(directory + "/" + file.Name())
 			if err != nil {
-				continue
+				_ = dialog.Warning("Error reading ODS file:", err)
 			}
-
-			/*
-				fileContent, err := ods.ReadODSFile("2024-4.ods")
-				if err != nil {
-					fmt.Println("Error reading ODS file:", err)
-					return
-				}
-			*/
 			sheet := fileContent.Sheets[1]
 			var outputContent []string
 			for i, row := range sheet.Rows {
@@ -78,11 +70,13 @@ func main() {
 			for _, line := range outputContent {
 				_, err := fmt.Fprintln(w, line+"\r")
 				if err != nil {
+					_ = dialog.Warning("Error writing buffer", err)
 					return
 				}
 			}
 			err = w.Flush()
 			if err != nil {
+				_ = dialog.Warning("Error flushing buffer", err)
 				return
 			}
 
@@ -93,11 +87,11 @@ func main() {
 			reader.Comma = ';'
 			records, err := reader.ReadAll()
 			if err != nil {
-				fmt.Println("Error reading CSV content:", err)
+				_ = dialog.Warning("Error reading CSV content:", err)
 				return
 			}
 
-			// -----------------------------------------------------------------------------------------------------------------
+			// ---------------------------------------------------------------------------------------------------------
 
 			uniqueAGs := findUniqueAG(records)
 			var combinedArray [][]interface{}
@@ -132,11 +126,11 @@ func main() {
 
 			err = saveAsXlsx(base+"-info.xlsx", uniqueEntries, records, combinedArray)
 			if err != nil {
-				log.Fatal(err)
+				_ = dialog.Warning("Error creating xlsx file:", err)
+				return
 			}
 		}
 	}
-
 }
 
 func findUniqueAN(records [][]string) map[string][]int {
