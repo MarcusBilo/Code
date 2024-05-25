@@ -56,9 +56,9 @@ func main() {
 			handleError(err, fileName)
 			continue
 		}
-		
+
 		// ########################################################
-		
+
 		sheet := fileContent.Sheets[1]
 		var outputContent []string
 		for i, row := range sheet.Rows {
@@ -191,33 +191,9 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 		return err
 	}
 
-	greyFill := xlsx.NewFill("solid", "FFDCDCDC", "FF000000")
-	greyStyle := xlsx.NewStyle()
-	greyStyle.Fill = *greyFill
-	greyStyle.Font.Size = 11
-	greyStyle.ApplyFill = true
+	greyStyle, whiteStyle, headerStyle := createStyles()
 
-	whiteFill := xlsx.NewFill("solid", "FFFFFFFF", "FF000000")
-	whiteStyle := xlsx.NewStyle()
-	whiteStyle.Fill = *whiteFill
-	whiteStyle.Font.Size = 11
-	whiteStyle.ApplyFill = true
-
-	headerFill := xlsx.NewFill("solid", "FFFFFFFF", "FF000000")
-	headerStyle := xlsx.NewStyle()
-	headerStyle.Border.Bottom = "medium"
-	headerStyle.Fill = *headerFill
-	headerStyle.Font.Size = 11
-	headerStyle.ApplyFill = true
-
-	// Add header row
-	headerRow := sheet.AddRow()
-	headers := []string{"Artikelgruppe", "Artikelnummer", "Artikelbezeichnung", "Durschnittspreis", "Gesamtmenge", "Brutto-Preis", "Gesamtpreis"}
-	for _, header := range headers {
-		headerCell := headerRow.AddCell()
-		headerCell.Value = header
-		headerCell.SetStyle(headerStyle)
-	}
+	addHeaderRow(sheet, headerStyle)
 
 	groupSum := make(map[int]float64)
 	firstRowOfGroup := make(map[int]int)
@@ -225,12 +201,7 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 	// Iterate over all entries in combinedArray
 	for i, entry := range combinedArray {
 		// Determine if the current set of rows should be grey or white
-		var currentStyle *xlsx.Style
-		if (i % 2) == 1 {
-			currentStyle = greyStyle
-		} else {
-			currentStyle = whiteStyle
-		}
+		currentStyle := selectStyle(i, greyStyle, whiteStyle)
 
 		// First column value
 		firstColumnValue := entry[0].(string)
@@ -249,9 +220,7 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 				firstRowOfGroup[i] = rowIndex
 			}
 
-			cell2 := row.AddCell()
-			cell2.SetString(value)
-			cell2.SetStyle(currentStyle)
+			addCell(row, value, currentStyle)
 
 			// Get the first entry in the list from uniqueEntries
 			firstEntry := uniqueEntries[value][0]
@@ -262,9 +231,7 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 				tenthColumnValue = records[firstEntry][10] // 10 = Artikelbezeichnung
 			}
 
-			cell3 := row.AddCell()
-			cell3.SetString(tenthColumnValue)
-			cell3.SetStyle(currentStyle)
+			addCell(row, tenthColumnValue, currentStyle)
 
 			sum := 0.0
 			count := len(uniqueEntries[value])
@@ -277,42 +244,13 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 				}
 				sum += val
 			}
-			cell4 := row.AddCell()
-			avg := sum / float64(count)
-			avg = roundFloat(avg, 3)
-			cell4.SetFloatWithFormat(avg, "0.00 €;-0.00 €")
-			cell4.SetStyle(currentStyle)
 
-			// Calculate sum of multiplied values for each unique entry
-			sumColumn13Column15 := 0
-			for _, index := range uniqueEntries[value] {
-				if index < len(records) && len(records[index]) > 14 {
-					val13, err := strconv.Atoi(records[index][12]) // 12 = Menge pro Einheit
-					if err != nil {
-						return err
-					}
-					val15, err := strconv.Atoi(records[index][14]) // 14 = Menge pro Artikel
-					if err != nil {
-						return err
-					}
-					sumColumn13Column15 += val13 * val15
-				}
-			}
-			cell5 := row.AddCell()
-			cell5.SetInt(sumColumn13Column15)
-			cell5.SetStyle(currentStyle)
+			avg := roundFloat(sum/float64(count), 3)
+			addCellWithFormat(row, avg, currentStyle, "0.00 €;-0.00 €")
 
-			/*
-				var sixteenthColumnValue string
-				if firstEntry < len(records) && 17 < len(records[firstEntry]) {
-					sixteenthColumnValue = records[firstEntry][16] // 16 = Steuer
-				}
-
-				cell6 := row.AddCell()
-				cell6.NumFmt = "0%"
-				cell6.SetValue(sixteenthColumnValue)
-				cell6.SetStyle(currentStyle)
-			*/
+			// 12 = Menge pro Einheit, 14 = Menge pro Artikel
+			sumColumn13Column15 := calculateSumColumns(records, uniqueEntries[value], 12, 14)
+			addCell(row, sumColumn13Column15, currentStyle)
 
 			sum = 0.0
 			for _, index := range uniqueEntries[value] {
@@ -325,9 +263,7 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 				sum += val
 			}
 			sumValue := roundFloat(sum, 3)
-			cell7 := row.AddCell()
-			cell7.SetFloatWithFormat(sumValue, "0.00 €;-0.00 €")
-			cell7.SetStyle(currentStyle)
+			addCellWithFormat(row, sumValue, currentStyle, "0.00 €;-0.00 €")
 
 			groupSum[i] += sum
 
@@ -339,11 +275,7 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 	var j int
 	for i := 0; i < len(groupSum); i++ {
 
-		if (i % 2) == 1 {
-			currentStyle = greyStyle
-		} else {
-			currentStyle = whiteStyle
-		}
+		currentStyle = selectStyle(i, greyStyle, whiteStyle)
 
 		cell, _ := sheet.Cell(firstRowOfGroup[i], 6)
 		cell.SetFloatWithFormat(groupSum[i], "0.00 €;-0.00 €")
@@ -355,8 +287,7 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 		// Create a map to store unique values
 		uniqueValues := make(map[string]struct{})
 		for _, rowIndex := range occurrences {
-			value := records[rowIndex][8]
-			uniqueValues[value] = struct{}{}
+			uniqueValues[records[rowIndex][8]] = struct{}{}
 		}
 
 		// Convert the unique values map to an array
@@ -382,13 +313,7 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 	emptyCell, _ := sheet.Cell(j, 6)
 	emptyCell.SetStyle(currentStyle)
 
-	newCol := xlsx.NewColForRange(1, 1)
-	newCol.SetWidth(8.5)
-	sheet.SetColParameters(newCol)
-
-	newCol = xlsx.NewColForRange(2, 7)
-	newCol.SetWidth(12)
-	sheet.SetColParameters(newCol)
+	setColumnWidths(sheet)
 
 	err = wb.Save(fileName)
 	if err != nil {
@@ -396,6 +321,42 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 	}
 
 	return nil
+}
+
+func createStyles() (*xlsx.Style, *xlsx.Style, *xlsx.Style) {
+	greyStyle := createStyle("FFDCDCDC")
+	whiteStyle := createStyle("FFFFFFFF")
+	headerStyle := createStyle("FFFFFFFF")
+	headerStyle.Border.Bottom = "medium"
+	return greyStyle, whiteStyle, headerStyle
+}
+
+func createStyle(color string) *xlsx.Style {
+	fill := xlsx.NewFill("solid", color, "FF000000")
+	style := xlsx.NewStyle()
+	style.Fill = *fill
+	style.Font.Size = 11
+	style.ApplyFill = true
+	return style
+}
+
+func addHeaderRow(sheet *xlsx.Sheet, headerStyle *xlsx.Style) {
+	headerRow := sheet.AddRow()
+	headers := []string{"Artikelgruppe", "Artikelnummer", "Artikelbezeichnung", "Durschnittspreis", "Gesamtmenge", "Brutto-Preis", "Gesamtpreis"}
+	for _, header := range headers {
+		headerCell := headerRow.AddCell()
+		headerCell.Value = header
+		headerCell.SetStyle(headerStyle)
+	}
+}
+
+func setColumnWidths(sheet *xlsx.Sheet) {
+	newCol := xlsx.NewColForRange(1, 1)
+	newCol.SetWidth(8.5)
+	sheet.SetColParameters(newCol)
+	newCol = xlsx.NewColForRange(2, 7)
+	newCol.SetWidth(12)
+	sheet.SetColParameters(newCol)
 }
 
 func handleError(originalErr error, fileOrDirName string) {
@@ -428,4 +389,37 @@ func handleError(originalErr error, fileOrDirName string) {
 func roundFloat(val float64, precision uint) float64 {
 	ratio := math.Pow(10, float64(precision))
 	return math.Round(val*ratio) / ratio
+}
+
+func addCell(row *xlsx.Row, value interface{}, style *xlsx.Style) {
+	cell := row.AddCell()
+	cell.SetValue(value)
+	cell.SetStyle(style)
+}
+
+func addCellWithFormat(row *xlsx.Row, value float64, style *xlsx.Style, format string) {
+	cell := row.AddCell()
+	cell.SetFloatWithFormat(value, format)
+	cell.SetStyle(style)
+}
+
+func calculateSumColumns(records [][]string, indices []int, col1, col2 int) int {
+	sum := 0
+	for _, index := range indices {
+		if index < len(records) && col2 < len(records[index]) {
+			val1, err1 := strconv.Atoi(records[index][col1])
+			val2, err2 := strconv.Atoi(records[index][col2])
+			if err1 == nil && err2 == nil {
+				sum += val1 * val2
+			}
+		}
+	}
+	return sum
+}
+
+func selectStyle(index int, greyStyle, whiteStyle *xlsx.Style) *xlsx.Style {
+	if (index % 2) == 1 {
+		return greyStyle
+	}
+	return whiteStyle
 }
