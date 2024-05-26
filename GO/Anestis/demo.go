@@ -225,38 +225,40 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 			// Get the first entry in the list from uniqueEntries
 			firstEntry := uniqueEntries[value][0]
 
-			// Check in the "records"
+			// 10 = Artikelbezeichnung
 			var tenthColumnValue string
 			if firstEntry < len(records) && 11 < len(records[firstEntry]) {
-				tenthColumnValue = records[firstEntry][10] // 10 = Artikelbezeichnung
+				tenthColumnValue = records[firstEntry][10]
 			}
 
 			addCell(row, tenthColumnValue, currentStyle)
 
+			// 11 = Preis pro Einheit
 			sum := 0.0
 			count := len(uniqueEntries[value])
 			for _, index := range uniqueEntries[value] {
 				floatStrWithComma := records[index][11]
 				floatStrWithDot := strings.Replace(floatStrWithComma, ",", ".", 1)
-				val, err := strconv.ParseFloat(floatStrWithDot, 64) // 11 = Preis pro Einheit
+				val, err := strconv.ParseFloat(floatStrWithDot, 64)
 				if err != nil {
 					return err
 				}
 				sum += val
 			}
-
 			avg := roundFloat(sum/float64(count), 3)
 			addCellWithFormat(row, avg, currentStyle, "0.00 €;-0.00 €")
 
-			// 12 = Menge pro Einheit, 14 = Menge pro Artikel
+			// 12 = Menge pro Einheit
+			// 14 = Menge pro Artikel
 			sumColumn13Column15 := calculateSumColumns(records, uniqueEntries[value], 12, 14)
 			addCell(row, sumColumn13Column15, currentStyle)
 
+			// 18 = Brutto-Rabattpreis
 			sum = 0.0
 			for _, index := range uniqueEntries[value] {
 				floatStrWithComma := records[index][18]
 				floatStrWithDot := strings.Replace(floatStrWithComma, ",", ".", 1)
-				val, err := strconv.ParseFloat(floatStrWithDot, 64) // 18 = Brutto-Rabattpreis
+				val, err := strconv.ParseFloat(floatStrWithDot, 64)
 				if err != nil {
 					return err
 				}
@@ -266,7 +268,6 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 			addCellWithFormat(row, sumValue, currentStyle, "0.00 €;-0.00 €")
 
 			groupSum[i] += sum
-
 			firstColumnValue = "" // Clear after the first iteration to avoid repeating
 		}
 	}
@@ -281,31 +282,33 @@ func saveAsXlsx(fileName string, uniqueEntries map[string][]int, records [][]str
 		cell.SetFloatWithFormat(groupSum[i], "0.00 €;-0.00 €")
 		cell.SetStyle(currentStyle)
 
-		lastGroup := combinedArray[len(combinedArray)-1][0].(string)
-		occurrences := uniqueAGs[lastGroup]
+		if i < len(groupSum)-1 {
 
-		// Create a map to store unique values
-		uniqueValues := make(map[string]struct{})
-		for _, rowIndex := range occurrences {
-			uniqueValues[records[rowIndex][8]] = struct{}{}
-		}
-
-		// Convert the unique values map to an array
-		uniqueValueArray := make([]string, 0, len(uniqueValues))
-		for value := range uniqueValues {
-			uniqueValueArray = append(uniqueValueArray, value)
-		}
-
-		if i == len(groupSum)-1 {
-			for j = firstRowOfGroup[i]; j < firstRowOfGroup[i]+(len(uniqueValueArray)-1); j++ {
-				emptyCell, _ := sheet.Cell(j, 6)
-				emptyCell.SetStyle(currentStyle)
-			}
-		} else {
 			for j = firstRowOfGroup[i]; j < firstRowOfGroup[i+1]; j++ {
 				emptyCell, _ := sheet.Cell(j, 6)
 				emptyCell.SetStyle(currentStyle)
 			}
+
+		} else {
+			lastGroup := combinedArray[len(combinedArray)-1][0].(string)
+			occurrences := uniqueAGs[lastGroup]
+
+			// Create a map to store unique values
+			uniqueValues := make(map[string]struct{})
+			for _, rowIndex := range occurrences {
+				uniqueValues[records[rowIndex][8]] = struct{}{}
+			}
+
+			// Convert the unique values map to an array
+			uniqueValueArray := make([]string, 0, len(uniqueValues))
+			for value := range uniqueValues {
+				uniqueValueArray = append(uniqueValueArray, value)
+			}
+			for j = firstRowOfGroup[i]; j < firstRowOfGroup[i]+(len(uniqueValueArray)-1); j++ {
+				emptyCell, _ := sheet.Cell(j, 6)
+				emptyCell.SetStyle(currentStyle)
+			}
+
 		}
 
 	}
