@@ -354,12 +354,12 @@ func addHeaderRow(sheet *xlsx.Sheet, headerStyle *xlsx.Style) {
 }
 
 func setColumnWidths(sheet *xlsx.Sheet) {
-	newCol := xlsx.NewColForRange(1, 1)
-	newCol.SetWidth(8.5)
-	sheet.SetColParameters(newCol)
-	newCol = xlsx.NewColForRange(2, 7)
-	newCol.SetWidth(12)
-	sheet.SetColParameters(newCol)
+	widths := []float64{10, 11, 19.5, 12, 11, 9, 9.5}
+	for i, width := range widths {
+		newCol := xlsx.NewColForRange(i+1, i+1)
+		newCol.SetWidth(width)
+		sheet.SetColParameters(newCol)
+	}
 }
 
 func handleError(originalErr error, fileOrDirName string) {
