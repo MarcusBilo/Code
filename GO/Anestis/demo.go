@@ -57,37 +57,20 @@ func main() {
 			continue
 		}
 
-		// ########################################################
-
 		sheet := fileContent.Sheets[1]
 		var outputContent []string
-		for i, row := range sheet.Rows {
+		const maxColumns = 21
+
+		for _, row := range sheet.Rows {
 			rowString := ""
 			for j, cell := range row.Cells {
-				if i == 0 && j == len(row.Cells)-1 { // Check if it's the last cell in the first row
-					continue // if so skip it, as "Charge" is always empty
-					//
-					// nur die letzte spalte entfernen sofern es eine header spalte mehr gibt als werte
-					// und auch nur entfernen wenn die letzte spalte "Charge" ist ?
-					// zumindest checken ob es nicht vllt doch einen wert in charge gibt
-					// falls doch dann nicht löschen?
-					//
+				if j >= maxColumns { // Truncate columns beyond the 21st
+					break
 				}
 				rowString = rowString + cell.Text + ";" // Add semicolon delimiter
 			}
 			outputContent = append(outputContent, rowString)
 		}
-
-		// Remove the last semicolon from each string in outputContent
-		// Ist mit der Charge änderung drin
-		// muss sich ebenfalls angeschaut werden
-		for i := range outputContent {
-			if len(outputContent[i]) > 0 && outputContent[i][len(outputContent[i])-1] == ';' {
-				outputContent[i] = outputContent[i][:len(outputContent[i])-1]
-			}
-		}
-
-		// ########################################################
 
 		var buf bytes.Buffer
 		w := bufio.NewWriter(&buf)
