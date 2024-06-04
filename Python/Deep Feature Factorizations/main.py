@@ -5,43 +5,102 @@ import warnings
 import numpy as np
 import requests
 import torch
-from pytorch_grad_cam.utils.image import preprocess_image, show_factorization_on_image
-import torchvision.transforms as transforms
+from pytorch_grad_cam.utils.image import show_factorization_on_image
 import matplotlib.pyplot as plt
 from torchvision.datasets import Imagenette
 import streamlit as st
 from pytorch_grad_cam import DeepFeatureFactorization, GradCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad, HiResCAM
 from pytorch_grad_cam.utils.image import show_cam_on_image
 from torchvision.models import resnet18
-from PIL import Image
 from matplotlib.gridspec import GridSpec
+from torch.utils.data import Dataset
+import os
+import torch.nn as nn
+import torch.optim as optim
+from sklearn.metrics import confusion_matrix, balanced_accuracy_score
+from torch.utils.data import DataLoader
+from tqdm import tqdm
+from torch.utils.data import Dataset, random_split
+from torchvision import transforms
+from torch.utils.data.sampler import BatchSampler
 
-# https://github.com/jacobgil/pytorch-grad-cam
-# streamlit run C:/Users/Marcus/PycharmProjects/pythonProject1/main.py
 
-st.set_page_config(layout="wide")
+# https://discuss.pytorch.org/t/load-the-same-number-of-data-per-class/65198/4
+class BalancedBatchSampler(BatchSampler):
+    def __init__(self, dataset, n_classes, n_samples):
+        loader = DataLoader(dataset)
+        self.labels_list = []
+        for _, label in loader:
+            self.labels_list.append(label)
+        self.labels = torch.LongTensor(self.labels_list)
+        self.labels_set = list(set(self.labels.numpy()))
+        self.label_to_indices = {label: np.where(self.labels.numpy() == label)[0]
+                                 for label in self.labels_set}
+        for l in self.labels_set:
+            np.random.shuffle(self.label_to_indices[l])
+        self.used_label_indices_count = {label: 0 for label in self.labels_set}
+        self.count = 0
+        self.n_classes = n_classes
+        self.n_samples = n_samples
+        self.dataset = dataset
+        self.batch_size = self.n_samples * self.n_classes
 
-st.sidebar.header('Enter Numbers')
-num1 = st.sidebar.number_input('index', min_value=0, step=1, value=0, format='%d')
+    def __iter__(self):
+        self.count = 0
+        while self.count + self.batch_size < len(self.dataset):
+            classes = np.random.choice(self.labels_set, self.n_classes, replace=False)
+            indices = []
+            for class_ in classes:
+                indices.extend(self.label_to_indices[class_][
+                               self.used_label_indices_count[class_]:self.used_label_indices_count[
+                                                                         class_] + self.n_samples])
+                self.used_label_indices_count[class_] += self.n_samples
+                if self.used_label_indices_count[class_] + self.n_samples > len(self.label_to_indices[class_]):
+                    np.random.shuffle(self.label_to_indices[class_])
+                    self.used_label_indices_count[class_] = 0
+            yield indices
+            self.count += self.n_classes * self.n_samples
 
-num2 = st.sidebar.number_input('n comp', min_value=1, step=1, value=1, format='%d')
-num3 = st.sidebar.number_input('top k', min_value=1, step=1, value=1, format='%d')
+    def __len__(self):
+        return len(self.dataset) // self.batch_size
 
-image_index = int(num1)
-n_components = int(num2)
-top_k = int(num3)
+
+# https://discuss.pytorch.org/t/torch-utils-data-dataset-random-split/32209/4
+class DatasetFromSubset(Dataset):
+    def __init__(self, subset, transform=None):
+        self.subset = subset
+        self.transform = transform
+
+    def __getitem__(self, index):
+        x, y = self.subset[index]
+        if self.transform:
+            x = self.transform(x)
+        return x, y
+
+    def __len__(self):
+        return len(self.subset)
 
 
 def get_image_from_file(image):
     img = np.array(image)
     rgb_img_float = np.float32(img) / 255
-    input_tensor = preprocess_image(rgb_img_float,
-                                    mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225])
-    return img, rgb_img_float, input_tensor
+    return img, rgb_img_float
 
 
 def create_labels(concept_scores, top_k=2):
+    concept_categories = np.argsort(concept_scores, axis=1)[:, ::-1][:, :top_k]
+    concept_labels_topk = []
+    for concept_index in range(concept_categories.shape[0]):
+        categories = concept_categories[concept_index, :]
+        concept_labels = [f"{get_label_from_numeric(label_map[category])}:{concept_scores[concept_index, category]:.2f}" for category
+                          in categories]
+        sorted_labels = sorted(concept_labels, key=lambda x: float(x.split(':')[1]), reverse=True)
+        concept_labels_topk.append("\n".join(sorted_labels))
+    return concept_labels_topk
+
+
+# https://jacobgil.github.io/pytorch-gradcam-book/Deep%20Feature%20Factorizations.html
+def create_labels2(concept_scores, top_k=2):
     imagenet_categories_url = \
         "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
     labels = eval(requests.get(imagenet_categories_url).text)
@@ -56,124 +115,300 @@ def create_labels(concept_scores, top_k=2):
     return concept_labels_topk
 
 
-plt.rcParams['figure.dpi'] = 90
+def get_label_from_numeric(numeric_label):
+    imagenet_categories_url = \
+        "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
+    labels = eval(requests.get(imagenet_categories_url).text)
+
+    label = labels.get(numeric_label, "Label not found")
+    if ',' in label:
+        label = label.split(',', 1)[0]  # Split at the first comma and take the part before it
+
+    return label
 
 
-def visualize_image(model, image, n_components=1, top_k=1):
-    img, rgb_img_float, input_tensor = get_image_from_file(image)
+def visualize_image(model, image, input_tensor, n_components=1, top_k=1):
+    img, rgb_img_float = get_image_from_file(image)
     classifier = model.fc
     dff = DeepFeatureFactorization(model=model, target_layer=model.layer4,
                                    computation_on_concepts=classifier)
     concepts, batch_explanations, concept_outputs = dff(input_tensor, n_components)
-
     concept_outputs = torch.softmax(torch.from_numpy(concept_outputs), axis=-1).numpy()
     concept_label_strings = create_labels(concept_outputs, top_k=top_k)
-    # Modify the list to add line breaks for two-word labels
-    modified_concept_labels = [label.replace(" ", "\n") if " " in label else label for label in concept_label_strings]
     visualization = show_factorization_on_image(rgb_img_float,
                                                 batch_explanations[0],
                                                 image_weight=0.5,
-                                                concept_labels=modified_concept_labels)
-
+                                                concept_labels=concept_label_strings)
     result = np.hstack((img, visualization))
     return result
 
 
+# https://jacobgil.github.io/pytorch-gradcam-book/Deep%20Feature%20Factorizations.html
+def visualize_image2(model, image, input_tensor, n_components=1, top_k=1):
+    img, rgb_img_float = get_image_from_file(image)
+    classifier = model.fc
+    dff = DeepFeatureFactorization(model=model, target_layer=model.layer4,
+                                   computation_on_concepts=classifier)
+    concepts, batch_explanations, concept_outputs = dff(input_tensor, n_components)
+    concept_outputs = torch.softmax(torch.from_numpy(concept_outputs), axis=-1).numpy()
+    concept_label_strings = create_labels2(concept_outputs, top_k=top_k)
+    # modified_concept_labels = [label.replace(" ", "\n") if " " in label else label for label in concept_label_strings]
+    visualization = show_factorization_on_image(rgb_img_float,
+                                                batch_explanations[0],
+                                                image_weight=0.5,
+                                                concept_labels=concept_label_strings)
+    result = np.hstack((img, visualization))
+    return result
+
+
+def evaluate_model(model, data_loader):
+    model.eval()
+    all_preds = []
+    all_labels = []
+    with torch.no_grad():
+        for inputs, labels in data_loader:
+            outputs = model(inputs)
+            _, preds = torch.max(outputs, 1)
+            all_preds.append(preds.cpu())
+            all_labels.append(labels.cpu())
+        all_preds = torch.cat(all_preds).numpy()
+        all_labels = torch.cat(all_labels).numpy()
+        return all_preds, all_labels
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+
+# streamlit run C:/Users/Marcus/PycharmProjects/pythonProject1/main.py
+
+st.set_page_config(layout="wide")
+
+st.sidebar.header('Enter Numbers')
+num1 = st.sidebar.number_input('index', min_value=0, step=1, value=0, format='%d')
+num2 = st.sidebar.number_input('n comp', min_value=1, step=1, value=1, format='%d')
+num3 = st.sidebar.number_input('top k', min_value=1, step=1, value=1, format='%d')
+
+model_choice = st.sidebar.selectbox("Choose a model", ["Fine-tuned", "Pretrained"])
+
+image_index = int(num1)
+n_components = int(num2)
+top_k = int(num3)
+
+plt.rcParams['figure.dpi'] = 82
+
+torch.manual_seed(123)
+
 warnings.filterwarnings('ignore')
-model = resnet18(pretrained=True)
 
 transform = transforms.Compose([
     transforms.Resize((320, 320)),
+    transforms.ToTensor(),
 ])
 
-train_data = Imagenette(root="Imagenette/train", split="train", size="320px", transform=transform)  # 9469
-val_data = Imagenette(root="Imagenette/val", split="val", size="320px", transform=transform)  # 3925
-
 label_map = {
-    0: "tench",
-    1: "English springer",
-    2: "cassette player",
-    3: "chain saw",
-    4: "church",
-    5: "French horn",
-    6: "garbage truck",
-    7: "gas pump",
-    8: "golf ball",
-    9: "parachute"
+    0: 0,    # tench
+    1: 217,  # English springer
+    2: 482,  # cassette player
+    3: 491,  # chain saw
+    4: 497,  # church
+    5: 566,  # French horn
+    6: 569,  # garbage truck
+    7: 571,  # gas pump
+    8: 574,  # golf ball
+    9: 701   # parachute
 }
 
-image, label = val_data[image_index]
+train_data = Imagenette(root="Imagenette/train", split="train", size="320px", transform=transform)  # 9469
+val_data = Imagenette(root="Imagenette/val", split="val", size="320px", transform=transforms.Resize((320, 320)))  # 3925
 
-model.eval()
+lengths = [int(len(val_data)*0.6), int(len(val_data)*0.4)]
+val_subset, holdout_subset = random_split(val_data, lengths)
+val_subset = DatasetFromSubset(val_subset, transform=transform)
+holdout_subset1 = DatasetFromSubset(holdout_subset, transform=transforms.Resize((320, 320)))
+holdout_subset2 = DatasetFromSubset(holdout_subset, transform=transform)
 
-# HiResCAM setup
-rgb_img = np.float32(image) / 255
-input_tensor = preprocess_image(rgb_img,
-                                mean=[0.485, 0.456, 0.406],
-                                std=[0.229, 0.224, 0.225])
+if model_choice == "Fine-tuned":
 
-input_tensor.requires_grad_()
-outputs_hirescam = model(input_tensor)
+    model = resnet18(pretrained=True)
+    model.fc = nn.Linear(512, 10)  # fc is the name of the classification layer
 
-target_layers = [model.layer4[-1]]
-probabilities_hirescam = torch.nn.functional.softmax(outputs_hirescam, dim=1)
-_, predicted_indices_hirescam = torch.topk(probabilities_hirescam, 3)
-predicted_indices_hirescam = predicted_indices_hirescam.squeeze().tolist()
-probabilities_np_hirescam = probabilities_hirescam.detach().numpy()
-concept_labels_hirescam = create_labels(probabilities_np_hirescam, 1)
+    if not os.path.exists("best_model.pth"):
 
-cam = HiResCAM(model=model, target_layers=target_layers)
-grayscale_cam = cam(input_tensor=input_tensor)
-grayscale_cam = grayscale_cam[0, :]
-visualization_hirescam = show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
+        for param in model.parameters():
+            param.requires_grad = False
 
-# DFF setup
-_, _, input_tensor_dff = get_image_from_file(image)
+        for param in model.fc.parameters():
+            param.requires_grad = True
 
-for param in model.parameters():
-    param.requires_grad = False
+        train_batch_sampler = BalancedBatchSampler(train_data, 10, 10)
+        val_batch_sampler = BalancedBatchSampler(val_subset, 10, 10)
+        train_loader = torch.utils.data.DataLoader(train_data, batch_sampler=train_batch_sampler)
+        val_loader = torch.utils.data.DataLoader(val_subset, batch_sampler=val_batch_sampler)
 
-outputs_dff = model(input_tensor_dff)
-probabilities_dff = torch.nn.functional.softmax(outputs_dff, dim=1)
-_, predicted_indices_dff = torch.topk(probabilities_dff, 3)
-predicted_indices_dff = predicted_indices_dff.squeeze().tolist()
-concept_labels_dff = create_labels(probabilities_dff.numpy(), 3)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
-ima_dff = visualize_image(model, image, n_components=n_components, top_k=top_k)
+        num_epochs = 3
+        best_accuracy = 0.0
 
-# Create figure with GridSpec
-fig = plt.figure(figsize=(12, 4))
-gs = GridSpec(1, 2, width_ratios=[1, 3])  # 1:2 ratio
+        # Training loop
+        for epoch in range(num_epochs):
+            print(f"Epoch {epoch + 1}/{num_epochs}")
 
-# HiResCAM image
-ax1 = fig.add_subplot(gs[0])
-ax1.imshow(visualization_hirescam)
-ax1.axis('off')
-ax1.set_title("HiResCAM")
+            model.train()
+            running_loss = 0.0
 
-# DFF image
-ax2 = fig.add_subplot(gs[1])
-ax2.imshow(ima_dff)
-ax2.axis('off')
-ax2.set_title("DFF")
+            for batch_idx, (inputs, labels) in enumerate(tqdm(train_loader), 1):
+                optimizer.zero_grad()
+                outputs = model(inputs)
+                loss = criterion(outputs, labels)
+                loss.backward()
+                optimizer.step()
+                running_loss += loss.item() * inputs.size(0)
 
-# Adjust the spacing between subplots and margins around the plot
-plt.subplots_adjust(wspace=0, hspace=0)
-plt.show()
+            epoch_loss = running_loss / len(train_data)
+
+            model.eval()
+            correct = 0
+            total = 0
+
+            with torch.no_grad():
+                for batch_idx, (inputs, labels) in enumerate(tqdm(val_loader), 1):
+                    outputs = model(inputs)
+                    _, predicted = torch.max(outputs, 1)
+                    labels = torch.tensor(labels)
+                    total += labels.size(0)
+                    correct += (predicted == labels).sum().item()
+
+            epoch_accuracy = correct / total
+            print(f"Training Loss: {epoch_loss:.4f}, Validation Accuracy: {epoch_accuracy:.2%}")
+
+            if epoch_accuracy > best_accuracy:
+                best_accuracy = epoch_accuracy
+                torch.save(model.state_dict(), "best_model.pth")
+                print("Model saved as best_model.pth")
+
+        print("Training completed.")
+        exit(0)
+
+    model.load_state_dict(torch.load("best_model.pth"))
+
+    image, label = holdout_subset1[image_index]
+    rgb_img = np.float32(image) / 255
+    model.eval()
+
+    input_tensor, _ = holdout_subset2[image_index]
+    input_tensor = input_tensor.unsqueeze(0)
+    outputs_hirescam = model(input_tensor)
+
+    probabilities_hirescam = torch.nn.functional.softmax(outputs_hirescam, dim=1)
+    top1_prob, top1_index = torch.topk(probabilities_hirescam, 1, dim=1)
+    top1_prob = top1_prob.detach().numpy().item()
+    top1_index = label_map[torch.Tensor.numpy(top1_index).item()]
+
+    cam = HiResCAM(model=model, target_layers=[model.layer4[-1]])
+    grayscale_cam = cam(input_tensor=input_tensor)
+    grayscale_cam = grayscale_cam[0, :]
+    visualization_hirescam = show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
+
+    for param in model.parameters():
+        param.requires_grad = False
+
+    ima_dff = visualize_image(model, image, input_tensor, n_components=n_components, top_k=top_k)
+
+    fig = plt.figure(figsize=(12, 4))
+    gs = GridSpec(1, 2, width_ratios=[1, 3])  # 1:2 ratio
+
+    # HiResCAM image
+    ax1 = fig.add_subplot(gs[0])
+    ax1.imshow(visualization_hirescam)
+    ax1.axis('off')
+    ax1.set_title("HiResCAM")
+
+    # DFF image
+    ax2 = fig.add_subplot(gs[1])
+    ax2.imshow(ima_dff)
+    ax2.axis('off')
+    ax2.set_title("DFF")
+
+    plt.subplots_adjust(wspace=0, hspace=0)
+    plt.show()
+
+    if image is not None:
+        st.pyplot(fig, use_container_width=True)
+
+        col_left, col1, col2, col_right = st.columns([2, 2, 2, 1])
+
+        with col1:
+            st.write("Top predicted class:")
+            st.write(f"{get_label_from_numeric(top1_index)}: {round(top1_prob, 2)}")
+
+        with col2:
+            st.write("True class:\n")
+            st.write(get_label_from_numeric(label_map[label]))
+
+else:
+    model = resnet18(pretrained=True)
+
+    image, label = holdout_subset1[image_index]
+    rgb_img = np.float32(image) / 255
+    model.eval()
+
+    input_tensor, _ = holdout_subset2[image_index]
+    input_tensor = input_tensor.unsqueeze(0)
+    outputs_hirescam = model(input_tensor)
+
+    probabilities_hirescam = torch.nn.functional.softmax(outputs_hirescam, dim=1)
+    _, predicted_indices_hirescam = torch.topk(probabilities_hirescam, 3)
+    predicted_indices_hirescam = predicted_indices_hirescam.squeeze().tolist()
+    probabilities_np_hirescam = probabilities_hirescam.detach().numpy()
+    concept_labels_hirescam = create_labels2(probabilities_np_hirescam, 1)
+
+    cam = HiResCAM(model=model, target_layers=[model.layer4[-1]])
+    grayscale_cam = cam(input_tensor=input_tensor)
+    grayscale_cam = grayscale_cam[0, :]
+    visualization_hirescam = show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
+
+    for param in model.parameters():
+        param.requires_grad = False
+
+    ima_dff = visualize_image2(model, image, input_tensor, n_components=n_components, top_k=top_k)
+
+    fig = plt.figure(figsize=(12, 4))
+    gs = GridSpec(1, 2, width_ratios=[1, 3])  # 1:2 ratio
+
+    # HiResCAM image
+    ax1 = fig.add_subplot(gs[0])
+    ax1.imshow(visualization_hirescam)
+    ax1.axis('off')
+    ax1.set_title("HiResCAM")
+
+    # DFF image
+    ax2 = fig.add_subplot(gs[1])
+    ax2.imshow(ima_dff)
+    ax2.axis('off')
+    ax2.set_title("DFF")
+
+    plt.subplots_adjust(wspace=0, hspace=0)
+    plt.show()
+
+    if image is not None:
+        st.pyplot(fig, use_container_width=True)
+
+        col_left, col1, col2, col_right = st.columns([2, 2, 2, 1])
+
+        with col1:
+            st.write("Top predicted classes:")
+            for i, labels in enumerate(concept_labels_hirescam[0].split("\n"), 1):
+                st.write(f"{i}. {labels}")
+
+        with col2:
+            st.write("True class:\n")
+            st.write(get_label_from_numeric(label_map[label]))
 
 
-# Streamlit display
-if image is not None:
-    st.pyplot(fig, use_container_width=True)
-
-    # Create empty columns on either side of the main columns to center them
-    col_left, col1, col2, col_right = st.columns([2, 2, 2, 1])
-
-    with col1:
-        st.write("Top predicted classes:")
-        for i, labels in enumerate(concept_labels_hirescam[0].split("\n"), 1):
-            st.write(f"{i}. {labels}")
-
-    with col2:
-        st.write("True class:\n")
-        st.write(label_map[label])
+# loader = torch.utils.data.DataLoader(val_subset, batch_size=100, shuffle=True)
+# val_preds, val_labels = evaluate_model(model, loader)
+# val_conf_matrix = confusion_matrix(val_labels, val_preds)
+# val_bal_acc = balanced_accuracy_score(val_labels, val_preds)
+# print("Validation Confusion Matrix:\n", val_conf_matrix)
+# print("Validation Balanced Accuracy: ", val_bal_acc)
