@@ -5,21 +5,18 @@ import warnings
 import numpy as np
 import requests
 import torch
-from pytorch_grad_cam.utils.image import show_factorization_on_image
+from pytorch_grad_cam.utils.image import show_factorization_on_image, show_cam_on_image
 import matplotlib.pyplot as plt
 from torchvision.datasets import Imagenette
 import streamlit as st
 from pytorch_grad_cam import DeepFeatureFactorization, GradCAM, ScoreCAM, GradCAMPlusPlus, AblationCAM, XGradCAM, EigenCAM, FullGrad, HiResCAM
-from pytorch_grad_cam.utils.image import show_cam_on_image
 from torchvision.models import resnet18
-from torch.utils.data import Dataset
 import os
 import torch.nn as nn
 import torch.optim as optim
 from sklearn.metrics import confusion_matrix, balanced_accuracy_score
-from torch.utils.data import DataLoader
 from tqdm import tqdm
-from torch.utils.data import Dataset, random_split
+from torch.utils.data import Dataset, random_split, DataLoader
 from torchvision import transforms
 from torch.utils.data.sampler import BatchSampler
 
@@ -33,8 +30,7 @@ class BalancedBatchSampler(BatchSampler):
             self.labels_list.append(label)
         self.labels = torch.LongTensor(self.labels_list)
         self.labels_set = list(set(self.labels.numpy()))
-        self.label_to_indices = {label: np.where(self.labels.numpy() == label)[0]
-                                 for label in self.labels_set}
+        self.label_to_indices = {label: np.where(self.labels.numpy() == label)[0] for label in self.labels_set}
         for l in self.labels_set:
             np.random.shuffle(self.label_to_indices[l])
         self.used_label_indices_count = {label: 0 for label in self.labels_set}
@@ -80,18 +76,19 @@ class DatasetFromSubset(Dataset):
         return len(self.subset)
 
 
-def get_image_from_file(image):
-    img = np.array(image)
+def get_image_from_file(input_image):
+    img = np.array(input_image)
     rgb_img_float = np.float32(img) / 255
     return img, rgb_img_float
 
 
-def create_labels(concept_scores, top_k=2):
-    concept_categories = np.argsort(concept_scores, axis=1)[:, ::-1][:, :top_k]
+def create_labels(concept_scores, no_of_categories=2):
+    concept_categories = np.argsort(concept_scores, axis=1)[:, ::-1][:, :no_of_categories]
     concept_labels_topk = []
     for concept_index in range(concept_categories.shape[0]):
         categories = concept_categories[concept_index, :]
-        concept_labels = [f"{get_label_from_numeric(label_map[category])}:{concept_scores[concept_index, category]:.2f}" for category
+        concept_labels = [f"{get_label_from_numeric(label_map[category])}:{concept_scores[concept_index, category]:.2f}"
+                          for category
                           in categories]
         sorted_labels = sorted(concept_labels, key=lambda x: float(x.split(':')[1]), reverse=True)
         concept_labels_topk.append("\n".join(sorted_labels))
@@ -99,11 +96,11 @@ def create_labels(concept_scores, top_k=2):
 
 
 # https://jacobgil.github.io/pytorch-gradcam-book/Deep%20Feature%20Factorizations.html
-def create_labels2(concept_scores, top_k=2):
+def create_labels2(concept_scores, no_of_categories=2):
     imagenet_categories_url = \
         "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
     labels = eval(requests.get(imagenet_categories_url).text)
-    concept_categories = np.argsort(concept_scores, axis=1)[:, ::-1][:, :top_k]
+    concept_categories = np.argsort(concept_scores, axis=1)[:, ::-1][:, :no_of_categories]
     concept_labels_topk = []
     for concept_index in range(concept_categories.shape[0]):
         categories = concept_categories[concept_index, :]
@@ -124,13 +121,13 @@ def get_label_from_numeric(numeric_label):
     return label
 
 
-def visualize_image(model, image, input_tensor, n_components=1, top_k=1):
-    img, rgb_img_float = get_image_from_file(image)
+def visualize_image(model, input_image, input_tensor, no_components=1, no_of_categories=1):
+    img, rgb_img_float = get_image_from_file(input_image)
     classifier = model.fc
     dff = DeepFeatureFactorization(model=model, target_layer=model.layer4, computation_on_concepts=classifier)
-    concepts, batch_explanations, concept_outputs = dff(input_tensor, n_components)
-    concept_outputs = torch.softmax(torch.from_numpy(concept_outputs), axis=-1).numpy()
-    concept_label_strings = create_labels(concept_outputs, top_k=top_k)
+    concepts, batch_explanations, concept_outputs = dff(input_tensor, no_components)
+    concept_outputs = torch.softmax(torch.from_numpy(concept_outputs), dim=-1).numpy()
+    concept_label_strings = create_labels(concept_outputs, no_of_categories=no_of_categories)
     visualization = show_factorization_on_image(rgb_img_float,
                                                 batch_explanations[0],
                                                 image_weight=0.5,
@@ -140,13 +137,13 @@ def visualize_image(model, image, input_tensor, n_components=1, top_k=1):
 
 
 # https://jacobgil.github.io/pytorch-gradcam-book/Deep%20Feature%20Factorizations.html
-def visualize_image2(model, image, input_tensor, n_components=1, top_k=1):
-    img, rgb_img_float = get_image_from_file(image)
+def visualize_image2(model, input_image, input_tensor, no_components=1, no_of_categories=1):
+    img, rgb_img_float = get_image_from_file(input_image)
     classifier = model.fc
     dff = DeepFeatureFactorization(model=model, target_layer=model.layer4, computation_on_concepts=classifier)
-    concepts, batch_explanations, concept_outputs = dff(input_tensor, n_components)
-    concept_outputs = torch.softmax(torch.from_numpy(concept_outputs), axis=-1).numpy()
-    concept_label_strings = create_labels2(concept_outputs, top_k=top_k)
+    concepts, batch_explanations, concept_outputs = dff(input_tensor, no_components)
+    concept_outputs = torch.softmax(torch.from_numpy(concept_outputs), dim=-1).numpy()
+    concept_label_strings = create_labels2(concept_outputs, no_of_categories=no_of_categories)
     # modified_concept_labels = [label.replace(" ", "\n") if " " in label else label for label in concept_label_strings]
     visualization = show_factorization_on_image(rgb_img_float,
                                                 batch_explanations[0],
@@ -156,17 +153,17 @@ def visualize_image2(model, image, input_tensor, n_components=1, top_k=1):
     return result
 
 
-def train_and_save_model(model, train_data, val_subset):
-    for param in model.parameters():
-        param.requires_grad = False
+def train_and_save_model(model, train_dataset, val_data_subset):
+    for parameter in model.parameters():
+        parameter.requires_grad = False
 
-    for param in model.fc.parameters():
-        param.requires_grad = True
+    for parameter in model.fc.parameters():
+        parameter.requires_grad = True
 
-    train_batch_sampler = BalancedBatchSampler(train_data, 10, 10)
-    val_batch_sampler = BalancedBatchSampler(val_subset, 10, 10)
-    train_loader = torch.utils.data.DataLoader(train_data, batch_sampler=train_batch_sampler)
-    val_loader = torch.utils.data.DataLoader(val_subset, batch_sampler=val_batch_sampler)
+    train_batch_sampler = BalancedBatchSampler(train_dataset, 10, 10)
+    val_batch_sampler = BalancedBatchSampler(val_data_subset, 10, 10)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=train_batch_sampler)
+    val_loader = torch.utils.data.DataLoader(val_data_subset, batch_sampler=val_batch_sampler)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
@@ -248,7 +245,7 @@ def load_resources():
     composed_transform = transforms.Compose([resize_transform, tensor_transform])
 
     label_map = {
-        0: 0,    # tench
+        0: 0,  # tench
         1: 217,  # English springer
         2: 482,  # cassette player
         3: 491,  # chain saw
@@ -257,7 +254,7 @@ def load_resources():
         6: 569,  # garbage truck
         7: 571,  # gas pump
         8: 574,  # golf ball
-        9: 701   # parachute
+        9: 701  # parachute
     }
 
     train_data = Imagenette(root="Imagenette/train", split="train", size="320px", transform=composed_transform)  # 9469
@@ -286,7 +283,6 @@ holdout_subset1 = resources['holdout_subset1']
 holdout_subset2 = resources['holdout_subset2']
 
 with center:
-
     tab1, tab2 = st.tabs(["Fine-tuned", "Pretrained"])
 
     col1, col2, col3 = st.columns(3)
@@ -330,7 +326,7 @@ with center:
         for param in model.parameters():
             param.requires_grad = False
 
-        ima_dff = visualize_image(model, image, input_tensor, n_components=n_components, top_k=top_k)
+        ima_dff = visualize_image(model, image, input_tensor, no_components=n_components, no_of_categories=top_k)
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4), gridspec_kw={'width_ratios': [1, 3]})
         ax1.imshow(visualization_hirescam)
@@ -377,7 +373,7 @@ with center:
         for param in model.parameters():
             param.requires_grad = False
 
-        ima_dff = visualize_image2(model, image, input_tensor, n_components=n_components, top_k=top_k)
+        ima_dff = visualize_image2(model, image, input_tensor, no_components=n_components, no_of_categories=top_k)
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4), gridspec_kw={'width_ratios': [1, 3]})
         ax1.imshow(visualization_hirescam)
