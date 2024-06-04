@@ -26,14 +26,14 @@ class BalancedBatchSampler(BatchSampler):
     def __init__(self, dataset, n_classes, n_samples):
         loader = DataLoader(dataset)
         self.labels_list = []
-        for _, label in loader:
-            self.labels_list.append(label)
+        for _, ll_label in loader:
+            self.labels_list.append(ll_label)
         self.labels = torch.LongTensor(self.labels_list)
         self.labels_set = list(set(self.labels.numpy()))
-        self.label_to_indices = {label: np.where(self.labels.numpy() == label)[0] for label in self.labels_set}
-        for l in self.labels_set:
-            np.random.shuffle(self.label_to_indices[l])
-        self.used_label_indices_count = {label: 0 for label in self.labels_set}
+        self.label_to_indices = {lti_label: np.where(self.labels.numpy() == lti_label)[0] for lti_label in self.labels_set}
+        for sl in self.labels_set:
+            np.random.shuffle(self.label_to_indices[sl])
+        self.used_label_indices_count = {ul_label: 0 for ul_label in self.labels_set}
         self.count = 0
         self.n_classes = n_classes
         self.n_samples = n_samples
@@ -99,12 +99,12 @@ def create_labels(concept_scores, no_of_categories=2):
 def create_labels2(concept_scores, no_of_categories=2):
     imagenet_categories_url = \
         "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
-    labels = eval(requests.get(imagenet_categories_url).text)
+    c_labels = eval(requests.get(imagenet_categories_url).text)
     concept_categories = np.argsort(concept_scores, axis=1)[:, ::-1][:, :no_of_categories]
     concept_labels_topk = []
     for concept_index in range(concept_categories.shape[0]):
         categories = concept_categories[concept_index, :]
-        concept_labels = [f"{labels[category].split(',')[0]}:{concept_scores[concept_index, category]:.2f}" for category
+        concept_labels = [f"{c_labels[category].split(',')[0]}:{concept_scores[concept_index, category]:.2f}" for category
                           in categories]
         sorted_labels = sorted(concept_labels, key=lambda x: float(x.split(':')[1]), reverse=True)
         concept_labels_topk.append("\n".join(sorted_labels))
@@ -114,18 +114,18 @@ def create_labels2(concept_scores, no_of_categories=2):
 def get_label_from_numeric(numeric_label):
     imagenet_categories_url = \
         "https://gist.githubusercontent.com/yrevar/942d3a0ac09ec9e5eb3a/raw/238f720ff059c1f82f368259d1ca4ffa5dd8f9f5/imagenet1000_clsidx_to_labels.txt"
-    labels = eval(requests.get(imagenet_categories_url).text)
-    label = labels.get(numeric_label, "Label not found")
-    if ',' in label:
-        label = label.split(',', 1)[0]  # Split at the first comma and take the part before it
-    return label
+    num_labels = eval(requests.get(imagenet_categories_url).text)
+    num_label = num_labels.get(numeric_label, "Label not found")
+    if ',' in num_label:
+        num_label = num_label.split(',', 1)[0]  # Split at the first comma and take the part before it
+    return num_label
 
 
-def visualize_image(model, input_image, input_tensor, no_components=1, no_of_categories=1):
+def visualize_image(input_model, input_image, vis_input_tensor, no_of_components=1, no_of_categories=1):
     img, rgb_img_float = get_image_from_file(input_image)
-    classifier = model.fc
-    dff = DeepFeatureFactorization(model=model, target_layer=model.layer4, computation_on_concepts=classifier)
-    concepts, batch_explanations, concept_outputs = dff(input_tensor, no_components)
+    classifier = input_model.fc
+    dff = DeepFeatureFactorization(model=input_model, target_layer=input_model.layer4, computation_on_concepts=classifier)
+    concepts, batch_explanations, concept_outputs = dff(vis_input_tensor, no_of_components)
     concept_outputs = torch.softmax(torch.from_numpy(concept_outputs), dim=-1).numpy()
     concept_label_strings = create_labels(concept_outputs, no_of_categories=no_of_categories)
     visualization = show_factorization_on_image(rgb_img_float,
@@ -137,11 +137,11 @@ def visualize_image(model, input_image, input_tensor, no_components=1, no_of_cat
 
 
 # https://jacobgil.github.io/pytorch-gradcam-book/Deep%20Feature%20Factorizations.html
-def visualize_image2(model, input_image, input_tensor, no_components=1, no_of_categories=1):
+def visualize_image2(input_model, input_image, vis_input_tensor, no_of_components=1, no_of_categories=1):
     img, rgb_img_float = get_image_from_file(input_image)
-    classifier = model.fc
-    dff = DeepFeatureFactorization(model=model, target_layer=model.layer4, computation_on_concepts=classifier)
-    concepts, batch_explanations, concept_outputs = dff(input_tensor, no_components)
+    classifier = input_model.fc
+    dff = DeepFeatureFactorization(model=input_model, target_layer=input_model.layer4, computation_on_concepts=classifier)
+    concepts, batch_explanations, concept_outputs = dff(vis_input_tensor, no_of_components)
     concept_outputs = torch.softmax(torch.from_numpy(concept_outputs), dim=-1).numpy()
     concept_label_strings = create_labels2(concept_outputs, no_of_categories=no_of_categories)
     # modified_concept_labels = [label.replace(" ", "\n") if " " in label else label for label in concept_label_strings]
@@ -153,11 +153,11 @@ def visualize_image2(model, input_image, input_tensor, no_components=1, no_of_ca
     return result
 
 
-def train_and_save_model(model, train_dataset, val_data_subset):
-    for parameter in model.parameters():
+def train_and_save_model(input_model, train_dataset, val_data_subset):
+    for parameter in input_model.parameters():
         parameter.requires_grad = False
 
-    for parameter in model.fc.parameters():
+    for parameter in input_model.fc.parameters():
         parameter.requires_grad = True
 
     train_batch_sampler = BalancedBatchSampler(train_dataset, 10, 10)
@@ -166,7 +166,7 @@ def train_and_save_model(model, train_dataset, val_data_subset):
     val_loader = torch.utils.data.DataLoader(val_data_subset, batch_sampler=val_batch_sampler)
 
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    optimizer = optim.Adam(input_model.parameters(), lr=1e-4)
 
     num_epochs = 3
     best_accuracy = 0.0
@@ -174,53 +174,53 @@ def train_and_save_model(model, train_dataset, val_data_subset):
     for epoch in range(num_epochs):
         print(f"Epoch {epoch + 1}/{num_epochs}")
 
-        model.train()
+        input_model.train()
         running_loss = 0.0
 
-        for batch_idx, (inputs, labels) in enumerate(tqdm(train_loader), 1):
+        for batch_idx, (inputs, tl_labels) in enumerate(tqdm(train_loader), 1):
             optimizer.zero_grad()
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
+            outputs = input_model(inputs)
+            loss = criterion(outputs, tl_labels)
             loss.backward()
             optimizer.step()
             running_loss += loss.item() * inputs.size(0)
 
-        epoch_loss = running_loss / len(train_data)
+        epoch_loss = running_loss / len(train_dataset)
 
-        model.eval()
+        input_model.eval()
         correct = 0
         total = 0
 
         with torch.no_grad():
-            for batch_idx, (inputs, labels) in enumerate(tqdm(val_loader), 1):
-                outputs = model(inputs)
+            for batch_idx, (inputs, vl_labels) in enumerate(tqdm(val_loader), 1):
+                outputs = input_model(inputs)
                 _, predicted = torch.max(outputs, 1)
-                labels = torch.tensor(labels)
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
+                vl_labels = torch.tensor(vl_labels)
+                total += vl_labels.size(0)
+                correct += (predicted == vl_labels).sum().item()
 
         epoch_accuracy = correct / total
         print(f"Training Loss: {epoch_loss:.4f}, Validation Accuracy: {epoch_accuracy:.2%}")
 
         if epoch_accuracy > best_accuracy:
             best_accuracy = epoch_accuracy
-            torch.save(model.state_dict(), "best_model.pth")
+            torch.save(input_model.state_dict(), "best_model.pth")
             print("Model saved as best_model.pth")
 
     print("Training completed.")
     exit(0)
 
 
-def evaluate_model(model, data_loader):
-    model.eval()
+def evaluate_model(input_model, data_loader):
+    input_model.eval()
     all_preds = []
     all_labels = []
     with torch.no_grad():
-        for inputs, labels in data_loader:
-            outputs = model(inputs)
+        for inputs, dl_labels in data_loader:
+            outputs = input_model(inputs)
             _, preds = torch.max(outputs, 1)
             all_preds.append(preds.cpu())
-            all_labels.append(labels.cpu())
+            all_labels.append(dl_labels.cpu())
         all_preds = torch.cat(all_preds).numpy()
         all_labels = torch.cat(all_labels).numpy()
         return all_preds, all_labels
@@ -244,7 +244,7 @@ def load_resources():
     tensor_transform = transforms.ToTensor()
     composed_transform = transforms.Compose([resize_transform, tensor_transform])
 
-    label_map = {
+    l_map = {
         0: 0,  # tench
         1: 217,  # English springer
         2: 482,  # cassette player
@@ -257,25 +257,26 @@ def load_resources():
         9: 701  # parachute
     }
 
-    train_data = Imagenette(root="Imagenette/train", split="train", size="320px", transform=composed_transform)  # 9469
-    val_data = Imagenette(root="Imagenette/val", split="val", size="320px", transform=resize_transform)  # 3925
+    t_data = Imagenette(root="Imagenette/train", split="train", size="320px", transform=composed_transform)  # 9469
+    v_data = Imagenette(root="Imagenette/val", split="val", size="320px", transform=resize_transform)  # 3925
 
-    lengths = [int(len(val_data) * 0.6), int(len(val_data) * 0.4)]
-    val_subset, holdout_subset = random_split(val_data, lengths)
-    val_subset = DatasetFromSubset(val_subset, transform=composed_transform)
-    holdout_subset1 = DatasetFromSubset(holdout_subset, transform=resize_transform)
-    holdout_subset2 = DatasetFromSubset(holdout_subset, transform=composed_transform)
+    lengths = [int(len(v_data) * 0.6), int(len(v_data) * 0.4)]
+    v_subset, h_subset = random_split(v_data, lengths)
+    v_subset = DatasetFromSubset(v_subset, transform=composed_transform)
+    h_subset1 = DatasetFromSubset(h_subset, transform=resize_transform)
+    h_subset2 = DatasetFromSubset(h_subset, transform=composed_transform)
 
     return {
-        'label_map': label_map,
-        'train_data': train_data,
-        'val_subset': val_subset,
-        'holdout_subset1': holdout_subset1,
-        'holdout_subset2': holdout_subset2
+        'label_map': l_map,
+        'train_data': t_data,
+        'val_subset': v_subset,
+        'holdout_subset1': h_subset1,
+        'holdout_subset2': h_subset2
     }
 
 
 resources = load_resources()
+
 label_map = resources['label_map']
 train_data = resources['train_data']
 val_subset = resources['val_subset']
@@ -326,7 +327,7 @@ with center:
         for param in model.parameters():
             param.requires_grad = False
 
-        ima_dff = visualize_image(model, image, input_tensor, no_components=n_components, no_of_categories=top_k)
+        ima_dff = visualize_image(model, image, input_tensor, no_of_components=n_components, no_of_categories=top_k)
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4), gridspec_kw={'width_ratios': [1, 3]})
         ax1.imshow(visualization_hirescam)
@@ -373,7 +374,7 @@ with center:
         for param in model.parameters():
             param.requires_grad = False
 
-        ima_dff = visualize_image2(model, image, input_tensor, no_components=n_components, no_of_categories=top_k)
+        ima_dff = visualize_image2(model, image, input_tensor, no_of_components=n_components, no_of_categories=top_k)
 
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4), gridspec_kw={'width_ratios': [1, 3]})
         ax1.imshow(visualization_hirescam)
