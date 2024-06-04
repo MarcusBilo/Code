@@ -226,9 +226,15 @@ val_subset = DatasetFromSubset(val_subset, transform=transform)
 holdout_subset1 = DatasetFromSubset(holdout_subset, transform=transforms.Resize((320, 320)))
 holdout_subset2 = DatasetFromSubset(holdout_subset, transform=transform)
 
+model = resnet18(pretrained=True)
+
+image, label = holdout_subset1[image_index]
+rgb_img = np.float32(image) / 255
+input_tensor, _ = holdout_subset2[image_index]
+input_tensor = input_tensor.unsqueeze(0)
+
 if model_choice == "Fine-tuned":
 
-    model = resnet18(pretrained=True)
     model.fc = nn.Linear(512, 10)  # fc is the name of the classification layer
 
     if not os.path.exists("best_model.pth"):
@@ -292,12 +298,8 @@ if model_choice == "Fine-tuned":
 
     model.load_state_dict(torch.load("best_model.pth"))
 
-    image, label = holdout_subset1[image_index]
-    rgb_img = np.float32(image) / 255
     model.eval()
 
-    input_tensor, _ = holdout_subset2[image_index]
-    input_tensor = input_tensor.unsqueeze(0)
     outputs_hirescam = model(input_tensor)
 
     probabilities_hirescam = torch.nn.functional.softmax(outputs_hirescam, dim=1)
@@ -347,14 +349,8 @@ if model_choice == "Fine-tuned":
             st.write(get_label_from_numeric(label_map[label]))
 
 else:
-    model = resnet18(pretrained=True)
-
-    image, label = holdout_subset1[image_index]
-    rgb_img = np.float32(image) / 255
     model.eval()
 
-    input_tensor, _ = holdout_subset2[image_index]
-    input_tensor = input_tensor.unsqueeze(0)
     outputs_hirescam = model(input_tensor)
 
     probabilities_hirescam = torch.nn.functional.softmax(outputs_hirescam, dim=1)
