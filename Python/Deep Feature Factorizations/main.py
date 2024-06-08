@@ -162,13 +162,13 @@ def train_and_save_model(input_model, train_dataset, val_data_subset):
 
     train_batch_sampler = BalancedBatchSampler(train_dataset, 10, 10)
     val_batch_sampler = BalancedBatchSampler(val_data_subset, 10, 10)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_sampler=train_batch_sampler)
-    val_loader = torch.utils.data.DataLoader(val_data_subset, batch_sampler=val_batch_sampler)
+    train_loader = DataLoader(train_dataset, batch_sampler=train_batch_sampler)
+    val_loader = DataLoader(val_data_subset, batch_sampler=val_batch_sampler)
 
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(input_model.parameters(), lr=1e-4)
 
-    num_epochs = 3
+    num_epochs = 2
     best_accuracy = 0.0
 
     for epoch in range(num_epochs):
@@ -351,6 +351,20 @@ with center:
                 st.write("True class:\n")
                 st.write(get_label_from_numeric(label_map[label]))
 
+        # loader = torch.utils.data.DataLoader(train_data, batch_size=100, shuffle=True)
+        # val_preds, val_labels = evaluate_model(model, loader)
+        # val_conf_matrix = confusion_matrix(val_labels, val_preds)
+        # val_bal_acc = balanced_accuracy_score(val_labels, val_preds)
+        # print("Train Confusion Matrix:\n", val_conf_matrix)
+        # print("Train Balanced Accuracy: ", val_bal_acc)
+
+        # loader = torch.utils.data.DataLoader(val_subset, batch_size=100, shuffle=True)
+        # val_preds, val_labels = evaluate_model(model, loader)
+        # val_conf_matrix = confusion_matrix(val_labels, val_preds)
+        # val_bal_acc = balanced_accuracy_score(val_labels, val_preds)
+        # print("Validation Confusion Matrix:\n", val_conf_matrix)
+        # print("Validation Balanced Accuracy: ", val_bal_acc)
+
     # ------------------------------------------------------------------------------------------------------------------
 
     with tab2:
@@ -399,10 +413,3 @@ with center:
             with col2:
                 st.write("True class:\n")
                 st.write(get_label_from_numeric(label_map[label]))
-
-    # loader = torch.utils.data.DataLoader(val_subset, batch_size=100, shuffle=True)
-    # val_preds, val_labels = evaluate_model(model, loader)
-    # val_conf_matrix = confusion_matrix(val_labels, val_preds)
-    # val_bal_acc = balanced_accuracy_score(val_labels, val_preds)
-    # print("Validation Confusion Matrix:\n", val_conf_matrix)
-    # print("Validation Balanced Accuracy: ", val_bal_acc)
