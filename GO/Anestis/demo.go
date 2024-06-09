@@ -20,7 +20,7 @@ import (
 
 func main() {
 
-	var executablePath, directory, fileName, base, outputFileName string
+	var executablePath, directory, fileName, outputFileName string
 	var err error
 	var files []os.FileInfo
 	var file os.FileInfo
@@ -28,8 +28,6 @@ func main() {
 	var outputContent []string
 	var buf bytes.Buffer
 	var records [][]string
-	var uniqueAGs, uniqueEntries map[string][]int
-	var combinedArray [][]interface{}
 
 	executablePath, err = os.Executable()
 	if err != nil {
@@ -72,13 +70,9 @@ func main() {
 			return
 		}
 
-		uniqueAGs = findUniqueAG(records)
-		combinedArray = combineUniqueAG(records, uniqueAGs)
-		uniqueEntries = findUniqueAN(records)
-		base = fileName[:len(fileName)-len(filepath.Ext(fileName))]
-		outputFileName = base + "-info.xlsx"
+		outputFileName = fileName[:len(fileName)-len(filepath.Ext(fileName))] + "-info.xlsx"
 
-		err = saveAsXlsx(records, uniqueAGs, combinedArray, uniqueEntries, outputFileName)
+		err = saveAsXlsx(records, outputFileName)
 		if err != nil {
 			handleError(err, fileName)
 		}
@@ -141,14 +135,14 @@ func extractContent(sheet ods.Sheet) []string {
 
 	var row ods.Row
 	var rowString string
-	var j int
+	var col int
 	var cell ods.Cell
 	var outputContent []string
 
 	for _, row = range sheet.Rows {
 		rowString = ""
-		for j, cell = range row.Cells {
-			if j >= 21 { // max column truncation
+		for col, cell = range row.Cells {
+			if col >= 21 { // max column truncation
 				break
 			}
 			rowString = rowString + cell.Text + ";" // semicolon delimiter
@@ -175,11 +169,11 @@ func writeContent(buf *bytes.Buffer, content []string) error {
 
 func readCSVContent(buf *bytes.Buffer) ([][]string, error) {
 
-	var reader *csv.Reader
+	var r *csv.Reader
 
-	reader = csv.NewReader(buf)
-	reader.Comma = ';'
-	return reader.ReadAll()
+	r = csv.NewReader(buf)
+	r.Comma = ';'
+	return r.ReadAll()
 }
 
 func findUniqueAG(records [][]string) map[string][]int {
@@ -258,7 +252,7 @@ func findUniqueAN(records [][]string) map[string][]int {
 	return uniqueEntries
 }
 
-func saveAsXlsx(records [][]string, uniqueAGs map[string][]int, combinedArray [][]interface{}, uniqueEntries map[string][]int, fileName string) error {
+func saveAsXlsx(records [][]string, fileName string) error {
 
 	var wb *xlsx.File
 	var sheet *xlsx.Sheet
@@ -266,6 +260,8 @@ func saveAsXlsx(records [][]string, uniqueAGs map[string][]int, combinedArray []
 	var greyStyle, whiteStyle, headerStyle, currentStyle *xlsx.Style
 	var firstRowOfGroup map[int]int
 	var groupSum map[int]float64
+	var uniqueAGs, uniqueEntries map[string][]int
+	var combinedArray [][]interface{}
 	var i, rowIndex, firstEntry, sumColumn13Column15, j, k int
 	var entry []interface{}
 	var firstColumnValue, value, lastGroup, tenthColumnValue string
@@ -291,6 +287,10 @@ func saveAsXlsx(records [][]string, uniqueAGs map[string][]int, combinedArray []
 
 	firstRowOfGroup = make(map[int]int)
 	groupSum = make(map[int]float64)
+
+	uniqueAGs = findUniqueAG(records)
+	combinedArray = combineUniqueAG(records, uniqueAGs)
+	uniqueEntries = findUniqueAN(records)
 
 	for i, entry = range combinedArray {
 
