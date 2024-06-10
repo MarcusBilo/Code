@@ -319,7 +319,7 @@ with center:
         top1_prob, top1_index = torch.topk(probabilities_hirescam, 1, dim=1)
         top1_prob = top1_prob.detach().numpy().item()
         top1_index = label_map[torch.Tensor.numpy(top1_index).item()]
-        cam = HiResCAM(model=model, target_layers=[model.layer4[-1]])
+        cam = HiResCAM(model=model, target_layers=[model.layer4])
         grayscale_cam = cam(input_tensor=input_tensor)
         grayscale_cam = grayscale_cam[0, :]
         visualization_hirescam = show_cam_on_image(rgb_img, grayscale_cam, use_rgb=True)
@@ -344,26 +344,37 @@ with center:
             col_left, col1, col2, col_right = st.columns([2, 2, 2, 1])
 
             with col1:
-                st.write("Predicted class:")
-                st.write(f"{get_label_from_numeric(top1_index)}: {round(top1_prob, 2)}")
+                # st.write("Predicted class:")
+                st.markdown(f"<p style='font-size:1.25em;'>Predicted class:</p>", unsafe_allow_html=True)
+                # st.write(f"{get_label_from_numeric(top1_index)}: {round(top1_prob, 2)}")
+                st.markdown(f"<p style='font-size:1.25em;'>{get_label_from_numeric(top1_index)}: {round(top1_prob, 2)}</p>", unsafe_allow_html=True)
 
             with col2:
-                st.write("True class:\n")
-                st.write(get_label_from_numeric(label_map[label]))
+                # st.write("True class:\n")
+                st.markdown(f"<p style='font-size:1.25em;'>True class:</p>", unsafe_allow_html=True)
+                # st.write(get_label_from_numeric(label_map[label]))
+                st.markdown(f"<p style='font-size:1.25em;'>{get_label_from_numeric(label_map[label])}</p>", unsafe_allow_html=True)
 
-        # loader = torch.utils.data.DataLoader(train_data, batch_size=100, shuffle=True)
+        # loader = DataLoader(train_data, batch_size=100, shuffle=True)
         # val_preds, val_labels = evaluate_model(model, loader)
         # val_conf_matrix = confusion_matrix(val_labels, val_preds)
         # val_bal_acc = balanced_accuracy_score(val_labels, val_preds)
         # print("Train Confusion Matrix:\n", val_conf_matrix)
         # print("Train Balanced Accuracy: ", val_bal_acc)
 
-        # loader = torch.utils.data.DataLoader(val_subset, batch_size=100, shuffle=True)
+        # loader = DataLoader(val_subset, batch_size=100, shuffle=True)
         # val_preds, val_labels = evaluate_model(model, loader)
         # val_conf_matrix = confusion_matrix(val_labels, val_preds)
         # val_bal_acc = balanced_accuracy_score(val_labels, val_preds)
         # print("Validation Confusion Matrix:\n", val_conf_matrix)
         # print("Validation Balanced Accuracy: ", val_bal_acc)
+
+        # loader = DataLoader(holdout_subset2, batch_size=100, shuffle=True)
+        # val_preds, val_labels = evaluate_model(model, loader)
+        # val_conf_matrix = confusion_matrix(val_labels, val_preds)
+        # val_bal_acc = balanced_accuracy_score(val_labels, val_preds)
+        # print("Holdout Confusion Matrix:\n", val_conf_matrix)
+        # print("Holdout Balanced Accuracy: ", val_bal_acc)
 
     # ------------------------------------------------------------------------------------------------------------------
 
@@ -405,11 +416,15 @@ with center:
             col_left, col1, col2, col_right = st.columns([2, 2, 2, 1])
 
             with col1:
-                st.write("Predicted class:")
+                # st.write("Predicted class:")
+                st.markdown(f"<p style='font-size:1.25em;'>Predicted class:</p>", unsafe_allow_html=True)
                 for _, labels in enumerate(concept_labels_hirescam[0].split("\n"), 1):
                     labels = labels.replace(":", ": ")
-                    st.write(f"{labels}")
+                    # st.write(f"{labels}")
+                    st.markdown(f"<p style='font-size:1.25em;'>{labels}</p>", unsafe_allow_html=True)
 
             with col2:
-                st.write("True class:\n")
-                st.write(get_label_from_numeric(label_map[label]))
+                # st.write("True class:\n")
+                st.markdown(f"<p style='font-size:1.25em;'>True class:</p>", unsafe_allow_html=True)
+                # st.write(get_label_from_numeric(label_map[label]))
+                st.markdown(f"<p style='font-size:1.25em;'>{get_label_from_numeric(label_map[label])}</p>", unsafe_allow_html=True)
