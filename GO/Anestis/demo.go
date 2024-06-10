@@ -47,6 +47,8 @@ func main() {
 
 	for _, file = range files {
 
+		buf.Reset() // Reset the buffer before reusing it
+
 		fileName = file.Name()
 		if !strings.HasSuffix(fileName, ".ods") {
 			continue
@@ -63,13 +65,13 @@ func main() {
 		err = writeContent(&buf, outputContent)
 		if err != nil {
 			handleError(err, fileName)
-			return
+			continue
 		}
 
 		records, err = readCSVContent(&buf)
 		if err != nil {
 			handleError(err, fileName)
-			return
+			continue
 		}
 
 		outputFileName = fileName[:len(fileName)-len(filepath.Ext(fileName))] + "-info.xlsx"
@@ -77,6 +79,7 @@ func main() {
 		err = saveAsXlsx(records, outputFileName)
 		if err != nil {
 			handleError(err, fileName)
+			continue
 		}
 	}
 }
