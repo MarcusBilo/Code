@@ -54,6 +54,7 @@ func main() {
 			continue
 		}
 
+		// ods.ReadODSFile is the biggest single point of slowdown - TODO
 		fileContent, err = ods.ReadODSFile(filepath.Join(directory, fileName))
 		if err != nil {
 			handleError(err, fileName)
