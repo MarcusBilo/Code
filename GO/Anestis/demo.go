@@ -54,7 +54,6 @@ func main() {
 			continue
 		}
 
-		// ods.ReadODSFile is the biggest single point of slowdown - TODO
 		fileContent, err = ods.ReadODSFile(filepath.Join(directory, fileName))
 		if err != nil {
 			handleError(err, fileName)
@@ -209,7 +208,10 @@ func saveAsXlsx(records [][]string, fileName string) error {
 		groupSum                           map[int]float64
 		uniqueAGs                          map[string][]int
 		combinedArray                      [][]interface{}
-		lastGroup                          string
+		lastGroup, header                  string
+		headerRow                          *xlsx.Row
+		headers                            []string
+		headerCell                         *xlsx.Cell
 	)
 
 	wb = xlsx.NewFile()
@@ -218,16 +220,22 @@ func saveAsXlsx(records [][]string, fileName string) error {
 		return err
 	}
 
-	headerStyle = createStyle("FFFFFFFF")
+	headerStyle, greyStyle, whiteStyle = createStyle("FFFFFFFF"), createStyle("FFDCDCDC"), createStyle("FFFFFFFF")
+
 	headerStyle.Border.Bottom = "medium"
-	addHeaderRow(sheet, headerStyle)
+	headerRow = sheet.AddRow()
+	headers = []string{"Artikelgruppe", "Artikelnummer", "Artikelbezeichnung", "Durschnittspreis", "Gesamtmenge", "Brutto-Preis", "Gesamtpreis"}
+	for _, header = range headers {
+		headerCell = headerRow.AddCell()
+		headerCell.Value = header
+		headerCell.SetStyle(headerStyle)
+	}
 
 	firstRowOfGroup = make(map[int]int)
 	groupSum = make(map[int]float64)
 	uniqueAGs = findUniqueAG(records)
 	combinedArray = combineUniqueAG(records, uniqueAGs)
 	lastGroup = combinedArray[len(combinedArray)-1][0].(string)
-	greyStyle, whiteStyle = createStyle("FFDCDCDC"), createStyle("FFFFFFFF")
 
 	firstRowOfGroup, groupSum, err = populateSheet(sheet, records, firstRowOfGroup, groupSum, combinedArray, greyStyle, whiteStyle)
 	if err != nil {
@@ -257,24 +265,6 @@ func createStyle(color string) *xlsx.Style {
 	return style
 }
 
-func addHeaderRow(sheet *xlsx.Sheet, headerStyle *xlsx.Style) {
-
-	var (
-		headerRow  *xlsx.Row
-		headers    []string
-		header     string
-		headerCell *xlsx.Cell
-	)
-
-	headerRow = sheet.AddRow()
-	headers = []string{"Artikelgruppe", "Artikelnummer", "Artikelbezeichnung", "Durschnittspreis", "Gesamtmenge", "Brutto-Preis", "Gesamtpreis"}
-	for _, header = range headers {
-		headerCell = headerRow.AddCell()
-		headerCell.Value = header
-		headerCell.SetStyle(headerStyle)
-	}
-}
-
 func populateSheet(sheet *xlsx.Sheet, records [][]string, firstRowOfGroup map[int]int, groupSum map[int]float64, combinedArray [][]interface{}, greyStyle, whiteStyle *xlsx.Style) (map[int]int, map[int]float64, error) {
 
 	var (
@@ -285,7 +275,7 @@ func populateSheet(sheet *xlsx.Sheet, records [][]string, firstRowOfGroup map[in
 		firstColumnValue, value, tenthColumnValue    string
 		values                                       []string
 		row                                          *xlsx.Row
-		cell1                                        *xlsx.Cell
+		cell                                         *xlsx.Cell
 		sum, avg                                     float64
 		err                                          error
 	)
@@ -304,42 +294,56 @@ func populateSheet(sheet *xlsx.Sheet, records [][]string, firstRowOfGroup map[in
 		values = entry[1].([]string)
 		for _, value = range values {
 			row = sheet.AddRow()
-			cell1 = row.AddCell()
-			cell1.Value = firstColumnValue
-			cell1.SetStyle(currentStyle)
+			cell = row.AddCell()
+			cell.Value = firstColumnValue
+			cell.SetStyle(currentStyle)
 
-			_, rowIndex = cell1.GetCoordinates()
-			if len(cell1.Value) != 0 {
+			_, rowIndex = cell.GetCoordinates()
+			if len(cell.Value) != 0 {
 				firstRowOfGroup[i] = rowIndex
 			}
 
-			addCell(row, value, currentStyle)
+			cell = row.AddCell()
+			cell.SetValue(value)
+			cell.SetStyle(currentStyle)
 
 			firstEntry = uniqueEntries[value][0]
 
 			if firstEntry < len(records) && 11 < len(records[firstEntry]) {
 				tenthColumnValue = records[firstEntry][10]
 			}
-			addCell(row, tenthColumnValue, currentStyle)
+
+			cell = row.AddCell()
+			cell.SetValue(tenthColumnValue)
+			cell.SetStyle(currentStyle)
 
 			sum, err = calculateSum(uniqueEntries[value], records, 11)
 			if err != nil {
 				return nil, nil, err
 			}
-			avg = roundFloat(sum/float64(len(uniqueEntries[value])), 3)
-			addCellWithFormat(row, avg, currentStyle, "0.00 €;-0.00 €")
+			avg = sum / float64(len(uniqueEntries[value]))
+
+			cell = row.AddCell()
+			cell.SetFloatWithFormat(math.Round(avg*math.Pow(avg, 3))/math.Pow(avg, 3), "0.00 €;-0.00 €")
+			cell.SetStyle(currentStyle)
 
 			sumColumn13Column15, err = calculateSumColumns(records, uniqueEntries[value], 12, 14)
 			if err != nil {
 				return nil, nil, err
 			}
-			addCell(row, sumColumn13Column15, currentStyle)
+
+			cell = row.AddCell()
+			cell.SetValue(sumColumn13Column15)
+			cell.SetStyle(currentStyle)
 
 			sum, err = calculateSum(uniqueEntries[value], records, 18)
 			if err != nil {
 				return nil, nil, err
 			}
-			addCellWithFormat(row, roundFloat(sum, 3), currentStyle, "0.00 €;-0.00 €")
+
+			cell = row.AddCell()
+			cell.SetFloatWithFormat(math.Round(sum*math.Pow(sum, 3))/math.Pow(sum, 3), "0.00 €;-0.00 €")
+			cell.SetStyle(currentStyle)
 
 			groupSum[i] += sum
 			firstColumnValue = ""
@@ -352,12 +356,15 @@ func populateSheet(sheet *xlsx.Sheet, records [][]string, firstRowOfGroup map[in
 func finalizeSheet(sheet *xlsx.Sheet, records [][]string, firstRowOfGroup map[int]int, groupSum map[int]float64, lastGroup string, uniqueAGs map[string][]int, greyStyle, whiteStyle *xlsx.Style) error {
 
 	var (
-		currentStyle     *xlsx.Style
-		value            string
-		uniqueValues     map[string]struct{}
-		uniqueValueArray []string
-		rowIndex, j, k   int
-		cell, emptyCell  *xlsx.Cell
+		currentStyle      *xlsx.Style
+		value             string
+		uniqueValues      map[string]struct{}
+		uniqueValueArray  []string
+		rowIndex, j, k, i int
+		cell, emptyCell   *xlsx.Cell
+		widths            []float64
+		width             float64
+		newCol            *xlsx.Col
 	)
 
 	for k = 0; k < len(groupSum); k++ {
@@ -400,7 +407,12 @@ func finalizeSheet(sheet *xlsx.Sheet, records [][]string, firstRowOfGroup map[in
 	emptyCell, _ = sheet.Cell(j, 6)
 	emptyCell.SetStyle(currentStyle)
 
-	setColumnWidths(sheet)
+	widths = []float64{10, 11, 19.5, 12, 11, 9, 9.5}
+	for i, width = range widths {
+		newCol = xlsx.NewColForRange(i+1, i+1)
+		newCol.SetWidth(width)
+		sheet.SetColParameters(newCol)
+	}
 
 	return nil
 }
@@ -487,28 +499,6 @@ func findUniqueAN(records [][]string) map[string][]int {
 	return uniqueEntries
 }
 
-func addCell(row *xlsx.Row, value interface{}, style *xlsx.Style) {
-
-	var (
-		cell *xlsx.Cell
-	)
-
-	cell = row.AddCell()
-	cell.SetValue(value)
-	cell.SetStyle(style)
-}
-
-func addCellWithFormat(row *xlsx.Row, value float64, style *xlsx.Style, format string) {
-
-	var (
-		cell *xlsx.Cell
-	)
-
-	cell = row.AddCell()
-	cell.SetFloatWithFormat(value, format)
-	cell.SetStyle(style)
-}
-
 func calculateSum(entries []int, records [][]string, column int) (float64, error) {
 
 	var (
@@ -529,16 +519,6 @@ func calculateSum(entries []int, records [][]string, column int) (float64, error
 		sum += val
 	}
 	return sum, nil
-}
-
-func roundFloat(val float64, precision uint) float64 {
-
-	var (
-		ratio float64
-	)
-
-	ratio = math.Pow(10, float64(precision))
-	return math.Round(val*ratio) / ratio
 }
 
 func calculateSumColumns(records [][]string, indices []int, col1, col2 int) (int, error) {
@@ -563,21 +543,4 @@ func calculateSumColumns(records [][]string, indices []int, col1, col2 int) (int
 		}
 	}
 	return sum, nil
-}
-
-func setColumnWidths(sheet *xlsx.Sheet) {
-
-	var (
-		widths []float64
-		i      int
-		width  float64
-		newCol *xlsx.Col
-	)
-
-	widths = []float64{10, 11, 19.5, 12, 11, 9, 9.5}
-	for i, width = range widths {
-		newCol = xlsx.NewColForRange(i+1, i+1)
-		newCol.SetWidth(width)
-		sheet.SetColParameters(newCol)
-	}
 }
