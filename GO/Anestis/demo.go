@@ -116,12 +116,16 @@ func handleError(originalErr error, fileOrDirName string) {
 		fmt.Println(err)
 	}
 
-	defer func() {
-		err = f.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}()
+	defer closeWithErrorHandling(f)
+
+}
+
+func closeWithErrorHandling(f *os.File) {
+	err := f.Close()
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func readDirectory(directory string) ([]os.FileInfo, error) {
@@ -136,12 +140,8 @@ func readDirectory(directory string) ([]os.FileInfo, error) {
 		return nil, err
 	}
 
-	defer func() {
-		err = dir.Close()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}()
+	defer closeWithErrorHandling(dir)
+
 	return dir.Readdir(-1)
 }
 
