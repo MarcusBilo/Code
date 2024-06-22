@@ -98,12 +98,12 @@ func handleError(originalErr error, fileOrDirName string) {
 	_, _, line, _ = runtime.Caller(1)
 	err = zenity.Error("See crash.txt", zenity.Title("Error"), zenity.ErrorIcon)
 	if err != nil {
-		fmt.Println(err)
+		_, _ = fmt.Fprintf(os.Stderr, "error displaying error: %v\n", err)
 	}
 
 	f, err = os.Create(fileName)
 	if err != nil {
-		fmt.Println(err)
+		_, _ = fmt.Fprintf(os.Stderr, "error creating file: %v\n", err)
 	}
 
 	errorMessage = fmt.Sprintf("Error: %v\nOccurred at line: %d\n", originalErr.Error(), line)
@@ -113,18 +113,17 @@ func handleError(originalErr error, fileOrDirName string) {
 
 	_, err = f.WriteString(errorMessage)
 	if err != nil {
-		fmt.Println(err)
+		_, _ = fmt.Fprintf(os.Stderr, "error writing string: %v\n", err)
 	}
 
-	defer closeWithErrorHandling(f)
+	defer closeSurely(f)
 
 }
 
-func closeWithErrorHandling(f *os.File) {
+func closeSurely(f *os.File) {
 	err := f.Close()
 	if err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
+		panic(fmt.Sprintf("error closing file: %v", err))
 	}
 }
 
@@ -137,10 +136,11 @@ func readDirectory(directory string) ([]os.FileInfo, error) {
 
 	dir, err = os.Open(directory)
 	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "error opening file: %v\n", err)
 		return nil, err
 	}
 
-	defer closeWithErrorHandling(dir)
+	defer closeSurely(dir)
 
 	return dir.Readdir(-1)
 }
