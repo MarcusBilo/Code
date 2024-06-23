@@ -67,7 +67,7 @@ func BenchmarkReadDir(b *testing.B) {
 
 		directory = filepath.Dir(exPath)
 
-		_, err = readDirectory(directory)
+		_, err = getOdsFilesInDirectory(directory)
 		if err != nil {
 			handleError(err, directory)
 			return
@@ -96,7 +96,7 @@ func BenchmarkWriteContent(b *testing.B) {
 
 		directory = filepath.Dir(exPath)
 
-		files, err = readDirectory(directory)
+		files, err = getOdsFilesInDirectory(directory)
 		if err != nil {
 			handleError(err, directory)
 			return
@@ -144,7 +144,7 @@ func BenchmarkReadCSV(b *testing.B) {
 
 		directory = filepath.Dir(exPath)
 
-		files, err = readDirectory(directory)
+		files, err = getOdsFilesInDirectory(directory)
 		if err != nil {
 			handleError(err, directory)
 			return
@@ -197,7 +197,7 @@ func BenchmarkFull(b *testing.B) {
 
 		directory = filepath.Dir(exPath)
 
-		files, err = readDirectory(directory)
+		files, err = getOdsFilesInDirectory(directory)
 		if err != nil {
 			handleError(err, directory)
 			return
