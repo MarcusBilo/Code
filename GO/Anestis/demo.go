@@ -23,8 +23,7 @@ func main() {
 	var (
 		exPath, directory, fileName, outputFileName string
 		err                                         error
-		files                                       []os.FileInfo
-		file                                        os.FileInfo
+		files                                       []string
 		fileContent                                 ods.Odsfile
 		outputContent                               []string
 		buf                                         bytes.Buffer
@@ -45,11 +44,10 @@ func main() {
 		return
 	}
 
-	for _, file = range files {
+	for _, fileName = range files {
 
 		buf.Reset() // Reset the buffer before reusing it
 
-		fileName = file.Name()
 		if !strings.HasSuffix(fileName, ".ods") {
 			continue
 		}
@@ -127,12 +125,12 @@ func closeSurely(f *os.File) {
 	}
 }
 
-func readDirectory(directory string) ([]os.FileInfo, error) {
+func readDirectory(directory string) ([]string, error) {
 
 	var (
 		dir     *os.File
 		err     error
-		entries []os.FileInfo
+		entries []string
 	)
 
 	dir, err = os.Open(directory)
@@ -143,7 +141,7 @@ func readDirectory(directory string) ([]os.FileInfo, error) {
 
 	defer closeSurely(dir)
 
-	entries, err = dir.Readdir(-1)
+	entries, err = dir.Readdirnames(-1)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "error reading dir: %v\n", err)
 		return nil, err
