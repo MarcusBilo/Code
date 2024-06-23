@@ -38,7 +38,7 @@ func main() {
 
 	directory = filepath.Dir(exPath)
 
-	files, err = readDirectory(directory)
+	files, err = getOdsFilesInDirectory(directory)
 	if err != nil {
 		handleError(err, directory)
 		return
@@ -110,18 +110,18 @@ func handleError(originalErr error, fileOrDirName string) {
 		_, _ = fmt.Fprintf(os.Stderr, "error writing string: %v\n", err)
 	}
 
-	defer closeSurely(f)
+	defer surelyClose(f)
 
 }
 
-func closeSurely(f *os.File) {
+func surelyClose(f *os.File) {
 	err := f.Close()
 	if err != nil {
 		panic(fmt.Sprintf("error closing file: %v", err))
 	}
 }
 
-func readDirectory(directory string) ([]string, error) {
+func getOdsFilesInDirectory(directory string) ([]string, error) {
 
 	var (
 		dir                      *os.File
@@ -135,7 +135,7 @@ func readDirectory(directory string) ([]string, error) {
 		return nil, err
 	}
 
-	defer closeSurely(dir)
+	defer surelyClose(dir)
 
 	entries, err = dir.Readdirnames(-1)
 	if err != nil {
