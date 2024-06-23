@@ -5,7 +5,6 @@ import (
 	"github.com/LIJUCHACKO/ods2csv"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -16,7 +15,6 @@ func BenchmarkFilePath(b *testing.B) {
 	var (
 		_   string
 		err error
-		_   []os.FileInfo
 	)
 
 	for i := 0; i < b.N; i++ {
@@ -30,12 +28,33 @@ func BenchmarkFilePath(b *testing.B) {
 	}
 }
 
+func BenchmarkPathDir(b *testing.B) {
+
+	var (
+		exPath, _ string
+		err       error
+		_         []string
+	)
+
+	for i := 0; i < b.N; i++ {
+
+		exPath, err = os.Executable()
+		if err != nil {
+			handleError(err, "")
+			return
+		}
+
+		_ = filepath.Dir(exPath)
+
+	}
+}
+
 func BenchmarkReadDir(b *testing.B) {
 
 	var (
 		exPath, directory string
 		err               error
-		_                 []os.FileInfo
+		_                 []string
 	)
 
 	for i := 0; i < b.N; i++ {
@@ -87,10 +106,6 @@ func BenchmarkWriteContent(b *testing.B) {
 
 			buf.Reset() // Reset the buffer before reusing it
 
-			if !strings.HasSuffix(fileName, ".ods") {
-				continue
-			}
-
 			fileContent, err = ods.ReadODSFile(filepath.Join(directory, fileName))
 			if err != nil {
 				handleError(err, fileName)
@@ -138,10 +153,6 @@ func BenchmarkReadCSV(b *testing.B) {
 		for _, fileName = range files {
 
 			buf.Reset() // Reset the buffer before reusing it
-
-			if !strings.HasSuffix(fileName, ".ods") {
-				continue
-			}
 
 			fileContent, err = ods.ReadODSFile(filepath.Join(directory, fileName))
 			if err != nil {
@@ -195,10 +206,6 @@ func BenchmarkFull(b *testing.B) {
 		for _, fileName = range files {
 
 			buf.Reset() // Reset the buffer before reusing it
-
-			if !strings.HasSuffix(fileName, ".ods") {
-				continue
-			}
 
 			fileContent, err = ods.ReadODSFile(filepath.Join(directory, fileName))
 			if err != nil {
