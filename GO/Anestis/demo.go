@@ -23,9 +23,8 @@ func main() {
 	var (
 		exPath, directory, fileName, outputFileName string
 		err                                         error
-		files                                       []string
+		files, outputContent                        []string
 		fileContent                                 ods.Odsfile
-		outputContent                               []string
 		buf                                         bytes.Buffer
 		records                                     [][]string
 	)
@@ -331,7 +330,7 @@ func populateSheet(sheet *xlsx.Sheet, records [][]string, firstRowOfGroup map[in
 			avg = sum / float64(len(uniqueEntries[value]))
 
 			cell = row.AddCell()
-			cell.SetFloatWithFormat(math.Round(avg*math.Pow(avg, 3))/math.Pow(avg, 3), "0.00 €;-0.00 €")
+			cell.SetFloatWithFormat(math.Round(avg*1000)/1000, "0.00 €;-0.00 €")
 			cell.SetStyle(currentStyle)
 
 			sumColumn13Column15, err = calculateSumColumns(records, uniqueEntries[value], 12, 14)
@@ -349,7 +348,7 @@ func populateSheet(sheet *xlsx.Sheet, records [][]string, firstRowOfGroup map[in
 			}
 
 			cell = row.AddCell()
-			cell.SetFloatWithFormat(math.Round(sum*math.Pow(sum, 3))/math.Pow(sum, 3), "0.00 €;-0.00 €")
+			cell.SetFloatWithFormat(math.Round(sum*1000)/1000, "0.00 €;-0.00 €")
 			cell.SetStyle(currentStyle)
 
 			groupSum[i] += sum
