@@ -130,8 +130,9 @@ func closeSurely(f *os.File) {
 func readDirectory(directory string) ([]os.FileInfo, error) {
 
 	var (
-		dir *os.File
-		err error
+		dir     *os.File
+		err     error
+		entries []os.FileInfo
 	)
 
 	dir, err = os.Open(directory)
@@ -142,7 +143,13 @@ func readDirectory(directory string) ([]os.FileInfo, error) {
 
 	defer closeSurely(dir)
 
-	return dir.Readdir(-1)
+	entries, err = dir.Readdir(-1)
+	if err != nil {
+		_, _ = fmt.Fprintf(os.Stderr, "error reading dir: %v\n", err)
+		return nil, err
+	}
+
+	return entries, nil
 }
 
 func extractContent(sheet ods.Sheet) []string {
