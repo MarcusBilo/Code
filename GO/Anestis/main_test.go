@@ -61,8 +61,7 @@ func BenchmarkWriteContent(b *testing.B) {
 	var (
 		exPath, directory, fileName string
 		err                         error
-		files                       []os.FileInfo
-		file                        os.FileInfo
+		files                       []string
 		fileContent                 ods.Odsfile
 		outputContent               []string
 		buf                         bytes.Buffer
@@ -84,11 +83,10 @@ func BenchmarkWriteContent(b *testing.B) {
 			return
 		}
 
-		for _, file = range files {
+		for _, fileName = range files {
 
 			buf.Reset() // Reset the buffer before reusing it
 
-			fileName = file.Name()
 			if !strings.HasSuffix(fileName, ".ods") {
 				continue
 			}
@@ -114,8 +112,7 @@ func BenchmarkReadCSV(b *testing.B) {
 	var (
 		exPath, directory, fileName string
 		err                         error
-		files                       []os.FileInfo
-		file                        os.FileInfo
+		files                       []string
 		fileContent                 ods.Odsfile
 		outputContent               []string
 		buf                         bytes.Buffer
@@ -138,11 +135,10 @@ func BenchmarkReadCSV(b *testing.B) {
 			return
 		}
 
-		for _, file = range files {
+		for _, fileName = range files {
 
 			buf.Reset() // Reset the buffer before reusing it
 
-			fileName = file.Name()
 			if !strings.HasSuffix(fileName, ".ods") {
 				continue
 			}
@@ -173,8 +169,7 @@ func BenchmarkFull(b *testing.B) {
 	var (
 		exPath, directory, fileName, outputFileName string
 		err                                         error
-		files                                       []os.FileInfo
-		file                                        os.FileInfo
+		files                                       []string
 		fileContent                                 ods.Odsfile
 		outputContent                               []string
 		buf                                         bytes.Buffer
@@ -197,11 +192,10 @@ func BenchmarkFull(b *testing.B) {
 			return
 		}
 
-		for _, file = range files {
+		for _, fileName = range files {
 
 			buf.Reset() // Reset the buffer before reusing it
 
-			fileName = file.Name()
 			if !strings.HasSuffix(fileName, ".ods") {
 				continue
 			}
