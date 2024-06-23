@@ -48,10 +48,6 @@ func main() {
 
 		buf.Reset() // Reset the buffer before reusing it
 
-		if !strings.HasSuffix(fileName, ".ods") {
-			continue
-		}
-
 		fileContent, err = ods.ReadODSFile(filepath.Join(directory, fileName))
 		if err != nil {
 			handleError(err, fileName)
@@ -128,9 +124,9 @@ func closeSurely(f *os.File) {
 func readDirectory(directory string) ([]string, error) {
 
 	var (
-		dir     *os.File
-		err     error
-		entries []string
+		dir                      *os.File
+		err                      error
+		entries, filteredEntries []string
 	)
 
 	dir, err = os.Open(directory)
@@ -147,7 +143,13 @@ func readDirectory(directory string) ([]string, error) {
 		return nil, err
 	}
 
-	return entries, nil
+	for _, entry := range entries {
+		if strings.HasSuffix(entry, ".ods") {
+			filteredEntries = append(filteredEntries, entry)
+		}
+	}
+
+	return filteredEntries, nil
 }
 
 func extractContent(sheet ods.Sheet) []string {
