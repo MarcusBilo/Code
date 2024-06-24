@@ -1,1 +1,3 @@
 = HTMX, basic CSS, and Go 1.22
+
+TODO: Die Karten mit den ersten 151 Pokemon füllen: Name, Typen, Sprite (aus "Pokemon Trozei!" oder "Pokemon Pinball")
