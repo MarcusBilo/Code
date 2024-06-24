@@ -123,7 +123,7 @@
 </div>
 
 <label class="custom-label">
-    <input id="searchInput" placeholder="Search Title" class="input-style" type="text">
+    <input id="searchInput" placeholder="Filter" class="input-style" type="text">
 </label>
 
 <div id="card-container" class="card-container"></div>
@@ -166,16 +166,20 @@
 
     function filterCards(cardContainer, searchInput) {
         const cards = cardContainer.querySelectorAll(".card");
-        const searchTitle = searchInput.value.toLowerCase();
+        const searchQuery = searchInput.value.toLowerCase();
+
         cards.forEach(card => {
             const title = card.querySelector(".title").textContent.toLowerCase();
-            if (searchTitle === "" || title.includes(searchTitle)) {
+            const description = card.querySelector(".description").textContent.toLowerCase();
+
+            if (searchQuery === "" || title.includes(searchQuery) || description.includes(searchQuery)) {
                 card.style.display = "flex";
             } else {
                 card.style.display = "none";
             }
         });
     }
+
 </script>
 
 </html>
