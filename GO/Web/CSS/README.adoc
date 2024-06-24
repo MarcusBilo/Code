@@ -1,3 +1,7 @@
 = HTMX, basic CSS, and Go 1.22
 
-TODO: Die Karten mit den ersten 151 Pokemon füllen: Name, Typen, Sprite (aus "Pokemon Trozei!" oder "Pokemon Pinball")
+Liste / TODO:
+Die Karten mit den ersten 151 Pokemon füllen: Name, Typen, ... ggf mit Sprite (aus "Pokemon Trozei!" oder "Pokemon Pinball")
+uint8 (0..255) passt für die 151 Gen1 pokemon
+id auto increment <- check wie / ob machbar
+Month zu Gen ändern <- check ob Gen1 oder nur 1
