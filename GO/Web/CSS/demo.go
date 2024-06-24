@@ -201,100 +201,74 @@ type CardData struct {
 	PContent4   string
 }
 
+func NewEnCardData(id, year, month uint8, title, description string) CardData {
+	return CardData{
+		Id:          id,
+		Year:        year,
+		Month:       month,
+		Title:       title,
+		Description: description,
+		Get:         fmt.Sprintf("../card/%d", id),
+		Blog:        "Read Card",
+	}
+}
+
+func NewDeCardData(id, year, month uint8, title, description string) CardData {
+	return CardData{
+		Id:          id,
+		Year:        year,
+		Month:       month,
+		Title:       title,
+		Description: description,
+		Get:         fmt.Sprintf("../card/%d", id),
+		Blog:        "Card lesen",
+	}
+}
+
+// https://bulbapedia.bulbagarden.net/wiki/List_of_Pok%C3%A9mon_by_National_Pok%C3%A9dex_number#Generation_I
+// https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_category
+
 var enCardDataSlice = []CardData{
-	{
-		Id:          1,
-		Year:        22,
-		Month:       1,
-		Title:       "Lorem Card 1 Title",
-		Description: "Description for Card 1.",
-		Get:         "../card/1",
-		Blog:        "Read Card",
-	},
-	{
-		Id:          2,
-		Year:        22,
-		Month:       2,
-		Title:       "Ipsum Card 2 Title",
-		Description: "Description for Card 2.",
-		Get:         "../card/2",
-		Blog:        "Read Card",
-	},
+	NewEnCardData(1, 22, 1, "Bulbasaur", "Seed, dual-type Grass-Poison, Pokémon"),
+	NewEnCardData(2, 22, 2, "Ivysaur", "Seed, dual-type Grass-Poison, Pokémon"),
+	NewEnCardData(3, 22, 3, "Venusaur", "Seed, dual-type Grass-Poison, Pokémon"),
+	NewEnCardData(4, 22, 4, "Charmander", "Lizard, mono-type Fire, Pokémon"),
+	NewEnCardData(5, 22, 5, "Charmeleon", "Flame, mono-type Fire, Pokémon"),
+	NewEnCardData(6, 22, 6, "Charizard", "Flame, dual-type Fire-Flying, Pokémon"),
 }
 
 var deCardDataSlice = []CardData{
-	{
-		Id:          1,
-		Year:        22,
-		Month:       1,
-		Title:       "Lorem Card 1 Titel",
-		Description: "Beschreibung für Card 1.",
-		Get:         "../card/1",
-		Blog:        "Card lesen",
-	},
-	{
-		Id:          2,
-		Year:        22,
-		Month:       2,
-		Title:       "Ipsum Card 2 Titel",
-		Description: "Beschreibung für Card 2.",
-		Get:         "../card/2",
-		Blog:        "Card lesen",
-	},
+	NewDeCardData(1, 22, 1, "Lorem Card 1 Titel", "Beschreibung für Card 1."),
+	NewDeCardData(2, 22, 2, "Ipsum Card 2 Titel", "Beschreibung für Card 2."),
+}
+
+func NewBlogData(id, year, month uint8, language, title, description, pcontent1, pcontent2, pcontent3, pcontent4 string) CardData {
+	return CardData{
+		Id:          id,
+		Year:        year,
+		Month:       month,
+		Language:    language,
+		Title:       title,
+		Description: description,
+		PContent1:   pcontent1,
+		PContent2:   pcontent2,
+		PContent3:   pcontent3,
+		PContent4:   pcontent4,
+	}
 }
 
 var enBlogDataSlice = []CardData{
-	{
-		Id:          1,
-		Year:        22,
-		Month:       1,
-		Language:    "en",
-		Title:       "Lorem Card 1 Title",
-		Description: "Description Card 1.",
-		PContent1:   "text1",
-		PContent2:   "text2",
-		PContent3:   "text3",
-		PContent4:   "text4",
-	},
-	{
-		Id:          2,
-		Year:        22,
-		Month:       2,
-		Language:    "en",
-		Title:       "Lorem Card 2 Title",
-		Description: "Description Card 2.",
-		PContent1:   "text1",
-		PContent2:   "text2",
-		PContent3:   "text3",
-		PContent4:   "text4",
-	},
+	NewBlogData(1, 22, 1, "en", "Lorem Card 1 Title", "Extended, full description Card 1.", "text1", "text2", "text3", "text4"),
+	NewBlogData(2, 22, 2, "en", "Lorem Card 2 Title", "Extended, full description Card 2.", "text1", "text2", "text3", "text4"),
+	NewBlogData(3, 22, 3, "en", "Lorem Card 3 Title", "Extended, full description Card 3.", "text1", "text2", "text3", "text4"),
+	NewBlogData(4, 22, 4, "en", "Lorem Card 4 Title", "Extended, full description Card 4.", "text1", "text2", "text3", "text4"),
+	NewBlogData(5, 22, 5, "en", "Lorem Card 5 Title", "Extended, full description Card 5.", "text1", "text2", "text3", "text4"),
+	NewBlogData(6, 22, 6, "en", "Lorem Card 6 Title", "Extended, full description Card 6.", "text1", "text2", "text3", "text4"),
 }
 
 var deBlogDataSlice = []CardData{
-	{
-		Id:          1,
-		Year:        22,
-		Month:       1,
-		Language:    "de",
-		Title:       "Lorem Card 1 Titel",
-		Description: "Beschreibung Card 1.",
-		PContent1:   "text1",
-		PContent2:   "text2",
-		PContent3:   "text3",
-		PContent4:   "text4",
-	},
-	{
-		Id:          2,
-		Year:        22,
-		Month:       2,
-		Language:    "de",
-		Title:       "Lorem Card 2 Titel",
-		Description: "Beschreibung Card 2.",
-		PContent1:   "text1",
-		PContent2:   "text2",
-		PContent3:   "text3",
-		PContent4:   "text4",
-	},
+	NewBlogData(1, 22, 1, "de", "Lorem Card 1 Titel", "Erweiterte, volle Beschreibung Card 1.", "text1", "text2", "text3", "text4"),
+	NewBlogData(2, 22, 2, "de", "Lorem Card 2 Titel", "Erweiterte, volle Beschreibung Card 2.", "text1", "text2", "text3", "text4"),
 }
 
 var enIndexMap = map[string]PageData{
