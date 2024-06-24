@@ -113,7 +113,7 @@ html, body {
     font-weight: 800;
     margin-bottom: 1rem;
     text-align: center;
-    color: var(--gray-800);
+    color: var(--gray-700);
 }
 .custom-p {
     margin-bottom: 1rem;
@@ -169,7 +169,7 @@ html, body {
     font-weight: 700;
     text-transform: uppercase;
     font-size: 18.72px;
-    color: var(--gray-900);
+    color: var(--gray-800);
 }
 .description {
     overflow: hidden;
@@ -180,7 +180,7 @@ html, body {
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: var(--gray-700);
+    color: var(--gray-900);
     text-align: justify;
 }
 .action {
