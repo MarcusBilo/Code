@@ -19,8 +19,14 @@
     --orange-300: #fdba74;
 }
 @font-face {
-    font-family:'Noto-Sans';
-    src: url('/Noto-Sans-regular.woff2') format('woff2');
+    font-family: 'Noto-Sans';
+    src: local('Noto Sans'), local('NotoSans-Regular'),
+    url('/Noto-Sans-regular.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'Arial-Bold';
+    src: local('Arial Bold'), local('Arial-Bold'),
+    url('/arial-boldmt-webfont.woff2') format('woff2');
 }
 html, body {
     height: 100%;
@@ -109,8 +115,9 @@ html, body {
     height: fit-content
 }
 .custom-h1 {
+    font-family: 'Arial-Bold', sans-serif;
     font-size: 1.875rem;
-    font-weight: 800;
+    font-weight: 700;
     margin-bottom: 1rem;
     text-align: center;
     color: var(--gray-700);
@@ -166,9 +173,10 @@ html, body {
     padding: 1rem;
 }
 .title {
-    font-weight: 700;
+    font-family: 'Arial-Bold', sans-serif;
     text-transform: uppercase;
     font-size: 18.72px;
+    font-weight: 700;
     color: var(--gray-800);
 }
 .description {
@@ -184,6 +192,7 @@ html, body {
     text-align: justify;
 }
 .action {
+    font-family: 'Arial-Bold', sans-serif;
     pointer-events: auto;
     display: block;
     background-color: var(--orange-200);
@@ -192,10 +201,10 @@ html, body {
     text-align: center;
     font-size: 0.75rem;
     line-height: 1rem;
-    font-weight: 700;
     text-transform: uppercase;
     border-radius: 0.25rem;
     border: 2px solid transparent;
+    text-decoration: none;
 }
 .action:hover {
     background-color: var(--orange-300);
