@@ -137,7 +137,7 @@
         await initializePage();
     });
 
-    htmx.on("#searchInput", "popstate", initializeSearch() && localStorage.setItem('historyBackAvailable', 'false'))
+    htmx.on("#searchInput", "popstate", initializeSearch())
 
     async function initializeSearch() {
         const cardContainer = document.body.querySelector("#card-container");
