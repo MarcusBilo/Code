@@ -181,7 +181,7 @@ html, body {
 .title {
     font-family: 'Arial-Bold', sans-serif;
     text-transform: uppercase;
-    font-size: 19px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--gray-800);
 }
@@ -237,7 +237,7 @@ html, body {
     fill: var(--neutral-50);
 }
 .flag {
-   width: 5.7em
+    width: 5.7em
 }
 button {
     margin-bottom: 1rem;
