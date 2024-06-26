@@ -1,6 +1,7 @@
 package main
 
 import (
+	"compress/gzip"
 	"fmt"
 	"html/template"
 	"log"
@@ -79,7 +80,7 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 	data, exist := indexCache[language+"_"+index]
 	if exist && time.Since(lastIndexCacheUpdate) < time.Minute {
 		templateFile := "generic_index" + index + ".html"
-		renderHTML(w, r, templateFile, data)
+		renderGzipHTML(w, r, templateFile, data)
 	} else {
 		cacheAndRenderIndexData(language, index, w, r)
 	}
@@ -101,7 +102,7 @@ func cacheAndRenderIndexData(language string, index string, w http.ResponseWrite
 		indexCache[language+"_"+index] = data
 		lastIndexCacheUpdate = time.Now()
 		templateFile := "generic_index" + index + ".html"
-		renderHTML(w, r, templateFile, data)
+		renderGzipHTML(w, r, templateFile, data)
 	} else {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 	}
@@ -129,7 +130,7 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 	cardNumber = cardNumber - 1
 	if cardNumber >= 0 && cardNumber < len(cardSlice) {
 		data := cardSlice[cardNumber]
-		renderHTML(w, r, "generic_index3.html", data)
+		renderGzipHTML(w, r, "generic_index3.html", data)
 	} else {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
@@ -151,6 +152,7 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	maxIndex := len(cardSlice) - 1
 	for i := maxIndex; i >= 0; i-- {
 		data := cardSlice[i]
+		// dont gzip
 		renderHTML(w, r, "card-template.html", data)
 	}
 }
@@ -165,6 +167,45 @@ func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, dat
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func renderGzipHTML(w http.ResponseWriter, r *http.Request, templateFile string, data interface{}) {
+	w.Header().Set("Content-Type", "text/html")
+	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		w.Header().Set("Content-Encoding", "gzip")
+
+		gzipWriter := gzip.NewWriter(w)
+		defer surelyClose(gzipWriter)
+
+		tmpl, err := template.ParseFiles(templateFile)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(gzipWriter, data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		tmpl, err := template.ParseFiles(templateFile)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		err = tmpl.Execute(w, data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func surelyClose(w *gzip.Writer) {
+	err := w.Close()
+	if err != nil {
+		panic(fmt.Sprintf("error closing writer: %v", err))
 	}
 }
 
