@@ -52,6 +52,12 @@ func main() {
 		}
 	}
 
+	if dealerHandTotal == 21 {
+		fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + " " + deck[drawnCards[3]])
+		fmt.Print("Dealer Win")
+		return
+	}
+
 	index := 4
 	for playerHandTotal < 22 {
 		fmt.Print("h for hit: ")
@@ -85,7 +91,7 @@ func main() {
 	// Dealer
 	fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + " " + deck[drawnCards[3]])
 
-	for dealerHandTotal < 18 {
+	for dealerHandTotal < 17 {
 		drawnCards = drawCards(drawnCards, 1)
 		dealerCards = append(dealerCards, index)
 		playerExtraDraw := len(playerCards) - 2
