@@ -1,3 +1,3 @@
-# Ugly and incomplete but baseline functional
+# Ugly and incomplete but baseline functional 1v1 blackjack
 
-Raw dogged - 3h
+Raw dogged
