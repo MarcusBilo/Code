@@ -26,8 +26,11 @@ func main() {
 
 	fmt.Println()
 
-	drawn := make([]int, 0, 17) // AFAIK 17 is the most one could need: Player (A A A A 2 2 2 2 3 3 3) Dealer (3 4 4 4 4)
-	drawnCards := drawCards(drawn, 4)
+	drawn := make([]int, 0, 4)
+	drawnCards := make([]int, 0, 17)
+	// AFAIK 17 is the most one could need:
+	// Player (A A A A 2 2 2 2 3 3 3) Dealer (3 4 4 4 4)
+	drawnCards = drawCards(drawn, 4)
 
 	fmt.Println("Player Cards: " + deck[drawnCards[0]] + " " + deck[drawnCards[1]])
 	fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + "  ??")
@@ -137,62 +140,50 @@ func calculateHand(playerCards []int, drawnCards []int) int {
 		i := playerCards[j]
 		card := drawnCards[i]
 		if card >= 48 {
-			sum = sum + 11
+			sum += 11
 			ace++
 			continue
 		}
 		if card >= 32 {
-			sum = sum + 10
+			sum += 10
 			continue
 		}
 		if card >= 28 {
-			sum = sum + 9
+			sum += 9
 			continue
 		}
 		if card >= 24 {
-			sum = sum + 8
+			sum += 8
 			continue
 		}
 		if card >= 20 {
-			sum = sum + 7
+			sum += 7
 			continue
 		}
 		if card >= 16 {
-			sum = sum + 6
+			sum += 6
 			continue
 		}
 		if card >= 12 {
-			sum = sum + 5
+			sum += 5
 			continue
 		}
 		if card >= 8 {
-			sum = sum + 4
+			sum += 4
 			continue
 		}
 		if card >= 4 {
-			sum = sum + 3
+			sum += 3
 			continue
 		}
 		if card >= 0 {
-			sum = sum + 2
+			sum += 2
 			continue
 		}
 	}
-	if ace > 0 && sum > 21 {
-		ace = ace - 1
-		sum = sum - 10
-	}
-	if ace > 0 && sum > 21 {
-		ace = ace - 1
-		sum = sum - 10
-	}
-	if ace > 0 && sum > 21 {
-		ace = ace - 1
-		sum = sum - 10
-	}
-	if ace > 0 && sum > 21 {
-		ace = ace - 1
-		sum = sum - 10
+	for ace > 0 && sum > 21 {
+		ace--
+		sum -= 10
 	}
 	return sum
 }
