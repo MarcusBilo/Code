@@ -28,7 +28,7 @@ func main() {
 
 	drawn := make([]int, 0, 4)
 	drawnCards := make([]int, 0, 17)
-	// AFAIK 17 is the most one could need:
+	// As 17 is the most one could need:
 	// Player (A A A A 2 2 2 2 3 3 3) Dealer (3 4 4 4 4)
 	drawnCards = drawCards(drawn, 4)
 
@@ -142,54 +142,35 @@ func drawCards(drawn []int, numberToDraw int) []int {
 func calculateHand(playerCards []int, drawnCards []int) int {
 	sum := 0
 	ace := 0
-	for j := range playerCards {
-		i := playerCards[j]
-		card := drawnCards[i]
-		if card >= 48 {
+	for j := 0; j < len(playerCards); j++ {
+		card := drawnCards[playerCards[j]]
+		switch {
+		case card >= 48:
 			sum += 11
 			ace++
-			continue
-		}
-		if card >= 32 {
+		case card >= 32:
 			sum += 10
-			continue
-		}
-		if card >= 28 {
+		case card >= 28:
 			sum += 9
-			continue
-		}
-		if card >= 24 {
+		case card >= 24:
 			sum += 8
-			continue
-		}
-		if card >= 20 {
+		case card >= 20:
 			sum += 7
-			continue
-		}
-		if card >= 16 {
+		case card >= 16:
 			sum += 6
-			continue
-		}
-		if card >= 12 {
+		case card >= 12:
 			sum += 5
-			continue
-		}
-		if card >= 8 {
+		case card >= 8:
 			sum += 4
-			continue
-		}
-		if card >= 4 {
+		case card >= 4:
 			sum += 3
-			continue
-		}
-		if card >= 0 {
+		case card >= 0:
 			sum += 2
-			continue
 		}
 	}
 	for ace > 0 && sum > 21 {
-		ace--
 		sum -= 10
+		ace--
 	}
 	return sum
 }
