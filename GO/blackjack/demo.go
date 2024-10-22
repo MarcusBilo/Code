@@ -84,7 +84,7 @@ func main() {
 	}
 
 	if playerHandTotal > 21 {
-		fmt.Println(" Loose with:", playerHandTotal, "\n")
+		fmt.Println(" Loose with:", playerHandTotal)
 		return
 	}
 
