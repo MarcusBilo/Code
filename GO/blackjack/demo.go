@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	var deck = [52]string{
+	deck := [52]string{
 		" 2♥", " 2♦", " 2♣", " 2♠", // 0-3
 		" 3♥", " 3♦", " 3♣", " 3♠", // 4-7
 		" 4♥", " 4♦", " 4♣", " 4♠", // 8-11
@@ -24,38 +24,35 @@ func main() {
 		" K♥", " K♦", " K♣", " K♠", // 44-47
 		" A♥", " A♦", " A♣", " A♠"} // 48-51
 
+	// Initialize
+
 	drawnCards := make([]int, 0, 17) // As 17 is the most one round could need: (A A A A 2 2 2 2 3 3 3) & (3 4 4 4 4)
 	drawnCards = drawCards(drawnCards, 4)
-
 	playerCards := make([]int, 0, 11) // As 11 is the most the player could need: (A A A A 2 2 2 2 3 3 3)
 	dealerCards := make([]int, 0, 11) // As 11 is the most the dealer could need: (A A A A 2 2 2 2 3 3 3)
 	playerCards = append(playerCards, 0, 1)
 	dealerCards = append(dealerCards, 2, 3)
-
 	fmt.Println("\nPlayer Cards: " + deck[drawnCards[0]] + " " + deck[drawnCards[1]])
 	fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + "  ??")
 
-	// Player
+	// Natural Blackjack
 
 	playerHandTotal := calculateHand(playerCards, drawnCards)
 	dealerHandTotal := calculateHand(dealerCards, drawnCards)
+	dealerHand := fmt.Sprintf("Dealer Cards: %s %s", deck[drawnCards[2]], deck[drawnCards[3]])
 
-	if playerHandTotal == 21 {
-		fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + " " + deck[drawnCards[3]])
-		if dealerHandTotal != 21 {
-			fmt.Println("Player Win")
-			return
-		} else {
-			fmt.Print("Draw")
-			return
-		}
-	}
-
-	if dealerHandTotal == 21 {
-		fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + " " + deck[drawnCards[3]])
-		fmt.Print("Dealer Win")
+	if playerHandTotal == 21 && dealerHandTotal != 21 {
+		fmt.Println(dealerHand, "\nPlayer Win")
+		return
+	} else if playerHandTotal == 21 && dealerHandTotal == 21 {
+		fmt.Println(dealerHand, "\nDraw")
+		return
+	} else if playerHandTotal != 21 && dealerHandTotal == 21 {
+		fmt.Println(dealerHand, "\nDealer Win")
 		return
 	}
+
+	// Player Turn
 
 	index := 4
 	for playerHandTotal < 22 {
@@ -87,8 +84,9 @@ func main() {
 		return
 	}
 
-	// Dealer
-	fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + " " + deck[drawnCards[3]])
+	// Dealer Turn
+
+	fmt.Println(dealerHand)
 
 	for dealerHandTotal < 17 {
 		drawnCards = drawCards(drawnCards, 1)
@@ -97,40 +95,44 @@ func main() {
 
 		fmt.Print("\nDealer Cards: ")
 		n := len(drawnCards)
-		for i := 0; i < n; i++ {
-			if i == 0 || i == 1 {
+		for k := 0; k < n; k++ {
+			if k == 0 || k == 1 {
 				continue
 			}
-			if playerExtraDraw > 0 && i > 3 && playerExtraDraw+4 > i {
+			if playerExtraDraw > 0 && k > 3 && playerExtraDraw+4 > k {
 				continue
 			}
-			fmt.Print(deck[drawnCards[i]], " ")
+			fmt.Print(deck[drawnCards[k]], " ")
 		}
 		index++
 		dealerHandTotal = calculateHand(dealerCards, drawnCards)
 	}
 	if dealerHandTotal > 21 {
-		fmt.Println(" Loose with:", dealerHandTotal, "\n")
+		fmt.Println("\nLoose with:", dealerHandTotal)
 		return
 	}
+
+	// Determine Winner
+
+	playerWin := fmt.Sprintf("\nPlayer Win: %d > %d", playerHandTotal, dealerHandTotal)
+	neitherWin := fmt.Sprintf("\nNeither Win: %d = %d", playerHandTotal, dealerHandTotal)
+	dealerWin := fmt.Sprintf("\nDealer Win: %d < %d", playerHandTotal, dealerHandTotal)
+
 	if playerHandTotal > dealerHandTotal {
-		fmt.Println(" Player Win:", playerHandTotal, ">", dealerHandTotal)
+		fmt.Println(playerWin)
+	} else if playerHandTotal == dealerHandTotal {
+		fmt.Println(neitherWin)
+	} else if playerHandTotal < dealerHandTotal {
+		fmt.Println(dealerWin)
 	}
-	if playerHandTotal == dealerHandTotal {
-		fmt.Println(" Draw:", playerHandTotal, dealerHandTotal)
-	}
-	if playerHandTotal < dealerHandTotal {
-		fmt.Println(" Dealer Win:", playerHandTotal, "<", dealerHandTotal)
-	}
+
 }
 
 func drawCards(drawn []int, numberToDraw int) []int {
 	successfulDraw := 0
 	for successfulDraw < numberToDraw {
 		randomNumber := rand.Intn(52)
-		if slices.Contains(drawn, randomNumber) {
-			// no op
-		} else {
+		if !slices.Contains(drawn, randomNumber) {
 			drawn = append(drawn, randomNumber)
 			successfulDraw++
 		}
