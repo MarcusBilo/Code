@@ -24,17 +24,19 @@ func main() {
 		" K♥", " K♦", " K♣", " K♠", // 44-47
 		" A♥", " A♦", " A♣", " A♠"} // 48-51
 
-	drawnCards := make([]int, 0, 17)
-	// As 17 is the most one could need:
-	// Player (A A A A 2 2 2 2 3 3 3) Dealer (3 4 4 4 4)
+	drawnCards := make([]int, 0, 17) // As 17 is the most one round could need: (A A A A 2 2 2 2 3 3 3) & (3 4 4 4 4)
 	drawnCards = drawCards(drawnCards, 4)
+
+	playerCards := make([]int, 0, 11) // As 11 is the most the player could need: (A A A A 2 2 2 2 3 3 3)
+	dealerCards := make([]int, 0, 11) // As 11 is the most the dealer could need: (A A A A 2 2 2 2 3 3 3)
+	playerCards = append(playerCards, 0, 1)
+	dealerCards = append(dealerCards, 2, 3)
 
 	fmt.Println("\nPlayer Cards: " + deck[drawnCards[0]] + " " + deck[drawnCards[1]])
 	fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + "  ??")
 
 	// Player
-	playerCards := []int{0, 1}
-	dealerCards := []int{2, 3}
+
 	playerHandTotal := calculateHand(playerCards, drawnCards)
 	dealerHandTotal := calculateHand(dealerCards, drawnCards)
 
