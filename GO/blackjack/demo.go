@@ -29,7 +29,7 @@ func main() {
 	drawnCards := make([]int, 0, 17) // As 17 is the most one round could need: (A A A A 2 2 2 2 3 3 3) & (3 4 4 4 4)
 	drawnCards = drawCards(drawnCards, 4)
 	playerCards := make([]int, 0, 11) // As 11 is the most the player could need: (A A A A 2 2 2 2 3 3 3)
-	dealerCards := make([]int, 0, 11) // As 11 is the most the dealer could need: (A A A A 2 2 2 2 3 3 3)
+	dealerCards := make([]int, 0, 10) // As 10 is the most the dealer could need: (A A A A 2 2 2 2 3 6)
 	playerCards = append(playerCards, 0, 1)
 	dealerCards = append(dealerCards, 2, 3)
 	fmt.Println("\nPlayer Cards: " + deck[drawnCards[0]] + " " + deck[drawnCards[1]])
