@@ -24,15 +24,12 @@ func main() {
 		" K♥", " K♦", " K♣", " K♠", // 44-47
 		" A♥", " A♦", " A♣", " A♠"} // 48-51
 
-	fmt.Println()
-
-	drawn := make([]int, 0, 4)
 	drawnCards := make([]int, 0, 17)
 	// As 17 is the most one could need:
 	// Player (A A A A 2 2 2 2 3 3 3) Dealer (3 4 4 4 4)
-	drawnCards = drawCards(drawn, 4)
+	drawnCards = drawCards(drawnCards, 4)
 
-	fmt.Println("Player Cards: " + deck[drawnCards[0]] + " " + deck[drawnCards[1]])
+	fmt.Println("\nPlayer Cards: " + deck[drawnCards[0]] + " " + deck[drawnCards[1]])
 	fmt.Println("Dealer Cards: " + deck[drawnCards[2]] + "  ??")
 
 	// Player
@@ -139,11 +136,11 @@ func drawCards(drawn []int, numberToDraw int) []int {
 	return drawn
 }
 
-func calculateHand(playerCards []int, drawnCards []int) int {
+func calculateHand(inHandCards []int, drawnCards []int) int {
 	sum := 0
 	ace := 0
-	for j := 0; j < len(playerCards); j++ {
-		card := drawnCards[playerCards[j]]
+	for j := 0; j < len(inHandCards); j++ {
+		card := drawnCards[inHandCards[j]]
 		switch {
 		case card >= 48:
 			sum += 11
