@@ -39,17 +39,21 @@ func main() {
 
 	playerHandTotal := calculateHand(playerCards, drawnCards)
 	dealerHandTotal := calculateHand(dealerCards, drawnCards)
-	dealerHand := fmt.Sprintf("Dealer Cards: %s %s", deck[drawnCards[2]], deck[drawnCards[3]])
 
-	if playerHandTotal == 21 && dealerHandTotal != 21 {
-		fmt.Println(dealerHand, "\nPlayer Win")
-		return
-	} else if playerHandTotal == 21 && dealerHandTotal == 21 {
-		fmt.Println(dealerHand, "\nDraw")
-		return
-	} else if playerHandTotal != 21 && dealerHandTotal == 21 {
-		fmt.Println(dealerHand, "\nDealer Win")
-		return
+	if playerHandTotal == 21 || dealerHandTotal == 21 {
+		fmt.Println("Dealer Cards:", deck[drawnCards[2]], deck[drawnCards[3]])
+		if playerHandTotal == 21 && dealerHandTotal != 21 {
+			fmt.Println("\nPlayer Win")
+			return
+		}
+		if playerHandTotal == 21 && dealerHandTotal == 21 {
+			fmt.Println("\nDraw")
+			return
+		}
+		if playerHandTotal != 21 && dealerHandTotal == 21 {
+			fmt.Println("\nDealer Win")
+			return
+		}
 	}
 
 	// Player Turn
@@ -86,7 +90,7 @@ func main() {
 
 	// Dealer Turn
 
-	fmt.Println(dealerHand)
+	fmt.Println("Dealer Cards:", deck[drawnCards[2]], deck[drawnCards[3]])
 
 	for dealerHandTotal < 17 {
 		drawnCards = drawCards(drawnCards, 1)
