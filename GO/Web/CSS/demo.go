@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"compress/gzip"
 	"fmt"
 	"html/template"
@@ -8,20 +9,12 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
-	"sync"
 	"time"
 )
 
 // Go 1.23.0
 
-var (
-	indexCache           map[string]PageData
-	indexCacheMutex      sync.Mutex
-	lastIndexCacheUpdate time.Time
-)
-
 func main() {
-	indexCache = make(map[string]PageData)
 
 	http.Handle("/", onlyHandleGET(http.HandlerFunc(handleBaseRequest)))
 	http.Handle("/{language}/index/{index}/", onlyHandleGET(http.HandlerFunc(removeTrailingSlash)))
@@ -79,19 +72,9 @@ func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
 func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 	language := r.PathValue("language")
 	index := r.PathValue("index")
-	indexCacheMutex.Lock()
-	defer indexCacheMutex.Unlock()
-	data, exist := indexCache[language+"_"+index]
-	if exist && time.Since(lastIndexCacheUpdate) < time.Minute {
-		templateFile := "generic_index" + index + ".html"
-		renderGzipHTML(w, r, templateFile, data)
-	} else {
-		cacheAndRenderIndexData(language, index, w, r)
-	}
-}
 
-func cacheAndRenderIndexData(language string, index string, w http.ResponseWriter, r *http.Request) {
 	var indexMap map[string]PageData
+
 	switch language {
 	case "en":
 		indexMap = enIndexMap
@@ -103,10 +86,8 @@ func cacheAndRenderIndexData(language string, index string, w http.ResponseWrite
 	}
 	data, ok := indexMap[index]
 	if ok {
-		indexCache[language+"_"+index] = data
-		lastIndexCacheUpdate = time.Now()
 		templateFile := "generic_index" + index + ".html"
-		renderGzipHTML(w, r, templateFile, data)
+		renderHTML(w, r, templateFile, data)
 	} else {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 	}
@@ -134,7 +115,7 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 	cardNumber = cardNumber - 1
 	if cardNumber >= 0 && cardNumber < len(cardSlice) {
 		data := cardSlice[cardNumber]
-		renderGzipHTML(w, r, "generic_index3.html", data)
+		renderHTML(w, r, "generic_index3.html", data)
 	} else {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 		return
@@ -156,12 +137,11 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	maxIndex := len(cardSlice) - 1
 	for i := maxIndex; i >= 0; i-- {
 		data := cardSlice[i]
-		// dont gzip
-		renderHTML(w, r, "card-template.html", data)
+		renderCardTemplateHTML(w, r, "card-template.html", data)
 	}
 }
 
-func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
+func renderCardTemplateHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "public, max-age=60") // Cache for 1 minute
 	tmpl, err := template.ParseFiles(templateFile)
@@ -169,38 +149,48 @@ func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, dat
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	err = tmpl.Execute(w, data)
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	var compressedPureHTML string
+	compressedPureHTML = strings.TrimSpace(buf.String())
+	compressedPureHTML = strings.ReplaceAll(compressedPureHTML, "\n", "")
+	compressedPureHTML = strings.ReplaceAll(compressedPureHTML, "\t", "")
+	compressedPureHTML = strings.Join(strings.Fields(compressedPureHTML), " ")
+
+	_, err = w.Write([]byte(compressedPureHTML))
+	if err != nil {
+		return
+	}
 }
 
-func renderGzipHTML(w http.ResponseWriter, r *http.Request, templateFile string, data interface{}) {
+func renderHTML(w http.ResponseWriter, r *http.Request, templateFile string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "public, max-age=60") // Cache for 1 minute
+
+	tmpl, err := template.ParseFiles(templateFile)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 		w.Header().Set("Content-Encoding", "gzip")
 
 		gzipWriter := gzip.NewWriter(w)
 		defer surelyClose(gzipWriter)
 
-		tmpl, err := template.ParseFiles(templateFile)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 		err = tmpl.Execute(gzipWriter, data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	} else {
-		tmpl, err := template.ParseFiles(templateFile)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 		err = tmpl.Execute(w, data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
