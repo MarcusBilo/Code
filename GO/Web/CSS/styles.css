@@ -100,7 +100,7 @@ html, body {
 .dropdown-content a:hover {
     background-color: var(--neutral-250);
 }
-.dropdown:hover .dropdown-content {
+.dropdown:hover, .dropdown:focus-within .dropdown-content {
     display: block;
 }
 .custom-div1 {
