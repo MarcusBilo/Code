@@ -162,6 +162,8 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Cache-Control", "public, max-age=60") // Cache for 1 minute
 	tmpl, err := template.ParseFiles(templateFile)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
