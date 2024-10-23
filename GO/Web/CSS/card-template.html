@@ -13,8 +13,9 @@
             <span class="title">{{.Title}}</span>
             <p class="description">{{.Description}}</p>
         </div>
-        <div>
+        <div hx-ext="preload">
             <a href="{{.Get}}"
+               preload="mousedown"
                hx-get="{{.Get}}"
                hx-push-url="true"
                hx-trigger="click"
