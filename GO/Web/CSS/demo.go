@@ -158,9 +158,7 @@ func renderCardTemplateHTML(w http.ResponseWriter, _ *http.Request, templateFile
 	}
 
 	var compressedPureHTML string
-	compressedPureHTML = strings.ReplaceAll(buf.String(), "\n", "")
-	compressedPureHTML = strings.ReplaceAll(compressedPureHTML, "\t", "")
-	compressedPureHTML = strings.Join(strings.Fields(compressedPureHTML), " ")
+	compressedPureHTML = strings.Join(strings.Fields(buf.String()), " ")
 
 	_, err = w.Write([]byte(compressedPureHTML))
 	if err != nil {
