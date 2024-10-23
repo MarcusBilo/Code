@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// Go 1.22rc2
+// Go 1.23.0
 
 var (
 	indexCache           map[string]PageData
@@ -48,8 +48,12 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 	case "/styles.css":
 		w.Header().Set("Content-Type", "text/css")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
-	case "/htmx_v1.9.10.min.js":
-		// https://unpkg.com/browse/htmx.org@1.9.10/dist/
+	case "/htmx_v1.9.12.min.js":
+		// https://unpkg.com/browse/htmx.org@1.9.12/dist/
+		w.Header().Set("Content-Type", "text/javascript")
+		http.StripPrefix("/", fs).ServeHTTP(w, r)
+	case "/htmx_preload.js":
+		// https://unpkg.com/browse/htmx.org@1.9.12/dist/ext/
 		w.Header().Set("Content-Type", "text/javascript")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/Noto-Sans-regular.woff2":
@@ -172,6 +176,7 @@ func renderHTML(w http.ResponseWriter, _ *http.Request, templateFile string, dat
 
 func renderGzipHTML(w http.ResponseWriter, r *http.Request, templateFile string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("Cache-Control", "public, max-age=60") // Cache for 1 minute
 	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 		w.Header().Set("Content-Encoding", "gzip")
 
