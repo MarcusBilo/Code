@@ -158,8 +158,7 @@ func renderCardTemplateHTML(w http.ResponseWriter, _ *http.Request, templateFile
 	}
 
 	var compressedPureHTML string
-	compressedPureHTML = strings.TrimSpace(buf.String())
-	compressedPureHTML = strings.ReplaceAll(compressedPureHTML, "\n", "")
+	compressedPureHTML = strings.ReplaceAll(buf.String(), "\n", "")
 	compressedPureHTML = strings.ReplaceAll(compressedPureHTML, "\t", "")
 	compressedPureHTML = strings.Join(strings.Fields(compressedPureHTML), " ")
 
