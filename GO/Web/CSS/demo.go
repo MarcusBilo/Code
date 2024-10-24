@@ -40,6 +40,10 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 
 	switch r.URL.Path {
 	case "/styles.css":
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			r.URL.Path += ".gz"
+			w.Header().Set("Content-Encoding", "gzip")
+		}
 		w.Header().Set("Content-Type", "text/css")
 		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
@@ -53,16 +57,22 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/htmx_preload.js":
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			r.URL.Path += ".gz"
+			w.Header().Set("Content-Encoding", "gzip")
+		}
 		// https://unpkg.com/browse/htmx.org@1.9.12/dist/ext/
 		w.Header().Set("Content-Type", "text/javascript")
 		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/Noto-Sans-regular.woff2":
+		// gzip not possible
 		// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
 		w.Header().Set("Content-Type", "font/woff2")
 		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/arial-boldmt-webfont.woff2":
+		// gzip not possible
 		// https://www.fontsquirrel.com/tools/webfont-generator
 		w.Header().Set("Content-Type", "font/woff2")
 		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
