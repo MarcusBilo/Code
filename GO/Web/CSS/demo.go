@@ -9,12 +9,34 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
 // Go 1.23.0
 
+var globalIndexMap = make(map[string]PageData)
+var mutex sync.Mutex
+
+func prepareIndexMap() {
+	for {
+		func() {
+			mutex.Lock()
+			for index, data := range enIndexMap {
+				globalIndexMap["en"+index] = data
+			}
+			for index, data := range deIndexMap {
+				globalIndexMap["de"+index] = data
+			}
+			defer mutex.Unlock()
+		}()
+		time.Sleep(120 * time.Second)
+	}
+}
+
 func main() {
+
+	go prepareIndexMap()
 
 	http.Handle("/", onlyHandleGET(http.HandlerFunc(handleBaseRequest)))
 	http.Handle("/{language}/index/{index}/", onlyHandleGET(http.HandlerFunc(removeTrailingSlash)))
@@ -94,24 +116,16 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 	language := r.PathValue("language")
 	index := r.PathValue("index")
 
-	var indexMap map[string]PageData
+	mutex.Lock()
+	data, ok := globalIndexMap[language+index]
+	defer mutex.Unlock()
 
-	switch language {
-	case "en":
-		indexMap = enIndexMap
-	case "de":
-		indexMap = deIndexMap
-	default:
-		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
-		return
-	}
-	data, ok := indexMap[index]
-	if ok {
-		templateFile := "generic_index" + index + ".html"
-		renderHTML(w, r, templateFile, data)
-	} else {
+	if !ok {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 	}
+
+	templateFile := "generic_index" + index + ".html"
+	renderHTML(w, r, templateFile, data)
 }
 
 func handleSingleCard(w http.ResponseWriter, r *http.Request) {
