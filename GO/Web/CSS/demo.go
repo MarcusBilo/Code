@@ -37,25 +37,35 @@ func onlyHandleGET(next http.Handler) http.Handler {
 
 func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 	fs := http.FileServer(http.Dir("."))
+
 	switch r.URL.Path {
 	case "/styles.css":
 		w.Header().Set("Content-Type", "text/css")
+		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/htmx_v1.9.12.min.js":
 		// https://unpkg.com/browse/htmx.org@1.9.12/dist/
+		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			r.URL.Path += ".gz"
+			w.Header().Set("Content-Encoding", "gzip")
+		}
 		w.Header().Set("Content-Type", "text/javascript")
+		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/htmx_preload.js":
 		// https://unpkg.com/browse/htmx.org@1.9.12/dist/ext/
 		w.Header().Set("Content-Type", "text/javascript")
+		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/Noto-Sans-regular.woff2":
 		// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
 		w.Header().Set("Content-Type", "font/woff2")
+		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/arial-boldmt-webfont.woff2":
 		// https://www.fontsquirrel.com/tools/webfont-generator
 		w.Header().Set("Content-Type", "font/woff2")
+		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/":
 		http.Redirect(w, r, "/en/index/1", http.StatusMovedPermanently)
@@ -162,6 +172,7 @@ func renderCardTemplateHTML(w http.ResponseWriter, _ *http.Request, templateFile
 
 	_, err = w.Write([]byte(compressedPureHTML))
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
