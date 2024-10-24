@@ -5,3 +5,5 @@ Liste / TODO:
 -uint8 (0..255) passt für die 151 Gen1 pokemon
 -id auto increment <- check
 -Month zu Gen ändern <- check ob Gen1 oder nur 1
+
+For gzip see https://github.com/MarcusBilo/Code/tree/main/Python/gzip
