@@ -20,7 +20,8 @@ func main() {
 	http.Handle("/{language}/index/{index}/", onlyHandleGET(http.HandlerFunc(removeTrailingSlash)))
 	http.Handle("/{language}/index/{index}", onlyHandleGET(http.HandlerFunc(handleIndexRequest)))
 	http.Handle("/{language}/all-cards", onlyHandleGET(http.HandlerFunc(handleAllCards)))
-	http.Handle("/{language}/card/", onlyHandleGET(http.HandlerFunc(handleSingleCard)))
+	http.Handle("/{language}/card/{card}/", onlyHandleGET(http.HandlerFunc(removeTrailingSlash)))
+	http.Handle("/{language}/card/{card}", onlyHandleGET(http.HandlerFunc(handleSingleCard)))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
@@ -45,7 +46,7 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Encoding", "gzip")
 		}
 		w.Header().Set("Content-Type", "text/css")
-		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+		w.Header().Set("Cache-Control", "public, max-age=3600")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/htmx_v1.9.12.min.js":
 		// https://unpkg.com/browse/htmx.org@1.9.12/dist/
@@ -54,28 +55,28 @@ func handleBaseRequest(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Encoding", "gzip")
 		}
 		w.Header().Set("Content-Type", "text/javascript")
-		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+		w.Header().Set("Cache-Control", "public, max-age=3600")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/htmx_preload.js":
+		// https://unpkg.com/browse/htmx.org@1.9.12/dist/ext/
 		if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 			r.URL.Path += ".gz"
 			w.Header().Set("Content-Encoding", "gzip")
 		}
-		// https://unpkg.com/browse/htmx.org@1.9.12/dist/ext/
 		w.Header().Set("Content-Type", "text/javascript")
-		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+		w.Header().Set("Cache-Control", "public, max-age=3600")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/Noto-Sans-regular.woff2":
 		// gzip not possible
 		// https://github.com/pages-themes/minimal/blob/master/assets/fonts/Noto-Sans-regular/Noto-Sans-regular.woff2
 		w.Header().Set("Content-Type", "font/woff2")
-		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+		w.Header().Set("Cache-Control", "public, max-age=3600")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/arial-boldmt-webfont.woff2":
 		// gzip not possible
 		// https://www.fontsquirrel.com/tools/webfont-generator
 		w.Header().Set("Content-Type", "font/woff2")
-		w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+		w.Header().Set("Cache-Control", "public, max-age=3600")
 		http.StripPrefix("/", fs).ServeHTTP(w, r)
 	case "/":
 		http.Redirect(w, r, "/en/index/1", http.StatusMovedPermanently)
@@ -157,13 +158,13 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	maxIndex := len(cardSlice) - 1
 	for i := maxIndex; i >= 0; i-- {
 		data := cardSlice[i]
-		renderCardTemplateHTML(w, r, "card-template.html", data)
+		renderCardTemplate(w, r, "card-template.html", data)
 	}
 }
 
-func renderCardTemplateHTML(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
+func renderCardTemplate(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("Cache-Control", "public, max-age=60") // Cache for 1 minute
+	w.Header().Set("Cache-Control", "public, max-age=60")
 	tmpl, err := template.ParseFiles(templateFile)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -189,7 +190,7 @@ func renderCardTemplateHTML(w http.ResponseWriter, _ *http.Request, templateFile
 
 func renderHTML(w http.ResponseWriter, r *http.Request, templateFile string, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
-	w.Header().Set("Cache-Control", "public, max-age=60") // Cache for 1 minute
+	w.Header().Set("Cache-Control", "public, max-age=60")
 
 	tmpl, err := template.ParseFiles(templateFile)
 	if err != nil {
@@ -230,9 +231,9 @@ func getLineAndTime() string {
 	return fmt.Sprintf("%s | Line: %d", timestamp, line)
 }
 
-// ###############################################################################
-// ################################## Mock Data ##################################
-// ###############################################################################
+// #####################################################################################################################
+// ################################## Mock Data ########################################################################
+// #####################################################################################################################
 
 type PageData struct {
 	Language          string
