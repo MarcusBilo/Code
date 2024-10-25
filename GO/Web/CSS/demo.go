@@ -16,13 +16,21 @@ import (
 
 // Go 1.23.0
 
-var globalIndexMap = make(map[string]PageData)
-var globalBlogDataMap = make(map[string]CardData)
-var globalCardDataMap = make(map[string]CardData)
-var globalCardDataMapLength = make(map[string]int)
+var globalIndexMap = make(map[string]PageData, 9)
+var globalBlogDataMap = make(map[string]CardData, 13)
+var globalCardDataMap = make(map[string]CardData, 13)
+var globalCardDataMapLength = make(map[string]int, 3)
 var mutex sync.Mutex
 
 func prepareMaps() {
+
+	/*
+		fmt.Println(len(globalIndexMap))
+		fmt.Println(len(globalBlogDataMap))
+		fmt.Println(len(globalCardDataMap))
+		fmt.Println(len(globalCardDataMapLength))
+	*/
+
 	for {
 		func() {
 			mutex.Lock()
@@ -80,6 +88,14 @@ func prepareMaps() {
 			globalCardDataMapLength["de"] = index - 1
 			defer mutex.Unlock()
 		}()
+
+		/*
+			fmt.Println(len(globalIndexMap))
+			fmt.Println(len(globalBlogDataMap))
+			fmt.Println(len(globalCardDataMap))
+			fmt.Println(len(globalCardDataMapLength))
+		*/
+
 		time.Sleep(300 * time.Second)
 	}
 }
@@ -87,21 +103,6 @@ func prepareMaps() {
 func main() {
 
 	go prepareMaps()
-
-	/*
-		func() {
-			var wg sync.WaitGroup
-			wg.Add(1)
-			start := time.Now().UnixMicro()
-			go func() {
-				defer wg.Done()
-				prepareMaps()
-			}()
-			wg.Wait()
-			end := time.Now().UnixMicro()
-			fmt.Println(end-start, "μs")
-		}()
-	*/
 
 	http.Handle("/", onlyHandleGET(http.HandlerFunc(handleBaseRequest)))
 	http.Handle("/{language}/index/{index}/", onlyHandleGET(http.HandlerFunc(removeTrailingSlash)))
@@ -178,7 +179,6 @@ func removeTrailingSlash(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
-	// start := time.Now().UnixMicro()
 	language := r.PathValue("language")
 	index := r.PathValue("index")
 	mutex.Lock()
@@ -189,12 +189,9 @@ func handleIndexRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	templateFile := "generic_index" + index + ".html"
 	renderHTML(w, r, templateFile, data)
-	// end := time.Now().UnixMicro()
-	// fmt.Printf("handleIndexRequest took %d microseconds\n", end-start)
 }
 
 func handleSingleCard(w http.ResponseWriter, r *http.Request) {
-	// start := time.Now().UnixMicro()
 	var cardNumber int
 	language := r.PathValue("language")
 	format := "/" + language + "/card/%d"
@@ -210,12 +207,9 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, getLineAndTime(), http.StatusInternalServerError)
 	}
 	renderHTML(w, r, "generic_index3.html", data)
-	// end := time.Now().UnixMicro()
-	// fmt.Printf("handleSingleCard took %d microseconds\n", end-start)
 }
 
 func handleAllCards(w http.ResponseWriter, r *http.Request) {
-	// start := time.Now().UnixMicro()
 	language := r.PathValue("language")
 	mutex.Lock()
 	for i := globalCardDataMapLength[language]; i >= 1; i-- {
@@ -226,11 +220,10 @@ func handleAllCards(w http.ResponseWriter, r *http.Request) {
 		renderCardTemplate(w, r, "card-template.html", card)
 	}
 	defer mutex.Unlock()
-	// end := time.Now().UnixMicro()
-	// fmt.Printf("handleAllCards took %d microseconds\n", end-start)
 }
 
 func renderCardTemplate(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
+	// start := time.Now().UnixMicro()
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "public, max-age=300")
 	tmpl, err := template.ParseFiles(templateFile)
@@ -254,9 +247,12 @@ func renderCardTemplate(w http.ResponseWriter, _ *http.Request, templateFile str
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	// end := time.Now().UnixMicro()
+	// fmt.Printf("renderCardTemplate took %d microseconds\n", end-start)
 }
 
 func renderHTML(w http.ResponseWriter, r *http.Request, templateFile string, data interface{}) {
+	// start := time.Now().UnixMicro()
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "public, max-age=300")
 
@@ -284,6 +280,8 @@ func renderHTML(w http.ResponseWriter, r *http.Request, templateFile string, dat
 			return
 		}
 	}
+	// end := time.Now().UnixMicro()
+	// fmt.Printf("renderHTML took %d microseconds\n", end-start)
 }
 
 func surelyClose(w *gzip.Writer) {
@@ -369,6 +367,10 @@ var enCardDataSlice = []CardData{
 var deCardDataSlice = []CardData{
 	NewDeCardData(1, 22, 1, "Lorem Card 1 Titel", "Beschreibung für Card 1."),
 	NewDeCardData(2, 22, 2, "Ipsum Card 2 Titel", "Beschreibung für Card 2."),
+	NewDeCardData(3, 22, 3, "Ipsum Card 3 Titel", "Beschreibung für Card 3."),
+	NewDeCardData(4, 22, 4, "Ipsum Card 4 Titel", "Beschreibung für Card 4."),
+	NewDeCardData(5, 22, 5, "Ipsum Card 5 Titel", "Beschreibung für Card 5."),
+	NewDeCardData(6, 22, 6, "Ipsum Card 6 Titel", "Beschreibung für Card 6."),
 }
 
 func NewBlogData(id, year, month uint8, language, title, description, pcontent1, pcontent2, pcontent3, pcontent4 string) CardData {
@@ -398,6 +400,10 @@ var enBlogDataSlice = []CardData{
 var deBlogDataSlice = []CardData{
 	NewBlogData(1, 22, 1, "de", "Lorem Card 1 Titel", "Erweiterte, volle Beschreibung Card 1.", "text1", "text2", "text3", "text4"),
 	NewBlogData(2, 22, 2, "de", "Lorem Card 2 Titel", "Erweiterte, volle Beschreibung Card 2.", "text1", "text2", "text3", "text4"),
+	NewBlogData(3, 22, 3, "de", "Lorem Card 3 Titel", "Erweiterte, volle Beschreibung Card 3.", "text1", "text2", "text3", "text4"),
+	NewBlogData(4, 22, 4, "de", "Lorem Card 4 Titel", "Erweiterte, volle Beschreibung Card 4.", "text1", "text2", "text3", "text4"),
+	NewBlogData(5, 22, 5, "de", "Lorem Card 5 Titel", "Erweiterte, volle Beschreibung Card 5.", "text1", "text2", "text3", "text4"),
+	NewBlogData(6, 22, 6, "de", "Lorem Card 6 Titel", "Erweiterte, volle Beschreibung Card 6.", "text1", "text2", "text3", "text4"),
 }
 
 var enIndexMap = map[string]PageData{
