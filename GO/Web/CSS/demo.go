@@ -16,8 +16,8 @@ import (
 
 // Go 1.23.0
 
-var globalIndexMap = make(map[string]PageData, 9)
-var globalBlogDataMap = make(map[string]CardData, 13)
+var globalIndexMap = make(map[string]IndexData, 9)
+var globalBlogDataMap = make(map[string]BlogData, 13)
 var globalCardDataMap = make(map[string]CardData, 13)
 var globalCardDataMapLength = make(map[string]int, 3)
 var mutex sync.Mutex
@@ -301,27 +301,32 @@ func getLineAndTime() string {
 // ################################## Mock Data ########################################################################
 // #####################################################################################################################
 
-type PageData struct {
-	Language          string
-	Title             string
-	H1Content         string
-	PContent1         string
-	PContent2         string
-	ButtonContent     string
-	AddButton1Content string
-	AddButton2Content string
+type IndexData struct {
+	Language  string
+	Title     string
+	H1Content string
+	PContent1 string
+	PContent2 string
 }
 
 type CardData struct {
 	Id          uint8
 	Year        uint8
 	Month       uint8
-	Language    string
 	Title       string
 	Description string
 	Get         string
 	Blog        string
+}
+
+type BlogData struct {
+	Id          uint8
+	Year        uint8
+	Month       uint8
+	Language    string
+	Title       string
 	H1Content   string
+	Description string
 	PContent1   string
 	PContent2   string
 	PContent3   string
@@ -373,8 +378,8 @@ var deCardDataSlice = []CardData{
 	NewDeCardData(6, 22, 6, "Ipsum Card 6 Titel", "Beschreibung für Card 6."),
 }
 
-func NewBlogData(id, year, month uint8, language, title, description, pcontent1, pcontent2, pcontent3, pcontent4 string) CardData {
-	return CardData{
+func NewBlogData(id, year, month uint8, language, title, description, pcontent1, pcontent2, pcontent3, pcontent4 string) BlogData {
+	return BlogData{
 		Id:          id,
 		Year:        year,
 		Month:       month,
@@ -388,7 +393,7 @@ func NewBlogData(id, year, month uint8, language, title, description, pcontent1,
 	}
 }
 
-var enBlogDataSlice = []CardData{
+var enBlogDataSlice = []BlogData{
 	NewBlogData(1, 22, 1, "en", "Lorem Card 1 Title", "Extended, full description Card 1.", "text1", "text2", "text3", "text4"),
 	NewBlogData(2, 22, 2, "en", "Lorem Card 2 Title", "Extended, full description Card 2.", "text1", "text2", "text3", "text4"),
 	NewBlogData(3, 22, 3, "en", "Lorem Card 3 Title", "Extended, full description Card 3.", "text1", "text2", "text3", "text4"),
@@ -397,7 +402,7 @@ var enBlogDataSlice = []CardData{
 	NewBlogData(6, 22, 6, "en", "Lorem Card 6 Title", "Extended, full description Card 6.", "text1", "text2", "text3", "text4"),
 }
 
-var deBlogDataSlice = []CardData{
+var deBlogDataSlice = []BlogData{
 	NewBlogData(1, 22, 1, "de", "Lorem Card 1 Titel", "Erweiterte, volle Beschreibung Card 1.", "text1", "text2", "text3", "text4"),
 	NewBlogData(2, 22, 2, "de", "Lorem Card 2 Titel", "Erweiterte, volle Beschreibung Card 2.", "text1", "text2", "text3", "text4"),
 	NewBlogData(3, 22, 3, "de", "Lorem Card 3 Titel", "Erweiterte, volle Beschreibung Card 3.", "text1", "text2", "text3", "text4"),
@@ -406,7 +411,7 @@ var deBlogDataSlice = []CardData{
 	NewBlogData(6, 22, 6, "de", "Lorem Card 6 Titel", "Erweiterte, volle Beschreibung Card 6.", "text1", "text2", "text3", "text4"),
 }
 
-var enIndexMap = map[string]PageData{
+var enIndexMap = map[string]IndexData{
 	"1": {
 		Language:  "en",
 		Title:     "HTMX & Basic CSS",
@@ -433,7 +438,7 @@ var enIndexMap = map[string]PageData{
 	},
 }
 
-var deIndexMap = map[string]PageData{
+var deIndexMap = map[string]IndexData{
 	"1": {
 		Language:  "de",
 		Title:     "HTMX & Basic CSS",
