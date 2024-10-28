@@ -311,8 +311,8 @@ type IndexData struct {
 
 type CardData struct {
 	Id          uint8
-	Year        uint8
-	Month       uint8
+	Year        string
+	Month       string
 	Title       string
 	Description string
 	Get         string
@@ -333,7 +333,7 @@ type BlogData struct {
 	PContent4   string
 }
 
-func NewEnCardData(id, year, month uint8, title, description string) CardData {
+func NewEnCardData(id uint8, year, month, title, description string) CardData {
 	return CardData{
 		Id:          id,
 		Year:        year,
@@ -345,7 +345,7 @@ func NewEnCardData(id, year, month uint8, title, description string) CardData {
 	}
 }
 
-func NewDeCardData(id, year, month uint8, title, description string) CardData {
+func NewDeCardData(id uint8, year, month, title, description string) CardData {
 	return CardData{
 		Id:          id,
 		Year:        year,
@@ -357,25 +357,24 @@ func NewDeCardData(id, year, month uint8, title, description string) CardData {
 	}
 }
 
-// https://bulbapedia.bulbagarden.net/wiki/List_of_Pok%C3%A9mon_by_National_Pok%C3%A9dex_number#Generation_I
-// https://bulbapedia.bulbagarden.net/wiki/Pok%C3%A9mon_category
+// https://leagueoflegends.fandom.com/wiki/List_of_champions
 
 var enCardDataSlice = []CardData{
-	NewEnCardData(1, 22, 1, "Bulbasaur", "Seed, dual-type Grass-Poison, Pokémon"),
-	NewEnCardData(2, 22, 2, "Ivysaur", "Seed, dual-type Grass-Poison, Pokémon"),
-	NewEnCardData(3, 22, 3, "Venusaur", "Seed, dual-type Grass-Poison, Pokémon"),
-	NewEnCardData(4, 22, 4, "Charmander", "Lizard, mono-type Fire, Pokémon"),
-	NewEnCardData(5, 22, 5, "Charmeleon", "Flame, mono-type Fire, Pokémon"),
-	NewEnCardData(6, 22, 6, "Charizard", "Flame, dual-type Fire-Flying, Pokémon"),
+	NewEnCardData(1, "09", "02", "Alistar the Minotaur", "Melee, Mana, Vanguard"),
+	NewEnCardData(2, "09", "02", "Annie the Dark Child", "Ranged, Mana, Burst"),
+	NewEnCardData(3, "09", "02", "Ashe the Frost Archer", "Ranged, Mana, Marksman"),
+	NewEnCardData(4, "09", "02", "Fiddlesticks the Ancient Fear", "Ranged, Mana, Specialist"),
+	NewEnCardData(5, "09", "02", "Jax Grandmaster at Arms", "Melee, Mana, Skirmisher"),
+	NewEnCardData(6, "09", "02", "Kayle the Righteous", "Melee, Mana, Specialist"),
 }
 
 var deCardDataSlice = []CardData{
-	NewDeCardData(1, 22, 1, "Lorem Card 1 Titel", "Beschreibung für Card 1."),
-	NewDeCardData(2, 22, 2, "Ipsum Card 2 Titel", "Beschreibung für Card 2."),
-	NewDeCardData(3, 22, 3, "Ipsum Card 3 Titel", "Beschreibung für Card 3."),
-	NewDeCardData(4, 22, 4, "Ipsum Card 4 Titel", "Beschreibung für Card 4."),
-	NewDeCardData(5, 22, 5, "Ipsum Card 5 Titel", "Beschreibung für Card 5."),
-	NewDeCardData(6, 22, 6, "Ipsum Card 6 Titel", "Beschreibung für Card 6."),
+	NewDeCardData(1, "09", "02", "Alistar, der Minotaurus", "Nahkampf, Mana, Vorkämpfer"),
+	NewDeCardData(2, "09", "02", "Annie, das Kind der Finsternis", "Fernkampf, Mana, Burst"),
+	NewDeCardData(3, "09", "02", "Ashe, die Frostbogenschützin", "Fernkampf, Mana, Schütze"),
+	NewDeCardData(4, "09", "02", "Fiddlesticks, das uralte Unheil", "Fernkampf, Mana, Spezialist"),
+	NewDeCardData(5, "09", "02", "Jax, der Großmeister der Waffen", "Nahkampf, Mana, Plänkler"),
+	NewDeCardData(6, "09", "02", "Kayle, die Rechtschaffende", "Nahkampf, Mana, Spezialist"),
 }
 
 func NewBlogData(id, year, month uint8, language, title, description, pcontent1, pcontent2, pcontent3, pcontent4 string) BlogData {
@@ -393,22 +392,24 @@ func NewBlogData(id, year, month uint8, language, title, description, pcontent1,
 	}
 }
 
+// empty H1Content
+
 var enBlogDataSlice = []BlogData{
-	NewBlogData(1, 22, 1, "en", "Lorem Card 1 Title", "Extended, full description Card 1.", "text1", "text2", "text3", "text4"),
-	NewBlogData(2, 22, 2, "en", "Lorem Card 2 Title", "Extended, full description Card 2.", "text1", "text2", "text3", "text4"),
-	NewBlogData(3, 22, 3, "en", "Lorem Card 3 Title", "Extended, full description Card 3.", "text1", "text2", "text3", "text4"),
-	NewBlogData(4, 22, 4, "en", "Lorem Card 4 Title", "Extended, full description Card 4.", "text1", "text2", "text3", "text4"),
-	NewBlogData(5, 22, 5, "en", "Lorem Card 5 Title", "Extended, full description Card 5.", "text1", "text2", "text3", "text4"),
-	NewBlogData(6, 22, 6, "en", "Lorem Card 6 Title", "Extended, full description Card 6.", "text1", "text2", "text3", "text4"),
+	NewBlogData(1, 22, 1, "en", "Alistar", "Extended, full description Card 1.", "text1", "text2", "text3", "text4"),
+	NewBlogData(2, 22, 2, "en", "Annie", "Extended, full description Card 2.", "text1", "text2", "text3", "text4"),
+	NewBlogData(3, 22, 3, "en", "Ashe", "Extended, full description Card 3.", "text1", "text2", "text3", "text4"),
+	NewBlogData(4, 22, 4, "en", "Fiddlesticks", "Extended, full description Card 4.", "text1", "text2", "text3", "text4"),
+	NewBlogData(5, 22, 5, "en", "Jax", "Extended, full description Card 5.", "text1", "text2", "text3", "text4"),
+	NewBlogData(6, 22, 6, "en", "Kayle", "Extended, full description Card 6.", "text1", "text2", "text3", "text4"),
 }
 
 var deBlogDataSlice = []BlogData{
-	NewBlogData(1, 22, 1, "de", "Lorem Card 1 Titel", "Erweiterte, volle Beschreibung Card 1.", "text1", "text2", "text3", "text4"),
-	NewBlogData(2, 22, 2, "de", "Lorem Card 2 Titel", "Erweiterte, volle Beschreibung Card 2.", "text1", "text2", "text3", "text4"),
-	NewBlogData(3, 22, 3, "de", "Lorem Card 3 Titel", "Erweiterte, volle Beschreibung Card 3.", "text1", "text2", "text3", "text4"),
-	NewBlogData(4, 22, 4, "de", "Lorem Card 4 Titel", "Erweiterte, volle Beschreibung Card 4.", "text1", "text2", "text3", "text4"),
-	NewBlogData(5, 22, 5, "de", "Lorem Card 5 Titel", "Erweiterte, volle Beschreibung Card 5.", "text1", "text2", "text3", "text4"),
-	NewBlogData(6, 22, 6, "de", "Lorem Card 6 Titel", "Erweiterte, volle Beschreibung Card 6.", "text1", "text2", "text3", "text4"),
+	NewBlogData(1, 22, 1, "de", "Alistar", "Erweiterte, volle Beschreibung Card 1.", "text1", "text2", "text3", "text4"),
+	NewBlogData(2, 22, 2, "de", "Annie", "Erweiterte, volle Beschreibung Card 2.", "text1", "text2", "text3", "text4"),
+	NewBlogData(3, 22, 3, "de", "Ashe", "Erweiterte, volle Beschreibung Card 3.", "text1", "text2", "text3", "text4"),
+	NewBlogData(4, 22, 4, "de", "Fiddlesticks", "Erweiterte, volle Beschreibung Card 4.", "text1", "text2", "text3", "text4"),
+	NewBlogData(5, 22, 5, "de", "Jax", "Erweiterte, volle Beschreibung Card 5.", "text1", "text2", "text3", "text4"),
+	NewBlogData(6, 22, 6, "de", "Kayle", "Erweiterte, volle Beschreibung Card 6.", "text1", "text2", "text3", "text4"),
 }
 
 var enIndexMap = map[string]IndexData{
