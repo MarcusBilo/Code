@@ -211,18 +211,24 @@ func handleSingleCard(w http.ResponseWriter, r *http.Request) {
 
 func handleAllCards(w http.ResponseWriter, r *http.Request) {
 	language := r.PathValue("language")
+
 	mutex.Lock()
-	for i := globalCardDataMapLength[language]; i >= 1; i-- {
+	numberOfCards := globalCardDataMapLength[language]
+	cards := make([]interface{}, 0, numberOfCards)
+	for i := numberOfCards; i >= 1; i-- {
 		card, ok := globalCardDataMap[language+strconv.Itoa(i)]
 		if !ok {
 			http.Error(w, getLineAndTime(), http.StatusInternalServerError)
+			return
 		}
-		renderCardTemplate(w, r, "card-template.html", card)
+		cards = append(cards, card)
 	}
 	defer mutex.Unlock()
+
+	renderCardTemplate(w, r, "card-template.html", cards)
 }
 
-func renderCardTemplate(w http.ResponseWriter, _ *http.Request, templateFile string, data interface{}) {
+func renderCardTemplate(w http.ResponseWriter, _ *http.Request, templateFile string, data []interface{}) {
 	// start := time.Now().UnixMicro()
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "public, max-age=300")
@@ -239,8 +245,7 @@ func renderCardTemplate(w http.ResponseWriter, _ *http.Request, templateFile str
 		return
 	}
 
-	var compressedPureHTML string
-	compressedPureHTML = strings.Join(strings.Fields(buf.String()), " ")
+	compressedPureHTML := strings.Join(strings.Fields(buf.String()), " ")
 
 	_, err = w.Write([]byte(compressedPureHTML))
 	if err != nil {
