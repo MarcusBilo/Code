@@ -97,7 +97,7 @@ for row_method in methods:
 # Each cell in a row represents the chance that the method of said row is better than the method of the column
 # Each cell in a column represents the chance that the method of said column is worse than the method of the row
 for row_method in methods:
-    row_str = ", ".join(
+    row_str = f"{row_method.ljust(max_len)}: " + ", ".join(
         f"{col}: {grid[row_method][col.strip()]}" for col in padded_methods
     )
     print(row_str)
