@@ -45,13 +45,10 @@ def signrank_MC(x, rope, prior_strength=0.5, prior_place="ROPE", nsamples=100000
     return samples
 
 
-def signrank(x, rope, prior_strength=0.5, prior_place="ROPE", nsamples=100000, verbose=False, names=('C1', 'C2')):
+def signrank(x, rope, prior_strength=0.5, prior_place="ROPE", nsamples=100000):
     samples = signrank_MC(x, rope, prior_strength, prior_place, nsamples)
     winners = numpy.argmax(samples, axis=1)
     pl, pe, pr = numpy.bincount(winners, minlength=3) / len(winners)
-    if verbose:
-        print('P({c1} > {c2}) = {pl}, P(rope) = {pe}, P({c2} > {c1}) = {pr}'.
-              format(c1=names[0], c2=names[1], pl=pl, pe=pe, pr=pr))
     return pl, pe, pr
 
 
@@ -72,44 +69,62 @@ results = {}
 
 for (name1, scores1), (name2, scores2) in itertools.combinations(scores.items(), 2):
     mock_scores = numpy.column_stack((scores1, scores2))
-    left, within, right = signrank(mock_scores, rope=rope, names=(name1, name2))
+    left, within, right = signrank(mock_scores, rope=rope)
     results[(name1, name2)] = (left, within, right)
 
-methods = ['AP', 'Llncosh', 'LMS', 'NLMS', 'Noisereduce', 'RLS', 'Vanilla', 'Wiener']
-max_len = max(len(method) for method in methods)
-padded_methods = [method.rjust(max_len) for method in methods]
-grid = {}
+systems = list(scores)
+max_len = max(len(s) for s in systems)
 
-for row_method in methods:
-    row = {}
-    for col_method in methods:
-        if row_method == col_method:
-            row[col_method] = "-----"
-        elif (row_method, col_method) in results:
-            row[col_method] = f"{results[(row_method, col_method)][0]:.3f}"  # Left value
-        elif (col_method, row_method) in results:
-            row[col_method] = f"{results[(col_method, row_method)][2]:.3f}"  # Right value
+# Individual Comparison Table:
+# The second cell from the left represents the chance that the method on the left is better than the one on the right
+# The third cell from the left represents the chance that both are practically equivalent
+# The fourth cell from the left represents the chance that the method on the left is worse than the one on the right
+print(max_len*" " + "     >      =      <")
+for sys1 in systems:
+    for sys2 in systems:
+        if sys1 == sys2:
+            continue
+        if (sys1, sys2) in results:
+            left, within, right = results[(sys1, sys2)]
+        elif (sys2, sys1) in results:
+            right, within, left = results[(sys2, sys1)]
         else:
-            row[col_method] = "N/A"  # Shouldn't happen if all pairs exist
-    grid[row_method] = row
+            left, within, right = (None, None, None)
+        sys1_padded = sys1.ljust(max_len)
+        sys2_padded = sys2.ljust(max_len)
+        print(f"{sys1_padded}, {left:.3f}, {within:.3f}, {right:.3f}, {sys2_padded}")
 
-# Print the grid:
+"""
+# Full Comparison Matrix:
 # Each cell in a row represents the chance that the method of said row is better than the method of the column
 # Each cell in a column represents the chance that the method of said column is worse than the method of the row
-for row_method in methods:
-    row_str = f"{row_method.ljust(max_len)}: " + ", ".join(
-        f"{col}: {grid[row_method][col.strip()]}" for col in padded_methods
+padded_sys = [s.rjust(max_len) for s in systems]
+grid = {}
+for row_system in systems:
+    row = {}
+    for col_system in systems:
+        if row_system == col_system:
+            row[col_system] = "-----"
+        elif (row_system, col_system) in results:
+            row[col_system] = f"{results[(row_system, col_system)][0]:.3f}"  # Left value
+        elif (col_system, row_system) in results:
+            row[col_system] = f"{results[(col_system, row_system)][2]:.3f}"  # Right value
+        else:
+            row[col_system] = "N/A"  # Shouldn't happen if all pairs exist
+    grid[row_system] = row
+for row_system in systems:
+    row_str = f"{row_system.ljust(max_len)}: " + ", ".join(
+        f"{col}: {grid[row_system][col.strip()]}" for col in padded_sys
     )
     print(row_str)
+"""
 
 
-# 50-60s Runtime
+# ~60s Runtime
 
 
-# This (Bayesian) Signed-Rank Test computes the Bayesian equivalent of the Wilcoxon signed-rank test.
-# It returns probabilities that one set of scores is better than another or within the region of practical equivalence.
-# https://github.com/BayesianTestsML/tutorial/blob/master/Python/Bsignedrank.ipynb
-# Time for a Change: a Tutorial for Comparing Multiple Classifiers Through Bayesian Analysis - Alessio Benavoli
+# Time for a Change: a Tutorial for Comparing Multiple Classifiers Through Bayesian Analysis:
 # https://www.jmlr.org/papers/volume18/16-305/16-305.pdf
-# A Bayesian Wilcoxon signed-rank test based on the Dirichlet process
+
+# A Bayesian Wilcoxon signed-rank test based on the Dirichlet process:
 # https://proceedings.mlr.press/v32/benavoli14.pdf
