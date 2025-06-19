@@ -11,7 +11,7 @@ def heaviside(X):
     return Y  # 1 * (x > 0)
 
 
-def signrank_MC(x, rope, prior_strength=0.5, prior_place="ROPE", nsamples=100000):
+def signrank_MC(x, rope, prior_strength, prior_place, nsamples):
     if x.ndim == 2:
         zm = x[:, 1] - x[:, 0]
     else:
@@ -45,8 +45,8 @@ def signrank_MC(x, rope, prior_strength=0.5, prior_place="ROPE", nsamples=100000
     return samples
 
 
-def signrank(x, rope, prior_strength=0.5, prior_place="ROPE", nsamples=100000):
-    samples = signrank_MC(x, rope, prior_strength, prior_place, nsamples)
+def signrank(x, rope):
+    samples = signrank_MC(x, rope, prior_strength=0.5, prior_place="ROPE", nsamples=100000)
     winners = numpy.argmax(samples, axis=1)
     pl, pe, pr = numpy.bincount(winners, minlength=3) / len(winners)
     return pl, pe, pr
@@ -91,8 +91,7 @@ for sys1 in systems:
         else:
             left, within, right = (None, None, None)
         sys1_padded = sys1.ljust(max_len)
-        sys2_padded = sys2.ljust(max_len)
-        print(f"{sys1_padded}, {left:.3f}, {within:.3f}, {right:.3f}, {sys2_padded}")
+        print(f"{sys1_padded}, {left:.3f}, {within:.3f}, {right:.3f}, {sys2}")
 
 """
 # Full Comparison Matrix:
