@@ -62,7 +62,7 @@ func main() {
 	// Player Turn --------------------------------------------------------------------------------------------------
 
 	for playerHandTotal < 22 {
-		fmt.Print("h for hit: ")
+		fmt.Print("h for hit, anything else to stand: ")
 		input := bufio.NewScanner(os.Stdin)
 		input.Scan()
 		if input.Text() != "h" {
@@ -72,8 +72,7 @@ func main() {
 			playerCards, drawableCards = drawOne(playerCards, drawableCards)
 
 			fmt.Print("\nPlayer Cards: ")
-			n := len(playerCards)
-			for i := 0; i < n; i++ {
+			for i := range playerCards {
 				fmt.Print(deck[playerCards[i]], " ")
 			}
 
@@ -95,8 +94,8 @@ func main() {
 		dealerCards, drawableCards = drawOne(dealerCards, drawableCards)
 
 		fmt.Print("\nDealer Cards: ")
-		n := len(dealerCards)
-		for i := 0; i < n; i++ {
+
+		for i := range dealerCards {
 			fmt.Print(deck[dealerCards[i]], " ")
 		}
 
@@ -141,8 +140,8 @@ func drawOne(alreadyDrawnCards []int, remainingPoolOfCards []bool) ([]int, []boo
 func calculateHand(cardsInHand []int) int {
 	sum := 0
 	ace := 0
-	for j := 0; j < len(cardsInHand); j++ {
-		card := cardsInHand[j]
+	for i := range cardsInHand {
+		card := cardsInHand[i]
 		switch {
 		case card >= 48:
 			sum += 11
