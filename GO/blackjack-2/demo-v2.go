@@ -91,70 +91,83 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "up":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-		case "down":
-			if m.cursor < len(m.options)-1 {
-				m.cursor++
-			}
-		case "enter":
-			selected := m.options[m.cursor]
-
-			switch selected {
-			case "Hit":
-				if m.turn != "player" {
-					return m, nil
-				}
-				m.playerCards, m.drawable = drawOne(m.playerCards, m.drawable)
-				m.playerTotal = calculateHand(m.playerCards)
-				if m.playerTotal > 21 {
-					m.message = fmt.Sprintf("Player Busts with %d! Dealer Wins.", m.playerTotal)
-					m.turn = "end"
-					m.showDealerHand = true
-					m.options = []string{"Restart", "Quit"}
-					m.cursor = 0
-				}
-
-			case "Stand":
-				if m.turn != "player" {
-					return m, nil
-				}
-				m.turn = "dealer"
-				m.showDealerHand = true
-
-				for m.dealerTotal < 17 {
-					m.dealerCards, m.drawable = drawOne(m.dealerCards, m.drawable)
-					m.dealerTotal = calculateHand(m.dealerCards)
-				}
-
-				if m.dealerTotal > 21 {
-					m.message = fmt.Sprintf("Dealer Busts with %d! Player Wins.", m.dealerTotal)
-				} else if m.playerTotal > m.dealerTotal {
-					m.message = fmt.Sprintf("Player Wins! %d > %d", m.playerTotal, m.dealerTotal)
-				} else if m.playerTotal < m.dealerTotal {
-					m.message = fmt.Sprintf("Dealer Wins! %d < %d", m.playerTotal, m.dealerTotal)
-				} else {
-					m.message = fmt.Sprintf("Draw! %d = %d", m.playerTotal, m.dealerTotal)
-				}
-
-				m.turn = "end"
-				m.options = []string{"Restart", "Quit"}
-				m.cursor = 0
-
-			case "Restart":
-				return initialModel(), nil
-
-			case "Quit":
-				return m, tea.Quit
-			}
-		}
+	keyMsg, ok := msg.(tea.KeyMsg)
+	if !ok {
+		return m, nil
 	}
+
+	key := keyMsg.String()
+	switch key {
+	case "up":
+		if m.cursor > 0 {
+			m.cursor--
+		}
+	case "down":
+		if m.cursor < len(m.options)-1 {
+			m.cursor++
+		}
+	case "enter":
+		selected := m.options[m.cursor]
+		return handleSelection(m, selected)
+	}
+
+	return m, nil
+}
+
+
+func handleSelection(m model, selected string) (tea.Model, tea.Cmd) {
+	switch selected {
+
+	case "Hit":
+		if m.turn != "player" {
+			return m, nil
+		}
+		m.playerCards, m.drawable = drawOne(m.playerCards, m.drawable)
+		m.playerTotal = calculateHand(m.playerCards)
+		if m.playerTotal > 21 {
+			m.message = fmt.Sprintf("Player Busts with %d! Dealer Wins.", m.playerTotal)
+			m.turn = "end"
+			m.showDealerHand = true
+			m.options = []string{"Restart", "Quit"}
+			m.cursor = 0
+		}
+		return m, nil
+
+	case "Stand":
+		if m.turn != "player" {
+			return m, nil
+		}
+		m.turn = "dealer"
+		m.showDealerHand = true
+
+		for m.dealerTotal < 17 {
+			m.dealerCards, m.drawable = drawOne(m.dealerCards, m.drawable)
+			m.dealerTotal = calculateHand(m.dealerCards)
+		}
+
+		switch {
+		case m.dealerTotal > 21:
+			m.message = fmt.Sprintf("Dealer Busts with %d! Player Wins.", m.dealerTotal)
+		case m.playerTotal > m.dealerTotal:
+			m.message = fmt.Sprintf("Player Wins! %d > %d", m.playerTotal, m.dealerTotal)
+		case m.playerTotal < m.dealerTotal:
+			m.message = fmt.Sprintf("Dealer Wins! %d < %d", m.playerTotal, m.dealerTotal)
+		case m.playerTotal == m.dealerTotal:
+			m.message = fmt.Sprintf("Draw! %d = %d", m.playerTotal, m.dealerTotal)
+		}
+
+		m.turn = "end"
+		m.options = []string{"Restart", "Quit"}
+		m.cursor = 0
+		return m, nil
+
+	case "Restart":
+		return initialModel(), nil
+
+	case "Quit":
+		return m, tea.Quit
+	}
+
 	return m, nil
 }
 
