@@ -223,7 +223,7 @@ func (m model) View() string {
 	for i, option := range m.options {
 		cursor := " "
 		if i == m.cursor {
-			cursor = "➤"
+			cursor = "→"
 		}
 		s += fmt.Sprintf("%s %s\n", cursor, option)
 	}
