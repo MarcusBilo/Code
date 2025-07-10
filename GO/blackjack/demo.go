@@ -23,7 +23,7 @@ func main() {
 		" K♥", " K♦", " K♣", " K♠", // 44-47
 		" A♥", " A♦", " A♣", " A♠"} // 48-51
 
-	// Initialize ---------------------------------------------------------------------------------------------------
+	// Initialize ---------------------------------------------------------------------------------------------
 
 	drawableCards := make([]bool, 52)
 	for i := range drawableCards {
@@ -38,7 +38,7 @@ func main() {
 	fmt.Println("\nPlayer Cards: " + deck[playerCards[0]] + " " + deck[playerCards[1]])
 	fmt.Println("Dealer Cards: " + deck[dealerCards[0]] + "  ??")
 
-	// Natural Blackjack --------------------------------------------------------------------------------------------
+	// Natural Blackjack --------------------------------------------------------------------------------------
 
 	playerHandTotal := calculateHand(playerCards)
 	dealerHandTotal := calculateHand(dealerCards)
@@ -59,54 +59,65 @@ func main() {
 		}
 	}
 
-	// Player Turn --------------------------------------------------------------------------------------------------
+	// Player Turn --------------------------------------------------------------------------------------------
 
-	for playerHandTotal < 22 {
-		fmt.Print("h for hit, anything else to stand: ")
-		input := bufio.NewScanner(os.Stdin)
-		input.Scan()
-		if input.Text() != "h" {
-			break
-		} else {
+	for {
 
-			playerCards, drawableCards = drawOne(playerCards, drawableCards)
+		if playerHandTotal < 22 {
+			fmt.Print("h for hit, anything else to stand: ")
+			input := bufio.NewScanner(os.Stdin)
+			input.Scan()
+			if input.Text() != "h" {
+				break
+			} else {
 
-			fmt.Print("\nPlayer Cards: ")
-			for i := range playerCards {
-				fmt.Print(deck[playerCards[i]], " ")
+				playerCards, drawableCards = drawOne(playerCards, drawableCards)
+
+				fmt.Print("\nPlayer Cards: ")
+				for i := range playerCards {
+					fmt.Print(deck[playerCards[i]], " ")
+				}
+
+				playerHandTotal = calculateHand(playerCards)
 			}
+		}
 
-			playerHandTotal = calculateHand(playerCards)
+		if playerHandTotal > 21 {
+			fmt.Println(" Player Loose with:", playerHandTotal)
+			return
 		}
 	}
 
-	if playerHandTotal > 21 {
-		fmt.Println(" Player Loose with:", playerHandTotal)
-		return
-	}
-
-	// Dealer Turn --------------------------------------------------------------------------------------------------
+	// Dealer Turn --------------------------------------------------------------------------------------------
 
 	fmt.Println("Dealer Cards:", deck[dealerCards[0]], deck[dealerCards[1]])
 
-	for dealerHandTotal < 17 {
+	for {
 
-		dealerCards, drawableCards = drawOne(dealerCards, drawableCards)
-
-		fmt.Print("\nDealer Cards: ")
-
-		for i := range dealerCards {
-			fmt.Print(deck[dealerCards[i]], " ")
+		if dealerHandTotal > 21 {
+			fmt.Println("\nDealer Loose with:", dealerHandTotal)
+			return
 		}
 
-		dealerHandTotal = calculateHand(dealerCards)
-	}
-	if dealerHandTotal > 21 {
-		fmt.Println("\nDealer Loose with:", dealerHandTotal)
-		return
+		if dealerHandTotal > 16 {
+			break
+		}
+
+		if dealerHandTotal < 17 {
+			dealerCards, drawableCards = drawOne(dealerCards, drawableCards)
+
+			fmt.Print("\nDealer Cards: ")
+
+			for i := range dealerCards {
+				fmt.Print(deck[dealerCards[i]], " ")
+			}
+
+			dealerHandTotal = calculateHand(dealerCards)
+		}
+
 	}
 
-	// Determine Winner ---------------------------------------------------------------------------------------------
+	// Determine Winner ---------------------------------------------------------------------------------------
 
 	playerWin := fmt.Sprintf("\nPlayer Win: %d > %d", playerHandTotal, dealerHandTotal)
 	neitherWin := fmt.Sprintf("\nNeither Win: %d = %d", playerHandTotal, dealerHandTotal)
