@@ -7,14 +7,53 @@ import (
 	"math/rand"
 )
 
+// ------------------------ Main ---------------------------------------------------------------------
+
+func main() {
+	p := tea.NewProgram(initialModel())
+	_, err := p.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// ------------------- Global Values -----------------------------------------------------------------
+
+const (
+	turnPlayer = "player"
+	turnDealer = "dealer"
+	turnEnd    = "end"
+)
+
+var (
+	optionsGame = []string{"Hit", "Stand", "Quit"}
+	optionsEnd  = []string{"Restart", "Quit"}
+	deck        = []string{
+		"  2♥", "  2♦", "  2♣", "  2♠",
+		"  3♥", "  3♦", "  3♣", "  3♠",
+		"  4♥", "  4♦", "  4♣", "  4♠",
+		"  5♥", "  5♦", "  5♣", "  5♠",
+		"  6♥", "  6♦", "  6♣", "  6♠",
+		"  7♥", "  7♦", "  7♣", "  7♠",
+		"  8♥", "  8♦", "  8♣", "  8♠",
+		"  9♥", "  9♦", "  9♣", "  9♠",
+		" 10♥", " 10♦", " 10♣", " 10♠",
+		"  J♥", "  J♦", "  J♣", "  J♠",
+		"  Q♥", "  Q♦", "  Q♣", "  Q♠",
+		"  K♥", "  K♦", "  K♣", "  K♠",
+		"  A♥", "  A♦", "  A♣", "  A♠"}
+)
+
+// ----------------- Bubble Tea Program --------------------------------------------------------------
+
 type model struct {
-	deck           [52]string
+	deck           []string
 	drawable       []bool
 	playerCards    []int
 	dealerCards    []int
 	playerTotal    int
 	dealerTotal    int
-	turn           string // "player", "dealer", "end"
+	turn           string
 	message        string
 	showDealerHand bool
 	cursor         int
@@ -22,53 +61,38 @@ type model struct {
 }
 
 func initialModel() model {
-	deck := [52]string{
-		" 2♥", " 2♦", " 2♣", " 2♠",
-		" 3♥", " 3♦", " 3♣", " 3♠",
-		" 4♥", " 4♦", " 4♣", " 4♠",
-		" 5♥", " 5♦", " 5♣", " 5♠",
-		" 6♥", " 6♦", " 6♣", " 6♠",
-		" 7♥", " 7♦", " 7♣", " 7♠",
-		" 8♥", " 8♦", " 8♣", " 8♠",
-		" 9♥", " 9♦", " 9♣", " 9♠",
-		"10♥", "10♦", "10♣", "10♠",
-		" J♥", " J♦", " J♣", " J♠",
-		" Q♥", " Q♦", " Q♣", " Q♠",
-		" K♥", " K♦", " K♣", " K♠",
-		" A♥", " A♦", " A♣", " A♠"}
-
 	drawable := make([]bool, 52)
 	for i := range drawable {
 		drawable[i] = true
 	}
 
-	playerCards := make([]int, 0, 11)
-	dealerCards := make([]int, 0, 10)
-	for range []int{1, 2} {
-		playerCards, drawable = drawOne(playerCards, drawable)
-		dealerCards, drawable = drawOne(dealerCards, drawable)
-	}
+	playerCards := make([]int, 0, 11) // 11 is the most the player could need: (A A A A 2 2 2 2 3 3 3)
+	dealerCards := make([]int, 0, 10) // 10 is the most the dealer could need: (2 2 2 2 3 A A A A 6)
+	playerCards, drawable = drawOne(playerCards, drawable)
+	dealerCards, drawable = drawOne(dealerCards, drawable)
+	playerCards, drawable = drawOne(playerCards, drawable)
+	dealerCards, drawable = drawOne(dealerCards, drawable)
 
 	playerTotal := calculateHand(playerCards)
 	dealerTotal := calculateHand(dealerCards)
 
 	message := ""
-	turn := "player"
+	turn := turnPlayer
 	showDealerHand := false
-	options := []string{"Hit", "Stand", "Quit"}
+	options := optionsGame
 
 	if playerTotal == 21 || dealerTotal == 21 {
 		showDealerHand = true
-		turn = "end"
+		turn = turnEnd
 		switch {
 		case playerTotal == 21 && dealerTotal != 21:
 			message = "Natural Blackjack! Player Wins!"
-		case dealerTotal == 21 && playerTotal != 21:
+		case playerTotal != 21 && dealerTotal == 21:
 			message = "Natural Blackjack! Dealer Wins!"
-		case dealerTotal == 21 && playerTotal == 21:
+		case playerTotal == 21 && dealerTotal == 21:
 			message = "Natural Blackjack! It's a Draw!"
 		}
-		options = []string{"Restart", "Quit"}
+		options = optionsEnd
 	}
 
 	return model{
@@ -114,30 +138,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-
 func handleSelection(m model, selected string) (tea.Model, tea.Cmd) {
 	switch selected {
 
 	case "Hit":
-		if m.turn != "player" {
+		if m.turn != turnPlayer {
 			return m, nil
 		}
 		m.playerCards, m.drawable = drawOne(m.playerCards, m.drawable)
 		m.playerTotal = calculateHand(m.playerCards)
 		if m.playerTotal > 21 {
 			m.message = fmt.Sprintf("Player Busts with %d! Dealer Wins.", m.playerTotal)
-			m.turn = "end"
+			m.turn = turnEnd
 			m.showDealerHand = true
-			m.options = []string{"Restart", "Quit"}
+			m.options = optionsEnd
 			m.cursor = 0
 		}
 		return m, nil
 
 	case "Stand":
-		if m.turn != "player" {
+		if m.turn != turnPlayer {
 			return m, nil
 		}
-		m.turn = "dealer"
+		m.turn = turnDealer
 		m.showDealerHand = true
 
 		for m.dealerTotal < 17 {
@@ -156,8 +179,8 @@ func handleSelection(m model, selected string) (tea.Model, tea.Cmd) {
 			m.message = fmt.Sprintf("Draw! %d = %d", m.playerTotal, m.dealerTotal)
 		}
 
-		m.turn = "end"
-		m.options = []string{"Restart", "Quit"}
+		m.turn = turnEnd
+		m.options = optionsEnd
 		m.cursor = 0
 		return m, nil
 
@@ -187,20 +210,20 @@ func (m model) View() string {
 		}
 		s += "\n"
 	} else {
-		s += m.deck[m.dealerCards[0]] + " ??\n"
+		s += m.deck[m.dealerCards[0]] + "   ??\n"
 	}
 
-	if m.turn == "player" {
-		s += "\nUse ↑/↓ to select an option and press Enter to confirm:\n"
-	} else if m.turn == "end" {
+	if m.turn == turnPlayer {
+		s += "\nUse ↑/↓ to select and press Enter to confirm:\n"
+	} else if m.turn == turnEnd {
 		s += "\n" + m.message + "\n"
-		s += "Use ↑/↓ to select an option and press Enter to confirm:\n"
+		s += "Use ↑/↓ to select and press Enter to confirm:\n"
 	}
 
 	for i, option := range m.options {
 		cursor := " "
 		if i == m.cursor {
-			cursor = "→"
+			cursor = "➤"
 		}
 		s += fmt.Sprintf("%s %s\n", cursor, option)
 	}
@@ -208,7 +231,7 @@ func (m model) View() string {
 	return s
 }
 
-// ----------------- Supporting functions ----------------------
+// ---------------- Supporting functions -------------------------------------------------------------
 
 func drawOne(hand []int, poolOfCards []bool) ([]int, []bool) {
 	card := rand.Intn(52)
@@ -253,11 +276,4 @@ func calculateHand(cards []int) int {
 		ace--
 	}
 	return sum
-}
-
-func main() {
-	p := tea.NewProgram(initialModel())
-	if _, err := p.Run(); err != nil {
-		log.Fatal(err)
-	}
 }
