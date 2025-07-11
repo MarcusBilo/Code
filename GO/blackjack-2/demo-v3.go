@@ -10,6 +10,7 @@ import (
 // ------------------------ Main ---------------------------------------------------------------------
 
 func main() {
+
 	p := tea.NewProgram(initialModel())
 	_, err := p.Run()
 	if err != nil {
@@ -57,7 +58,7 @@ func initialModel() model {
 		"  K♥", "  K♦", "  K♣", "  K♠",
 		"  A♥", "  A♦", "  A♣", "  A♠"} // 48-51
 
-	deckStack := shuffleDeck()
+	deckStack := rand.Perm(52)
 
 	playerCards := make([]int, 0, 11) // 11 is the most the player could need: (A A A A 2 2 2 2 3 3 3)
 	dealerCards := make([]int, 0, 10) // 10 is the most the dealer could need: (2 2 2 2 3 A A A A 6)
@@ -98,17 +99,6 @@ func initialModel() model {
 		message:        message,
 		cursor:         0,
 	}
-}
-
-func shuffleDeck() []int {
-	deck := make([]int, 52)
-	for i := 0; i < 52; i++ {
-		deck[i] = i
-	}
-	rand.Shuffle(len(deck), func(i, j int) {
-		deck[i], deck[j] = deck[j], deck[i]
-	})
-	return deck
 }
 
 func (m model) Init() tea.Cmd {
@@ -241,14 +231,14 @@ func (m model) View() string {
 
 // ---------------- Supporting functions -------------------------------------------------------------
 
-func drawOneFromStack(hand []int, stack []int) ([]int, []int) {
-	if len(stack) == 0 {
+func drawOneFromStack(hand []int, drawStack []int) ([]int, []int) {
+	if len(drawStack) == 0 {
 		log.Fatal("No more cards in deck!")
 	}
-	card := stack[0]
-	stack = stack[1:]
-	hand = append(hand, card)
-	return hand, stack
+	drawnCard := drawStack[0]
+	newDrawStack := drawStack[1:]
+	newHand := append(hand, drawnCard)
+	return newHand, newDrawStack
 }
 
 func calculateHand(cards []int) int {
