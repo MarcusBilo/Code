@@ -161,28 +161,23 @@ func handleSelection(m model, selected string) (tea.Model, tea.Cmd) {
 		m.showDealerHand = true
 		m.turn = turnDealer
 
-		/*
-			// Dealer Hits Soft 17: 0.18% Casino Edge
-			var isSoft17 bool
-			for {
-				m.dealerTotal, isSoft17 = calculateHand(m.dealerCards)
-				if m.dealerTotal < 17 || (m.dealerTotal == 17 && isSoft17) {
-					m.dealerCards, m.drawStack = drawOneFromStack(m.dealerCards, m.drawStack)
-				} else {
-					break
-				}
-			}
-		*/
-
-		// Dealer Stands on Soft 17: 0.02% Casino Edge
+		// Dealer Hits Soft 17: 0.18% Casino Edge
+		var isSoft17 bool
 		for {
-			m.dealerTotal, _ = calculateHand(m.dealerCards)
-			if m.dealerTotal < 17 {
-				m.dealerCards, m.drawStack = drawOneFromStack(m.dealerCards, m.drawStack)
-			} else {
+			m.dealerTotal, isSoft17 = calculateHand(m.dealerCards)
+			if m.dealerTotal > 17 || (m.dealerTotal == 17 && !isSoft17) {
 				break
 			}
+			m.dealerCards, m.drawStack = drawOneFromStack(m.dealerCards, m.drawStack)
 		}
+
+		/*
+			// Dealer Stands on Soft 17: 0.02% Casino Edge
+			for m.dealerTotal < 17 {
+				m.dealerCards, m.drawStack = drawOneFromStack(m.dealerCards, m.drawStack)
+				m.dealerTotal, _ = calculateHand(m.dealerCards)
+			}
+		*/
 
 		switch {
 		case m.dealerTotal > 21:
