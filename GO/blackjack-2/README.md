@@ -1,1 +1,1 @@
-v1 and v2 based on previoius blackjack but now also with bubbletea - w cgpt
+v1 etc based on previous blackjack but now also with bubbletea - w cgpt
