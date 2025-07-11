@@ -30,7 +30,7 @@ const (
 
 type model struct {
 	deck           [52]string
-	deckStack      []int
+	drawStack      []int
 	playerCards    []int
 	dealerCards    []int
 	playerTotal    int
@@ -58,17 +58,17 @@ func initialModel() model {
 		"  K♥", "  K♦", "  K♣", "  K♠",
 		"  A♥", "  A♦", "  A♣", "  A♠"} // 48-51
 
-	deckStack := rand.Perm(52)
+	drawStack := rand.Perm(52)
 
 	playerCards := make([]int, 0, 11) // 11 is the most the player could need: (A A A A 2 2 2 2 3 3 3)
 	dealerCards := make([]int, 0, 10) // 10 is the most the dealer could need: (2 2 2 2 3 A A A A 6)
-	playerCards, deckStack = drawOneFromStack(playerCards, deckStack)
-	dealerCards, deckStack = drawOneFromStack(dealerCards, deckStack)
-	playerCards, deckStack = drawOneFromStack(playerCards, deckStack)
-	dealerCards, deckStack = drawOneFromStack(dealerCards, deckStack)
+	playerCards, drawStack = drawOneFromStack(playerCards, drawStack)
+	dealerCards, drawStack = drawOneFromStack(dealerCards, drawStack)
+	playerCards, drawStack = drawOneFromStack(playerCards, drawStack)
+	dealerCards, drawStack = drawOneFromStack(dealerCards, drawStack)
 
-	playerTotal := calculateHand(playerCards)
-	dealerTotal := calculateHand(dealerCards)
+	playerTotal, _ := calculateHand(playerCards)
+	dealerTotal, _ := calculateHand(dealerCards)
 
 	showDealerHand := false
 	turn := turnPlayer
@@ -89,7 +89,7 @@ func initialModel() model {
 
 	return model{
 		deck:           deck,
-		deckStack:      deckStack,
+		drawStack:      drawStack,
 		playerCards:    playerCards,
 		dealerCards:    dealerCards,
 		playerTotal:    playerTotal,
@@ -144,8 +144,8 @@ func handleSelection(m model, selected string) (tea.Model, tea.Cmd) {
 		if m.turn != turnPlayer {
 			return m, nil
 		}
-		m.playerCards, m.deckStack = drawOneFromStack(m.playerCards, m.deckStack)
-		m.playerTotal = calculateHand(m.playerCards)
+		m.playerCards, m.drawStack = drawOneFromStack(m.playerCards, m.drawStack)
+		m.playerTotal, _ = calculateHand(m.playerCards)
 		if m.playerTotal > 21 {
 			m.message = fmt.Sprintf("Player Busts with %d! Dealer Wins.", m.playerTotal)
 			m.showDealerHand = true
@@ -161,9 +161,27 @@ func handleSelection(m model, selected string) (tea.Model, tea.Cmd) {
 		m.showDealerHand = true
 		m.turn = turnDealer
 
-		for m.dealerTotal < 17 {
-			m.dealerCards, m.deckStack = drawOneFromStack(m.dealerCards, m.deckStack)
-			m.dealerTotal = calculateHand(m.dealerCards)
+		/*
+			// Dealer Hits Soft 17: 0.18% Casino Edge
+			var isSoft17 bool
+			for {
+				m.dealerTotal, isSoft17 = calculateHand(m.dealerCards)
+				if m.dealerTotal < 17 || (m.dealerTotal == 17 && isSoft17) {
+					m.dealerCards, m.drawStack = drawOneFromStack(m.dealerCards, m.drawStack)
+				} else {
+					break
+				}
+			}
+		*/
+
+		// Dealer Stands on Soft 17: 0.02% Casino Edge
+		for {
+			m.dealerTotal, _ = calculateHand(m.dealerCards)
+			if m.dealerTotal < 17 {
+				m.dealerCards, m.drawStack = drawOneFromStack(m.dealerCards, m.drawStack)
+			} else {
+				break
+			}
 		}
 
 		switch {
@@ -241,7 +259,7 @@ func drawOneFromStack(hand []int, drawStack []int) ([]int, []int) {
 	return newHand, newDrawStack
 }
 
-func calculateHand(cards []int) int {
+func calculateHand(cards []int) (handTotal int, isSoft17 bool) {
 	sum := 0
 	ace := 0
 	for _, card := range cards {
@@ -273,5 +291,8 @@ func calculateHand(cards []int) int {
 		sum -= 10
 		ace--
 	}
-	return sum
+	if sum == 17 && ace > 0 {
+		return sum, true
+	}
+	return sum, false
 }
