@@ -163,12 +163,9 @@ func handleSelection(m model, selected string) (tea.Model, tea.Cmd) {
 
 		// Dealer Hits Soft 17: 0.18% Casino Edge
 		var isSoft17 bool
-		for {
-			m.dealerTotal, isSoft17 = calculateHand(m.dealerCards)
-			if m.dealerTotal > 17 || (m.dealerTotal == 17 && !isSoft17) {
-				break
-			}
+		for m.dealerTotal < 17 || (m.dealerTotal == 17 && isSoft17) {
 			m.dealerCards, m.drawStack = drawOneFromStack(m.dealerCards, m.drawStack)
+			m.dealerTotal, isSoft17 = calculateHand(m.dealerCards)
 		}
 
 		/*
